@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: apcrda_tdr
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d apcrda_tdr']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - apcrda-internal
+
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    env_file: .env.local
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/apcrda_tdr
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cerbos:
+        condition: service_started
+    networks:
+      - apcrda-internal
+
+  cerbos:
+    image: ghcr.io/cerbos/cerbos:0.38.0
+    command: server --config=/config.yaml
+    volumes:
+      - ./cerbos/policies:/policies
+      - ./cerbos/config.yaml:/config.yaml
+      - cerbos_logs:/var/log/cerbos
+    ports:
+      - '3592:3592'
+      - '3593:3593'
+    networks:
+      - apcrda-internal
+
+  ipfs:
+    image: ipfs/kubo:latest
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - apcrda-internal
+
+volumes:
+  postgres_data:
+  cerbos_logs:
+  ipfs_data:
+
+networks:
+  apcrda-internal:
+    driver: bridge

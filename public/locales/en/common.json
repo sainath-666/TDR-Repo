@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "APCRDA TDR Platform",
+    "subtitle": "Offline TDR Bond Migration"
+  },
+  "bond": {
+    "status": {
+      "DRAFT": "Draft",
+      "PENDING_L1": "Pending L1 Review",
+      "PENDING_L2": "Pending SDC Review",
+      "PENDING_L3": "Pending Director Review",
+      "PENDING_L4": "Pending Commissioner Review",
+      "ACTIVE": "Active",
+      "REJECTED": "Rejected",
+      "REVOKED": "Revoked"
+    }
+  },
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "download": "Download Certificate"
+  }
+}

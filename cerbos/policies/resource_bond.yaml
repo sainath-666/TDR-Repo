@@ -1,0 +1,50 @@
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: 'default'
+  importDerivedRoles: [apcrda_derived]
+  resource: bond
+  rules:
+    - actions: [create]
+      roles: [DEO, SURVEYOR]
+      effect: EFFECT_ALLOW
+
+    - actions: [update, submit]
+      roles: [DEO, SURVEYOR]
+      condition:
+        match:
+          expr: request.resource.attr.status == "DRAFT"
+      effect: EFFECT_ALLOW
+
+    - actions: [view]
+      derivedRoles: [same_district_official]
+      effect: EFFECT_ALLOW
+
+    - actions: [view]
+      roles: [COMMISSIONER, ADDL_COMMISSIONER]
+      effect: EFFECT_ALLOW
+
+    - actions: [view]
+      derivedRoles: [bond_owner_farmer]
+      effect: EFFECT_ALLOW
+
+    - actions: [upload_document]
+      derivedRoles: [same_district_official]
+      condition:
+        match:
+          expr: >
+            request.resource.attr.status != "ACTIVE"
+            && request.resource.attr.status != "REJECTED"
+            && request.resource.attr.status != "REVOKED"
+      effect: EFFECT_ALLOW
+
+    - actions: [revoke]
+      roles: [COMMISSIONER]
+      condition:
+        match:
+          expr: request.resource.attr.status == "ACTIVE"
+      effect: EFFECT_ALLOW
+
+    - actions: ['*']
+      roles: ['*']
+      effect: EFFECT_DENY

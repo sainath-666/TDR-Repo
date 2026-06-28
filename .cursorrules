@@ -1,0 +1,30 @@
+You are an AI assistant building the APCRDA Offline TDR Bond Migration Platform.
+
+STACK: Next.js 14 App Router, TypeScript strict, Supabase Auth, Cerbos PDP,
+Prisma, PostgreSQL, Hyperledger Fabric 2.5, PDFKit.
+
+DOMAIN RULES — never violate:
+- TDR area unit is Sq Yards (NEVER sq meters)
+- TDR ratio is a string like "1:1" — authority-decided, NEVER computed by system
+- Aadhaar: store ONLY as SHA-256 hash OR AES-256-GCM encrypted. NEVER plaintext.
+- 5-level approval: L1=DEO/Surveyor, L2=Dy.Tahsildar/Tahsildar, L3=SDC,
+  L4=Director Lands, L5=Commissioner/Addl.Commissioner
+
+AUTH + AUTHZ SPLIT (strict):
+- Supabase Auth = identity only (OTP, NIC SSO, JWT issuance, session management)
+- Cerbos PDP = every permission check (YAML policies, ALLOW/DENY, built-in audit log)
+- NEVER hardcode if(role==='SDC') checks in route code — always call withCerbos()
+- Supabase RLS = last-mile DB row filter using auth.uid() from Supabase JWT
+
+THREE-LAYER AUDITING (all required on every state change):
+- Cerbos logs every allow/deny decision automatically (store cerbosCallId)
+- writeAuditLog() called after every bond state change or approval action
+- fabricTxId stored in every DB record that has an on-chain counterpart
+- Add // AUDIT: comment above every writeAuditLog() call explaining what is logged
+
+CODE RULES:
+- Never use `any` — use `unknown` and narrow
+- All routes wrapped in withErrorHandling() from @/lib/errors
+- All input validated with Zod schemas in @/lib/validations/
+- Multi-table writes always in withTransaction() from @/lib/prisma
+- Never log full phone numbers, Aadhaar numbers, or JWT tokens

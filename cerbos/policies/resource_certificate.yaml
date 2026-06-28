@@ -1,0 +1,28 @@
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: 'default'
+  importDerivedRoles: [apcrda_derived]
+  resource: certificate
+  rules:
+    - actions: [generate]
+      roles: [COMMISSIONER, ADDL_COMMISSIONER]
+      condition:
+        match:
+          expr: request.resource.attr.bondStatus == "PENDING_L4"
+      effect: EFFECT_ALLOW
+
+    - actions: [download]
+      derivedRoles: [bond_owner_farmer]
+      condition:
+        match:
+          expr: request.resource.attr.bondStatus == "ACTIVE"
+      effect: EFFECT_ALLOW
+
+    - actions: [verify]
+      roles: ['*']
+      effect: EFFECT_ALLOW
+
+    - actions: ['*']
+      roles: ['*']
+      effect: EFFECT_DENY

@@ -1,0 +1,23 @@
+{
+  "app": {
+    "title": "APCRDA TDR వేదిక",
+    "subtitle": "ఆఫ్‌లైన్ TDR బాండ్ మైగ్రేషన్"
+  },
+  "bond": {
+    "status": {
+      "DRAFT": "డ్రాఫ్ట్",
+      "PENDING_L1": "L1 సమీక్ష పెండింగ్",
+      "PENDING_L2": "SDC సమీక్ష పెండింగ్",
+      "PENDING_L3": "డైరెక్టర్ సమీక్ష పెండింగ్",
+      "PENDING_L4": "కమిషనర్ సమీక్ష పెండింగ్",
+      "ACTIVE": "సక్రియం",
+      "REJECTED": "తిరస్కరించబడింది",
+      "REVOKED": "రద్దు చేయబడింది"
+    }
+  },
+  "common": {
+    "submit": "సమర్పించు",
+    "cancel": "రద్దు",
+    "download": "certificate డౌన్‌లోడ్"
+  }
+}

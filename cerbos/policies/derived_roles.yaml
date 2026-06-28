@@ -1,0 +1,48 @@
+---
+apiVersion: api.cerbos.dev/v1
+description: APCRDA TDR derived roles — level-specific and district-aware
+derivedRoles:
+  name: apcrda_derived
+  definitions:
+    - name: bond_owner_farmer
+      parentRoles: ['FARMER']
+      condition:
+        match:
+          expr: request.resource.attr.farmerId == request.principal.id
+
+    - name: same_district_official
+      parentRoles: ['DEO', 'SURVEYOR', 'DY_TAHSILDAR', 'TAHSILDAR', 'SDC', 'DIRECTOR_LANDS']
+      condition:
+        match:
+          expr: >
+            request.principal.attr.districtCode == request.resource.attr.districtCode
+
+    - name: l1_approver
+      parentRoles: ['DY_TAHSILDAR', 'TAHSILDAR']
+      condition:
+        match:
+          expr: >
+            request.resource.attr.status == "PENDING_L1"
+            && request.principal.attr.districtCode == request.resource.attr.districtCode
+
+    - name: l2_approver
+      parentRoles: ['SDC']
+      condition:
+        match:
+          expr: >
+            request.resource.attr.status == "PENDING_L2"
+            && request.principal.attr.districtCode == request.resource.attr.districtCode
+
+    - name: l3_approver
+      parentRoles: ['DIRECTOR_LANDS']
+      condition:
+        match:
+          expr: >
+            request.resource.attr.status == "PENDING_L3"
+            && request.principal.attr.districtCode == request.resource.attr.districtCode
+
+    - name: l4_approver
+      parentRoles: ['COMMISSIONER', 'ADDL_COMMISSIONER']
+      condition:
+        match:
+          expr: request.resource.attr.status == "PENDING_L4"

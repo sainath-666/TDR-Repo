@@ -1,0 +1,67 @@
+---
+name: APCRDA TDR bond authorization tests
+tests:
+  - name: DEO can create bonds
+    input:
+      principal: { id: deo1, roles: [DEO], attributes: { districtCode: KRISHNA } }
+      resource: { kind: bond, id: new, attributes: {} }
+      actions: [create]
+    expected: { create: EFFECT_ALLOW }
+
+  - name: FARMER cannot create bonds
+    input:
+      principal: { id: f1, roles: [FARMER] }
+      resource: { kind: bond, id: new, attributes: {} }
+      actions: [create]
+    expected: { create: EFFECT_DENY }
+
+  - name: SDC can approve PENDING_L2 bond in same district
+    input:
+      principal: { id: sdc1, roles: [SDC], attributes: { districtCode: KRISHNA } }
+      resource:
+        { kind: approval, id: b1, attributes: { status: PENDING_L2, districtCode: KRISHNA } }
+      actions: [approve]
+    expected: { approve: EFFECT_ALLOW }
+
+  - name: SDC cannot approve PENDING_L1 bond (wrong level)
+    input:
+      principal: { id: sdc1, roles: [SDC], attributes: { districtCode: KRISHNA } }
+      resource:
+        { kind: approval, id: b1, attributes: { status: PENDING_L1, districtCode: KRISHNA } }
+      actions: [approve]
+    expected: { approve: EFFECT_DENY }
+
+  - name: SDC cannot approve bond in different district
+    input:
+      principal: { id: sdc1, roles: [SDC], attributes: { districtCode: KRISHNA } }
+      resource: { kind: approval, id: b1, attributes: { status: PENDING_L2, districtCode: GUNTUR } }
+      actions: [approve]
+    expected: { approve: EFFECT_DENY }
+
+  - name: Farmer can view own bond
+    input:
+      principal: { id: f1, roles: [FARMER] }
+      resource: { kind: bond, id: b1, attributes: { farmerId: f1 } }
+      actions: [view]
+    expected: { view: EFFECT_ALLOW }
+
+  - name: Farmer cannot view another farmer's bond
+    input:
+      principal: { id: f1, roles: [FARMER] }
+      resource: { kind: bond, id: b2, attributes: { farmerId: f2 } }
+      actions: [view]
+    expected: { view: EFFECT_DENY }
+
+  - name: Commissioner can revoke ACTIVE bond
+    input:
+      principal: { id: c1, roles: [COMMISSIONER] }
+      resource: { kind: bond, id: b1, attributes: { status: ACTIVE } }
+      actions: [revoke]
+    expected: { revoke: EFFECT_ALLOW }
+
+  - name: SDC cannot revoke bond (wrong role for revoke)
+    input:
+      principal: { id: sdc1, roles: [SDC], attributes: { districtCode: KRISHNA } }
+      resource: { kind: bond, id: b1, attributes: { status: ACTIVE, districtCode: KRISHNA } }
+      actions: [revoke]
+    expected: { revoke: EFFECT_DENY }

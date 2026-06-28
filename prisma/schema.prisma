@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BondStatus {
+  DRAFT
+  PENDING_L1
+  PENDING_L2
+  PENDING_L3
+  PENDING_L4
+  ACTIVE
+  REJECTED
+  REVOKED
+}
+
+enum RelationType {
+  S_O
+  D_O
+  W_O
+}
+
+enum DocumentType {
+  OWNERSHIP_DOCUMENT
+  AADHAAR_COPY
+  RETURNABLE_PLOT_ALLOTMENT
+  TDR_ISSUED_COPY
+  INDIVIDUAL_SKETCH
+}
+
+enum OfficialRole {
+  DEO
+  SURVEYOR
+  DY_TAHSILDAR
+  TAHSILDAR
+  SDC
+  DIRECTOR_LANDS
+  ADDL_COMMISSIONER
+  COMMISSIONER
+}
+
+enum ApprovalDecision {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+model TdrBond {
+  id                  String     @id @default(uuid()) @db.Uuid
+  tdrNumber           String     @unique @map("tdr_number")
+  track               String     @default("OFFLINE")
+  status              BondStatus @default(DRAFT)
+  farmerId            String     @map("farmer_id") @db.Uuid
+  createdBy           String     @map("created_by") @db.Uuid
+  fabricTxId          String?    @map("fabric_tx_id")
+  certificateIpfsCid  String?    @map("certificate_ipfs_cid")
+  mintedAt            DateTime?  @map("minted_at")
+  rejectionReason     String?    @map("rejection_reason")
+  revokedAt           DateTime?  @map("revoked_at")
+  revokeReason        String?    @map("revoke_reason")
+  createdAt           DateTime   @default(now()) @map("created_at")
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  farmer         Farmer          @relation(fields: [farmerId], references: [id])
+  creator        Official        @relation("BondCreator", fields: [createdBy], references: [id])
+  holder         BondHolder?
+  landDetails    BondLandDetail?
+  documents      BondDocument[]
+  approvalSteps  ApprovalStep[]
+  auditLogs      AuditLog[]
+
+  @@index([status, farmerId])
+  @@map("tdr_bonds")
+}
+
+model BondHolder {
+  id               String       @id @default(uuid()) @db.Uuid
+  bondId           String       @unique @map("bond_id") @db.Uuid
+  name             String
+  relationType     RelationType @map("relation_type")
+  relationName     String       @map("relation_name")
+  aadhaarHash      String       @map("aadhaar_hash")
+  aadhaarEncrypted String       @map("aadhaar_encrypted")
+  aadhaarPhone     String       @map("aadhaar_phone")
+  email            String?
+  doorNo           String       @map("door_no")
+  street           String
+  village          String
+  mandal           String
+  district         String
+
+  bond TdrBond @relation(fields: [bondId], references: [id], onDelete: Cascade)
+
+  @@map("bond_holders")
+}
+
+model BondLandDetail {
+  id                     String   @id @default(uuid()) @db.Uuid
+  bondId                 String   @unique @map("bond_id") @db.Uuid
+  surrenderedVillage     String   @map("surrendered_village")
+  surveyNumber           String   @map("survey_number")
+  ownershipDeedNo        String?  @map("ownership_deed_no")
+  surrenderedAreaSqYds   Decimal  @map("surrendered_area_sq_yds") @db.Decimal(12, 4)
+  tdrIssuedExtentSqYds   Decimal  @map("tdr_issued_extent_sq_yds") @db.Decimal(12, 4)
+  issuedRatio            String   @map("issued_ratio")
+  tdrCertificateNumber   String?  @map("tdr_certificate_number")
+  returnablePlotCode     String?  @map("returnable_plot_code")
+
+  bond TdrBond @relation(fields: [bondId], references: [id], onDelete: Cascade)
+
+  @@map("bond_land_details")
+}
+
+model BondDocument {
+  id                   String       @id @default(uuid()) @db.Uuid
+  bondId               String       @map("bond_id") @db.Uuid
+  docType              DocumentType @map("doc_type")
+  ipfsCid              String       @map("ipfs_cid")
+  supabaseStoragePath  String       @map("supabase_storage_path")
+  sha256Hash           String       @map("sha256_hash")
+  fileName             String       @map("file_name")
+  fileSizeKb           Int          @map("file_size_kb")
+  uploadedBy           String       @map("uploaded_by") @db.Uuid
+  uploadedAt           DateTime     @default(now()) @map("uploaded_at")
+
+  bond     TdrBond  @relation(fields: [bondId], references: [id], onDelete: Cascade)
+  uploader Official @relation(fields: [uploadedBy], references: [id])
+
+  @@index([bondId])
+  @@map("bond_documents")
+}
+
+model ApprovalStep {
+  id            String           @id @default(uuid()) @db.Uuid
+  bondId        String           @map("bond_id") @db.Uuid
+  level         Int
+  role          OfficialRole
+  decision      ApprovalDecision @default(PENDING)
+  officialId    String?          @map("official_id") @db.Uuid
+  signatureHash String?          @map("signature_hash")
+  cerbosCallId  String?          @map("cerbos_call_id")
+  fabricTxId    String?          @map("fabric_tx_id")
+  remarks       String?
+  decidedAt     DateTime?        @map("decided_at")
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  bond     TdrBond   @relation(fields: [bondId], references: [id], onDelete: Cascade)
+  official Official? @relation(fields: [officialId], references: [id])
+
+  @@unique([bondId, level])
+  @@map("approval_steps")
+}
+
+model Official {
+  id           String       @id @db.Uuid
+  employeeId   String       @unique @map("employee_id")
+  name         String
+  role         OfficialRole
+  districtCode String       @map("district_code")
+  phone        String
+  isActive     Boolean      @default(true) @map("is_active")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  createdBonds  TdrBond[]      @relation("BondCreator")
+  approvalSteps ApprovalStep[]
+  documents     BondDocument[]
+
+  @@map("officials")
+}
+
+model Farmer {
+  id              String   @id @db.Uuid
+  apcrdaFarmerId  String?  @map("apcrda_farmer_id")
+  name            String
+  aadhaarHash     String   @map("aadhaar_hash")
+  aadhaarPhone    String   @map("aadhaar_phone")
+  kycVerified     Boolean  @default(false) @map("kyc_verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  bonds TdrBond[]
+
+  @@index([aadhaarPhone, aadhaarHash])
+  @@map("farmers")
+}
+
+model AuditLog {
+  id           BigInt   @id @default(autoincrement())
+  bondId       String?  @map("bond_id") @db.Uuid
+  actorId      String?  @map("actor_id") @db.Uuid
+  actorRole    String?  @map("actor_role")
+  action       String
+  details      Json?
+  ipAddress    String?  @map("ip_address")
+  cerbosCallId String?  @map("cerbos_call_id")
+  fabricTxId   String?  @map("fabric_tx_id")
+  chainHash    String   @map("chain_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  bond TdrBond? @relation(fields: [bondId], references: [id])
+
+  @@index([bondId, createdAt])
+  @@map("audit_log")
+}
+
+model OtpRequest {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  purpose   String
+  otpHash   String   @map("otp_hash")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("otp_requests")
+}
+
+model Village {
+  id          String   @id @default(uuid()) @db.Uuid
+  gisCode     String   @unique @map("gis_code")
+  villageName String   @map("village_name")
+  mandal      String
+  district    String
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("villages")
+}
+
+model IdempotencyCache {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  response  String
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("idempotency_cache")
+}

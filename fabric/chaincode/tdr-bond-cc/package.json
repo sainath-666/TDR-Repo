@@ -1,0 +1,16 @@
+{
+  "name": "tdr-bond-cc",
+  "version": "1.0.0",
+  "description": "APCRDA TDR Bond chaincode",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/bond.test.js"
+  },
+  "dependencies": {
+    "fabric-contract-api": "^2.5.0",
+    "fabric-shim": "^2.5.0"
+  }
+}
