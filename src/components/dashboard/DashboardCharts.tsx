@@ -21,22 +21,23 @@ import { Card } from '@/components/ui/Card';
 
 const STATUS_COLORS: Record<string, string> = {
   [BondStatus.DRAFT]: '#64748b',
-  [BondStatus.PENDING_L1]: '#f59e0b',
-  [BondStatus.PENDING_L2]: '#f97316',
-  [BondStatus.PENDING_L3]: '#3b82f6',
-  [BondStatus.PENDING_L4]: '#8b5cf6',
-  [BondStatus.ACTIVE]: '#10b981',
-  [BondStatus.REJECTED]: '#ef4444',
-  [BondStatus.REVOKED]: '#9ca3af',
+  [BondStatus.PENDING_L1]: '#d97706',
+  [BondStatus.PENDING_L2]: '#ea580c',
+  [BondStatus.PENDING_L3]: '#0284c7',
+  [BondStatus.PENDING_L4]: '#8b2e8b',
+  [BondStatus.ACTIVE]: '#0d9488',
+  [BondStatus.REJECTED]: '#dc2626',
+  [BondStatus.REVOKED]: '#94a3b8',
 };
 
-const PIPELINE_COLORS = ['#1e3a5f', '#f59e0b', '#f97316', '#3b82f6', '#8b5cf6', '#10b981'];
+const PIPELINE_COLORS = ['#1b3a6b', '#d97706', '#ea580c', '#0284c7', '#8b2e8b', '#0d9488'];
 
 interface DashboardChartsProps {
   data: OfficialDashboardData;
+  compact?: boolean;
 }
 
-export function DashboardCharts({ data }: DashboardChartsProps) {
+export function DashboardCharts({ data, compact = false }: DashboardChartsProps) {
   const statusData = useMemo(() => {
     const counts = new Map<BondStatus, number>();
     for (const bond of data.bonds) {
@@ -74,14 +75,23 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
   }, [data.levelStats]);
 
   const hasBonds = data.bonds.length > 0;
+  const chartHeight = compact ? 150 : 220;
+  const innerR = compact ? 32 : 52;
+  const outerR = compact ? 52 : 80;
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6 h-full">
-      <Card className="flex flex-col min-h-[300px]">
-        <h3 className="text-sm font-semibold text-slate-800 mb-1">Bond status distribution</h3>
-        <p className="text-xs text-slate-500 mb-4">Breakdown by current status</p>
+    <div
+      className={
+        compact
+          ? 'grid h-full grid-cols-1 gap-2 sm:grid-cols-2'
+          : 'grid h-full grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6'
+      }
+    >
+      <Card padding={compact ? 'xs' : 'md'} className="flex min-h-0 flex-col">
+        <h3 className="text-xs font-semibold text-slate-800">Bond status</h3>
+        <p className="mb-1 text-[10px] text-slate-500">By current status</p>
         {hasBonds ? (
-          <div className="flex-1 min-h-[220px]">
+          <div className="min-h-0 flex-1" style={{ height: chartHeight }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -89,9 +99,9 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="50%"
-                  innerRadius={52}
-                  outerRadius={80}
+                  cy="46%"
+                  innerRadius={innerR}
+                  outerRadius={outerR}
                   paddingAngle={2}
                 >
                   {statusData.map((entry) => (
@@ -100,35 +110,36 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                 </Pie>
                 <Tooltip
                   formatter={(value: number, name: string) => [value, name]}
-                  contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
+                  contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11 }}
                 />
                 <Legend
                   layout="horizontal"
                   verticalAlign="bottom"
-                  wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                  wrapperStyle={{ fontSize: 9, paddingTop: 4 }}
+                  iconSize={8}
                 />
               </PieChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-slate-400">
-            No data to chart
+          <div className="flex flex-1 items-center justify-center text-xs text-slate-400">
+            No data
           </div>
         )}
       </Card>
 
-      <Card className="flex flex-col min-h-[300px]">
-        <h3 className="text-sm font-semibold text-slate-800 mb-1">Approval pipeline</h3>
-        <p className="text-xs text-slate-500 mb-4">Cumulative levels L1 → L{data.govLevel}</p>
+      <Card padding={compact ? 'xs' : 'md'} className="flex min-h-0 flex-col">
+        <h3 className="text-xs font-semibold text-slate-800">Approval pipeline</h3>
+        <p className="mb-1 text-[10px] text-slate-500">L1 → L{data.govLevel}</p>
         {hasBonds ? (
-          <div className="flex-1 min-h-[220px]">
+          <div className="min-h-0 flex-1" style={{ height: chartHeight }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pipelineData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+              <BarChart data={pipelineData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={28} />
                 <Tooltip
-                  contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
+                  contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11 }}
                   labelFormatter={(_, payload) =>
                     payload?.[0]?.payload?.fullName ? String(payload[0].payload.fullName) : ''
                   }
@@ -147,14 +158,14 @@ export function DashboardCharts({ data }: DashboardChartsProps) {
                     return [value, label ?? ''];
                   }}
                 />
-                <Bar dataKey="primary" fill={PIPELINE_COLORS[1]} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="secondary" fill={PIPELINE_COLORS[3]} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="primary" fill={PIPELINE_COLORS[1]} radius={[3, 3, 0, 0]} />
+                <Bar dataKey="secondary" fill={PIPELINE_COLORS[3]} radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="flex flex-1 items-center justify-center text-sm text-slate-400">
-            No data to chart
+          <div className="flex flex-1 items-center justify-center text-xs text-slate-400">
+            No data
           </div>
         )}
       </Card>

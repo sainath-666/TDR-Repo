@@ -18,8 +18,9 @@ export function LogoutButton({ className }: { className?: string }) {
       type="button"
       onClick={handleLogout}
       className={cn(
-        'flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium',
-        'text-slate-400 hover:bg-white/5 hover:text-white transition-colors',
+        'flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-3 py-2.5',
+        'text-sm font-semibold text-white/90 transition-colors',
+        'hover:border-white/35 hover:bg-white/15 hover:text-white',
         className,
       )}
     >

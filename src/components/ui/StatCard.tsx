@@ -11,13 +11,14 @@ interface StatCardProps {
   accent?: StatAccent;
   trend?: string;
   className?: string;
+  compact?: boolean;
 }
 
 const accentClasses: Record<StatAccent, { bg: string; icon: string; ring: string }> = {
   primary: {
-    bg: 'bg-apcrda-primary/8',
-    icon: 'text-apcrda-primary',
-    ring: 'ring-apcrda-primary/15',
+    bg: 'bg-indigo-50',
+    icon: 'text-indigo-700',
+    ring: 'ring-indigo-200',
   },
   amber: { bg: 'bg-amber-50', icon: 'text-amber-600', ring: 'ring-amber-100' },
   green: { bg: 'bg-emerald-50', icon: 'text-emerald-600', ring: 'ring-emerald-100' },
@@ -33,8 +34,33 @@ export function StatCard({
   accent = 'primary',
   trend,
   className,
+  compact = false,
 }: StatCardProps) {
   const colors = accentClasses[accent];
+
+  if (compact) {
+    return (
+      <Card padding="xs" className={cn(className)} hover>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="truncate text-[11px] font-medium text-slate-600">{label}</p>
+            <p className="text-xl font-bold tabular-nums tracking-tight text-slate-900">{value}</p>
+            {trend && <p className="truncate text-[10px] text-slate-400">{trend}</p>}
+          </div>
+          <div
+            className={cn(
+              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1',
+              colors.bg,
+              colors.icon,
+              colors.ring,
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn('animate-slide-up', className)} hover>

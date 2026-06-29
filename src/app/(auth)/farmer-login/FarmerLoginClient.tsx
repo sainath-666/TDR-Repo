@@ -77,7 +77,7 @@ export default function FarmerLoginClient() {
   return (
     <div className="w-full max-w-lg mx-auto animate-slide-up">
       <div className="text-center mb-6">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-apcrda-accent text-white mb-4 shadow-lg">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-teal text-white mb-4 shadow-lg shadow-teal-900/25">
           <Wheat className="h-7 w-7" />
         </div>
         <h1 className="text-2xl font-bold text-apcrda-primary">Farmer Login</h1>

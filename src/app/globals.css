@@ -3,34 +3,23 @@
 @tailwind utilities;
 
 :root {
-  /* Internal portal brand */
-  --brand-navy: #1e3a5f;
-  --brand-navy-light: #2d5a8e;
-  --brand-navy-dark: #0f2744;
-  --brand-gold: #c9a227;
-  --brand-gold-light: #e8c547;
-  --brand-green: #2d6a4f;
-  --brand-green-light: #40916c;
+  /* Internal portal — royal navy + gold */
+  --brand-navy: #1b3a6b;
+  --brand-navy-light: #2e5c9a;
+  --brand-navy-dark: #0f2347;
+  --brand-gold: #d4a012;
+  --brand-gold-light: #f5c842;
+  --brand-teal: #0d9488;
+  --brand-teal-light: #14b8a6;
 
-  /* Public APCRDA portal chrome */
-  --portal-purple: #7d007d;
-  --portal-purple-dark: #5a005a;
-  --portal-purple-light: #962d96;
-  --portal-maroon: #5c1a2e;
-  --portal-blue: #1a6fb5;
-  --portal-red: #c0392b;
-
-  /* Neutrals */
-  --foreground: #0f172a;
-  --muted-foreground: #64748b;
-  --background: #ffffff;
-  --surface: #f1f5f9;
-  --surface-elevated: #ffffff;
-  --border: #e2e8f0;
-  --border-subtle: #f1f5f9;
-
-  /* Legacy aliases */
-  --portal-purple-dark-legacy: #662d91;
+  /* Public APCRDA portal — rich purple & burgundy */
+  --portal-purple: #8b2e8b;
+  --portal-purple-dark: #5c1a6e;
+  --portal-purple-light: #ab47ab;
+  --portal-maroon: #8b1e3f;
+  --portal-blue: #0284c7;
+  --portal-red: #dc2626;
+  --portal-surface: #f8f0fa;
 }
 
 @layer base {
@@ -40,8 +29,8 @@
 
   body {
     @apply font-sans antialiased;
-    color: var(--foreground);
-    background: var(--background);
+    color: var(--foreground, #0f172a);
+    background: #ffffff;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -58,14 +47,14 @@
   }
 
   ::selection {
-    background-color: color-mix(in srgb, var(--brand-navy) 18%, transparent);
+    background-color: color-mix(in srgb, var(--portal-purple) 22%, transparent);
   }
 }
 
 @layer components {
   /* ── APCRDA TDR official portal chrome ── */
   .gov-header-brand {
-    @apply border-b border-slate-200/80 bg-white py-4 shadow-sm sm:py-5;
+    @apply border-b border-purple-100/80 bg-gradient-to-r from-white via-white to-purple-50/40 py-4 shadow-sm sm:py-5;
   }
 
   .gov-header-title {
@@ -90,25 +79,32 @@
   }
 
   .gov-nav-bar {
-    background: linear-gradient(180deg, var(--portal-purple) 0%, var(--portal-purple-dark) 100%);
-    @apply overflow-visible shadow-md;
+    background: linear-gradient(
+      90deg,
+      var(--portal-purple-dark) 0%,
+      var(--portal-purple) 45%,
+      var(--portal-purple-light) 100%
+    );
+    @apply overflow-visible shadow-lg;
   }
 
   .gov-nav-link {
-    @apply flex items-center gap-1.5 whitespace-nowrap px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-white transition-colors md:px-3 md:text-[11px];
+    @apply flex items-center gap-1.5 whitespace-nowrap px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-white/95 transition-all md:px-3 md:text-[11px];
   }
 
   .gov-nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.16);
+    @apply text-white;
   }
 
   .gov-nav-link-active {
-    background-color: rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.24);
+    box-shadow: inset 0 -3px 0 var(--brand-gold);
+    @apply text-white;
   }
 
   .gov-footer {
-    background: linear-gradient(180deg, var(--portal-purple-dark) 0%, #3d003d 100%);
+    background: linear-gradient(160deg, var(--portal-purple-dark) 0%, #3d1250 55%, #2a0d38 100%);
     @apply text-white;
   }
 
@@ -118,8 +114,8 @@
   }
 
   .portal-section-accent {
-    @apply mx-auto mb-8 h-1 w-16 rounded-full;
-    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold));
+    @apply mx-auto mb-8 h-1.5 w-20 rounded-full;
+    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold), var(--portal-blue));
   }
 
   .portal-section {
@@ -127,7 +123,8 @@
   }
 
   .portal-section-muted {
-    @apply border-t border-slate-100 bg-slate-50/80;
+    background: linear-gradient(180deg, var(--portal-surface) 0%, #f1f5f9 100%);
+    @apply border-t border-purple-100/50;
   }
 
   .portal-content-block {
@@ -135,7 +132,24 @@
   }
 
   .portal-content {
-    @apply flex-1 overflow-y-auto bg-gradient-to-b from-slate-100 to-slate-50/80 p-4 md:p-6 lg:p-8;
+    background: linear-gradient(160deg, #eef2ff 0%, #f8fafc 45%, #f1f5f9 100%);
+    @apply flex min-h-0 flex-1 flex-col overflow-y-auto p-4 md:p-5 lg:p-6;
+  }
+
+  .portal-content:has(.dashboard-shell) {
+    @apply overflow-hidden p-3 md:p-4;
+  }
+
+  .dashboard-shell {
+    @apply flex h-full min-h-0 flex-col gap-3;
+  }
+
+  .data-table-compact th {
+    @apply px-3 py-2 text-[10px];
+  }
+
+  .data-table-compact td {
+    @apply px-3 py-2 text-xs;
   }
 
   /* ── Forms & auth ── */
@@ -145,11 +159,11 @@
 
   .input-field {
     @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400;
-    @apply focus:border-apcrda-primary focus:outline-none focus:ring-2 focus:ring-apcrda-primary/20;
+    @apply focus:border-apcrda-primary focus:outline-none focus:ring-2 focus:ring-apcrda-primary/25;
   }
 
   .input-field-accent {
-    @apply focus:border-apcrda-accent focus:ring-apcrda-accent/20;
+    @apply focus:border-apcrda-accent focus:ring-apcrda-accent/25;
   }
 
   .input-field-with-icon {
@@ -157,35 +171,36 @@
   }
 
   .auth-card {
-    @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card;
+    @apply overflow-hidden rounded-2xl border border-purple-100/60 bg-white shadow-card;
   }
 
   .auth-card-accent {
-    @apply h-1 w-full;
-    background: linear-gradient(90deg, var(--brand-gold) 0%, var(--brand-gold-light) 100%);
+    @apply h-1.5 w-full;
+    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold), var(--portal-blue));
   }
 
   .btn-submit {
-    @apply w-full rounded-xl py-3 text-sm font-semibold text-white shadow-sm transition-all;
+    @apply w-full rounded-xl py-3 text-sm font-semibold text-white shadow-md transition-all;
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
     @apply disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-submit-primary {
-    background-color: var(--brand-navy);
-    @apply hover:brightness-110 focus-visible:ring-apcrda-primary/30;
+    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-light) 100%);
+    @apply hover:brightness-110 focus-visible:ring-apcrda-primary/35;
   }
 
   .btn-submit-accent {
-    @apply bg-apcrda-accent hover:bg-apcrda-accent-light focus-visible:ring-apcrda-accent/30;
+    background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-light) 100%);
+    @apply hover:brightness-110 focus-visible:ring-apcrda-accent/35;
   }
 
   .alert-banner-warning {
-    @apply mb-4 rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-800;
+    @apply mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900;
   }
 
   .alert-banner-error {
-    @apply mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700;
+    @apply mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800;
   }
 
   /* ── Data tables ── */
@@ -194,11 +209,12 @@
   }
 
   .data-table thead {
-    @apply border-b border-slate-200 bg-slate-50;
+    background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
+    @apply border-b border-indigo-100;
   }
 
   .data-table th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500;
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-indigo-900/70;
   }
 
   .data-table td {
@@ -206,7 +222,7 @@
   }
 
   .data-table tbody tr {
-    @apply border-b border-slate-100 transition-colors hover:bg-slate-50/80;
+    @apply border-b border-slate-100 transition-colors hover:bg-indigo-50/40;
   }
 
   .data-table tbody tr:last-child {
@@ -230,10 +246,10 @@
 
   .gradient-primary {
     background: linear-gradient(
-      135deg,
+      160deg,
       var(--brand-navy-dark) 0%,
-      var(--brand-navy-light) 50%,
-      var(--brand-navy-dark) 100%
+      var(--brand-navy) 40%,
+      var(--brand-navy-light) 100%
     );
   }
 
@@ -242,7 +258,19 @@
   }
 
   .gradient-portal {
-    background: linear-gradient(135deg, var(--portal-purple) 0%, var(--portal-purple-dark) 100%);
+    background: linear-gradient(135deg, var(--portal-purple) 0%, var(--portal-purple-light) 100%);
+  }
+
+  .gradient-teal {
+    background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-light) 100%);
+  }
+
+  .gradient-amber {
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  }
+
+  .gradient-navy {
+    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-light) 100%);
   }
 
   .font-telugu {

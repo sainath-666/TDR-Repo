@@ -25,33 +25,30 @@ export default async function FarmerDashboardPage() {
   const pendingCount = bonds.filter((b) => b.status.startsWith('PENDING')).length;
 
   return (
-    <>
-      <div className="relative mb-6 md:mb-8 overflow-hidden rounded-2xl gradient-primary px-5 py-8 md:px-8 md:py-10 text-white shadow-card animate-fade-in">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-apcrda-secondary blur-3xl" />
-        </div>
-        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-          <div>
-            <p className="text-apcrda-secondary font-semibold text-xs uppercase tracking-wider">
-              Farmer Portal · APCRDA
+    <div className="dashboard-shell">
+      <div className="relative shrink-0 overflow-hidden rounded-xl gradient-primary px-4 py-4 text-white shadow-sm">
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300/90">
+              Farmer Portal
             </p>
-            <h1 className="text-2xl md:text-3xl font-bold mt-1">My TDR Bonds</h1>
-            <p className="text-slate-300 text-sm mt-2 max-w-md">
-              Track approval status and download certificates
+            <h1 className="text-lg font-bold">My TDR Bonds</h1>
+            <p className="mt-0.5 text-xs text-sky-100/90">
+              Track status &amp; download certificates
             </p>
           </div>
-          <div className="flex gap-6 sm:gap-8">
-            <div className="text-center sm:text-right">
-              <p className="text-2xl font-bold">{bonds.length}</p>
-              <p className="text-xs text-slate-300">Total</p>
+          <div className="flex gap-4 text-center">
+            <div>
+              <p className="text-lg font-bold tabular-nums">{bonds.length}</p>
+              <p className="text-[10px] text-sky-200/80">Total</p>
             </div>
-            <div className="text-center sm:text-right">
-              <p className="text-2xl font-bold text-emerald-300">{activeCount}</p>
-              <p className="text-xs text-slate-300">Active</p>
+            <div>
+              <p className="text-lg font-bold tabular-nums text-emerald-300">{activeCount}</p>
+              <p className="text-[10px] text-sky-200/80">Active</p>
             </div>
-            <div className="text-center sm:text-right">
-              <p className="text-2xl font-bold text-amber-300">{pendingCount}</p>
-              <p className="text-xs text-slate-300">In Progress</p>
+            <div>
+              <p className="text-lg font-bold tabular-nums text-amber-300">{pendingCount}</p>
+              <p className="text-[10px] text-sky-200/80">Pending</p>
             </div>
           </div>
         </div>
@@ -61,50 +58,48 @@ export default async function FarmerDashboardPage() {
         <EmptyState
           icon={FileText}
           title="No bonds linked yet"
-          description="Your TDR bonds will appear here once registered by a DEO at the APCRDA office. Contact your local office for assistance."
+          description="Your TDR bonds will appear here once registered by a DEO at the APCRDA office."
+          className="py-10"
         />
       ) : (
-        <div className="space-y-4">
-          {bonds.map((bond, index) => (
-            <Card
-              key={bond.id}
-              className="animate-slide-up overflow-hidden"
-              hover
-              style={{ animationDelay: `${index * 60}ms` }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-apcrda-secondary shrink-0" />
-                    <h2 className="font-bold text-lg text-apcrda-primary">{bond.tdrNumber}</h2>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-0.5">
+          {bonds.map((bond) => (
+            <Card key={bond.id} padding="xs" className="overflow-hidden" hover>
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <Award className="h-3.5 w-3.5 shrink-0 text-apcrda-secondary" />
+                    <h2 className="truncate text-sm font-bold text-apcrda-primary">
+                      {bond.tdrNumber}
+                    </h2>
                   </div>
                   {bond.holder && (
-                    <p className="text-sm text-slate-500 mt-0.5">{bond.holder.name}</p>
+                    <p className="truncate text-xs text-slate-500">{bond.holder.name}</p>
                   )}
                 </div>
-                <Badge status={bond.status} size="md" />
+                <Badge status={bond.status} />
               </div>
 
               {bond.landDetails && (
-                <div className="grid grid-cols-2 gap-3 mb-5 p-3 rounded-lg bg-slate-50">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                <div className="mb-2 grid grid-cols-2 gap-2 rounded-lg bg-slate-50 p-2 text-xs">
+                  <div className="flex items-start gap-1.5">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
                         Village
                       </p>
-                      <p className="text-sm text-slate-700">
+                      <p className="truncate text-slate-700">
                         {bond.landDetails.surrenderedVillage}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Ruler className="h-4 w-4 text-slate-400 mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-1.5">
+                    <Ruler className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
                     <div>
-                      <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
-                        Area (Sq Yds)
+                      <p className="text-[9px] font-medium uppercase tracking-wider text-slate-400">
+                        Sq Yds
                       </p>
-                      <p className="text-sm text-slate-700 font-semibold">
+                      <p className="font-semibold text-slate-700">
                         {Number(bond.landDetails.surrenderedAreaSqYds).toLocaleString('en-IN')}
                       </p>
                     </div>
@@ -112,33 +107,23 @@ export default async function FarmerDashboardPage() {
                 </div>
               )}
 
-              <div className="mb-4">
-                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-3">
-                  Approval Progress
-                </p>
-                <BondStatusTracker status={bond.status} compact />
-              </div>
+              <BondStatusTracker status={bond.status} compact />
 
               {bond.status === BondStatus.ACTIVE && (
                 <Button
                   href={`/farmer/certificates/${bond.id}`}
                   variant="accent"
-                  className="w-full"
+                  size="sm"
+                  className="mt-2 w-full"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-3.5 w-3.5" />
                   Download Certificate
                 </Button>
-              )}
-
-              {bond.status.startsWith('PENDING') && (
-                <p className="text-xs text-center text-slate-400 mt-2">
-                  Submitted {bond.updatedAt.toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-                </p>
               )}
             </Card>
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }

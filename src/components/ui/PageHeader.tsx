@@ -6,6 +6,7 @@ interface PageHeaderProps {
   children?: React.ReactNode;
   className?: string;
   breadcrumb?: string;
+  compact?: boolean;
 }
 
 export function PageHeader({
@@ -14,11 +15,34 @@ export function PageHeader({
   children,
   className,
   breadcrumb,
+  compact = false,
 }: PageHeaderProps) {
+  if (compact) {
+    return (
+      <div
+        className={cn(
+          'flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-xl border border-indigo-100/80 border-l-4 border-l-apcrda-secondary bg-white px-3 py-2.5 shadow-sm',
+          className,
+        )}
+      >
+        <div className="min-w-0">
+          {breadcrumb && (
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-apcrda-secondary">
+              {breadcrumb}
+            </p>
+          )}
+          <h1 className="text-base font-bold tracking-tight text-apcrda-primary">{title}</h1>
+          {description && <p className="truncate text-xs text-slate-600">{description}</p>}
+        </div>
+        {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        'mb-6 animate-fade-in rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card ring-1 ring-slate-100/80 md:mb-8 md:p-6',
+        'mb-6 animate-fade-in rounded-2xl border border-indigo-100/80 border-l-4 border-l-apcrda-secondary bg-white p-5 shadow-card md:mb-8 md:p-6',
         className,
       )}
     >

@@ -37,11 +37,11 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
         href="/"
         className="flex items-center gap-3 px-5 py-5 border-b border-white/10 hover:bg-white/5 transition-colors"
       >
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-apcrda-secondary/20 ring-1 ring-apcrda-secondary/30">
-          <Landmark className="h-5 w-5 text-apcrda-secondary" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/15 ring-1 ring-amber-300/40">
+          <Landmark className="h-5 w-5 text-amber-300" />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-apcrda-secondary">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300">
             APCRDA
           </p>
           <p className="text-sm font-bold text-white truncate">{PORTAL_TITLES[portal]}</p>
@@ -51,7 +51,7 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
         {navSections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+            <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-white/60">
               {section.title}
             </p>
             <div className="space-y-1">
@@ -68,8 +68,8 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
                     className={cn(
                       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                       active
-                        ? 'bg-apcrda-secondary/20 text-apcrda-secondary ring-1 ring-apcrda-secondary/30'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-white',
+                        ? 'bg-white/20 text-white shadow-sm ring-1 ring-amber-300/50'
+                        : 'text-white/80 hover:bg-white/10 hover:text-white',
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
@@ -82,12 +82,14 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
         ))}
       </nav>
 
-      <div className="border-t border-white/10 p-4 space-y-3">
-        <div className="rounded-xl bg-white/5 ring-1 ring-white/10 px-3 py-3">
-          <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Signed in as</p>
-          <p className="text-sm font-semibold text-white truncate">{formatRole(role)}</p>
+      <div className="border-t border-white/15 p-4 space-y-3">
+        <div className="rounded-xl bg-black/30 px-3 py-3 ring-1 ring-white/20">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-white/75">
+            Signed in as
+          </p>
+          <p className="truncate text-sm font-semibold text-white">{formatRole(role)}</p>
           {districtCode && (
-            <p className="text-[11px] text-apcrda-secondary/80 mt-0.5">District: {districtCode}</p>
+            <p className="mt-1 text-xs font-medium text-amber-200">District: {districtCode}</p>
           )}
         </div>
         <LogoutButton />
@@ -101,7 +103,7 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
       <div className="h-1 shrink-0 gradient-gold" />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <aside className="hidden md:flex w-64 h-full shrink-0 flex-col bg-apcrda-primary-dark shadow-sidebar">
+        <aside className="hidden md:flex w-64 h-full shrink-0 flex-col gradient-primary shadow-sidebar">
           {sidebar}
         </aside>
 
@@ -115,7 +117,7 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
 
         <aside
           className={cn(
-            'fixed inset-y-0 left-0 z-50 w-64 bg-apcrda-primary-dark shadow-sidebar transform transition-transform duration-200 md:hidden',
+            'fixed inset-y-0 left-0 z-50 w-64 gradient-primary shadow-sidebar transform transition-transform duration-200 md:hidden',
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
@@ -124,7 +126,7 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
 
         <div className="flex flex-1 flex-col min-h-0 min-w-0 overflow-hidden">
           <header className="z-30 shrink-0 border-b border-slate-200/80 bg-white shadow-header">
-            <div className="flex h-14 items-center gap-4 px-4 md:px-6">
+            <div className="flex h-11 items-center gap-3 px-3 md:px-4">
               <button
                 type="button"
                 className="md:hidden p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100"
@@ -167,7 +169,9 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
             </div>
           </header>
 
-          <main className="portal-content w-full flex-1 overflow-y-auto">{children}</main>
+          <main className="portal-content flex w-full min-h-0 flex-1 flex-col overflow-y-auto">
+            {children}
+          </main>
         </div>
       </div>
     </div>

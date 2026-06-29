@@ -57,30 +57,30 @@ export function HeroCarousel() {
         </div>
       ))}
 
-      <div className="absolute inset-0 z-20 bg-gradient-to-r from-black/75 via-black/50 to-black/20" />
+      <div className="absolute inset-0 z-20 bg-gradient-to-r from-indigo-950/85 via-purple-900/60 to-sky-900/30" />
 
       <div className="absolute inset-0 z-30 flex items-center">
         <div className="max-w-[1140px] mx-auto w-full px-6 sm:px-8">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-white/80 sm:text-sm">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-amber-300/90 sm:text-sm">
             Andhra Pradesh Capital Region Development Authority
           </p>
           <h1 className="max-w-2xl text-2xl font-bold leading-tight text-white sm:text-4xl lg:text-[2.75rem]">
             Transferable Development Rights
           </h1>
-          <p className="mt-3 max-w-xl text-sm text-white/90 sm:text-base">
+          <p className="mt-3 max-w-xl text-sm text-sky-100/95 sm:text-base">
             Offline TDR bond validation and migration for Amaravati landowners under the Land
             Pooling Scheme.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/farmer-login"
-              className="inline-flex items-center rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-apcrda-portal-purple shadow-md transition hover:bg-slate-50"
+              className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 px-5 py-2.5 text-sm font-bold text-indigo-950 shadow-lg transition hover:brightness-110"
             >
               Apply for TDR
             </Link>
             <Link
               href="/verify"
-              className="inline-flex items-center rounded-xl border-2 border-white/80 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center rounded-xl border-2 border-white/90 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
             >
               Verify Certificate
             </Link>

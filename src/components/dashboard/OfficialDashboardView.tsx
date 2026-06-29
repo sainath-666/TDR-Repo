@@ -16,47 +16,73 @@ interface OfficialDashboardViewProps {
   roleLabel: string;
 }
 
-function LevelStatCard({ block }: { block: OfficialDashboardData['levelStats'][number] }) {
+function LevelStatsPanel({
+  blocks,
+  govLevel,
+}: {
+  blocks: OfficialDashboardData['levelStats'];
+  govLevel: number;
+}) {
   return (
-    <Card className="h-full border-l-4 border-l-apcrda-primary">
-      <p className="text-sm font-bold text-apcrda-primary mb-4">{block.title}</p>
-      {block.level === 1 ? (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt className="text-slate-500">Drafts</dt>
-            <dd className="text-2xl font-bold text-slate-900 tabular-nums">{block.drafts ?? 0}</dd>
+    <Card padding="xs" className="flex h-full min-h-0 flex-col">
+      <h2 className="mb-2 shrink-0 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+        Level stats (L1 → L{govLevel})
+      </h2>
+      <div className="min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5">
+        {blocks.map((block) => (
+          <div
+            key={block.level}
+            className="rounded-lg border border-slate-100 bg-slate-50/80 px-2.5 py-2"
+          >
+            <p className="mb-1.5 truncate text-[11px] font-semibold text-apcrda-primary">
+              {block.title}
+            </p>
+            {block.level === 1 ? (
+              <dl className="grid grid-cols-4 gap-1 text-center">
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Draft</dt>
+                  <dd className="text-sm font-bold tabular-nums text-slate-800">
+                    {block.drafts ?? 0}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Pipeline</dt>
+                  <dd className="text-sm font-bold tabular-nums text-slate-800">
+                    {block.inPipeline ?? 0}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Active</dt>
+                  <dd className="text-sm font-bold tabular-nums text-emerald-700">
+                    {block.active ?? 0}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Reject</dt>
+                  <dd className="text-sm font-bold tabular-nums text-red-600">
+                    {block.rejected ?? 0}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <dl className="grid grid-cols-2 gap-1 text-center">
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Queue</dt>
+                  <dd className="text-sm font-bold tabular-nums text-amber-700">
+                    {block.inQueue ?? 0}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-[10px] font-medium text-slate-600">Forwarded</dt>
+                  <dd className="text-sm font-bold tabular-nums text-slate-800">
+                    {block.forwarded ?? 0}
+                  </dd>
+                </div>
+              </dl>
+            )}
           </div>
-          <div>
-            <dt className="text-slate-500">In pipeline</dt>
-            <dd className="text-2xl font-bold text-slate-900 tabular-nums">
-              {block.inPipeline ?? 0}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Active</dt>
-            <dd className="text-2xl font-bold text-emerald-700 tabular-nums">
-              {block.active ?? 0}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Rejected</dt>
-            <dd className="text-2xl font-bold text-red-600 tabular-nums">{block.rejected ?? 0}</dd>
-          </div>
-        </dl>
-      ) : (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt className="text-slate-500">In queue</dt>
-            <dd className="text-2xl font-bold text-amber-700 tabular-nums">{block.inQueue ?? 0}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">Forwarded</dt>
-            <dd className="text-2xl font-bold text-slate-900 tabular-nums">
-              {block.forwarded ?? 0}
-            </dd>
-          </div>
-        </dl>
-      )}
+        ))}
+      </div>
     </Card>
   );
 }
@@ -69,68 +95,82 @@ export function OfficialDashboardView({ data, portal, roleLabel }: OfficialDashb
     isDeo ? `/deo/bonds/new?bondId=${bondId}` : `/official/bonds/${bondId}/review`;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="dashboard-shell">
       <PageHeader
+        compact
         title="Dashboard"
-        description={`${roleLabel} — cumulative approval pipeline (${data.scopeLabel})`}
+        description={`${roleLabel} · ${data.scopeLabel}`}
         breadcrumb={isDeo ? 'DEO Portal' : 'Official Portal'}
       >
         {newBondHref && (
-          <Button href={newBondHref} size="md">
-            New Bond Entry
+          <Button href={newBondHref} size="sm">
+            New Bond
           </Button>
         )}
         {queueHref && data.queueCount > 0 && (
-          <Button href={queueHref} variant="outline" size="md">
-            <ClipboardList className="h-4 w-4" />
-            My Queue ({data.queueCount})
+          <Button href={queueHref} variant="outline" size="sm">
+            <ClipboardList className="h-3.5 w-3.5" />
+            Queue ({data.queueCount})
           </Button>
         )}
       </PageHeader>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total Bonds" value={data.summary.total} icon={FileText} accent="primary" />
+      <div className="grid shrink-0 grid-cols-2 gap-2 lg:grid-cols-4">
         <StatCard
-          label="Pending Approval"
+          compact
+          label="Total"
+          value={data.summary.total}
+          icon={FileText}
+          accent="primary"
+        />
+        <StatCard
+          compact
+          label="Pending"
           value={data.summary.pending}
           icon={Clock}
           accent="amber"
-          trend={data.summary.drafts > 0 ? `${data.summary.drafts} draft(s)` : undefined}
+          trend={data.summary.drafts > 0 ? `${data.summary.drafts} draft` : undefined}
         />
-        <StatCard label="Active" value={data.summary.active} icon={CheckCircle2} accent="green" />
-        <StatCard label="Rejected" value={data.summary.rejected} icon={XCircle} accent="red" />
+        <StatCard
+          compact
+          label="Active"
+          value={data.summary.active}
+          icon={CheckCircle2}
+          accent="green"
+        />
+        <StatCard
+          compact
+          label="Rejected"
+          value={data.summary.rejected}
+          icon={XCircle}
+          accent="red"
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 xl:items-start">
-        <div className="xl:col-span-8">
-          <DashboardCharts data={data} />
+      <div
+        className="grid shrink-0 grid-cols-1 gap-2 lg:grid-cols-12 lg:gap-3"
+        style={{ height: 200 }}
+      >
+        <div className="min-h-0 lg:col-span-8">
+          <DashboardCharts compact data={data} />
         </div>
-        <div className="xl:col-span-4 space-y-4">
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">
-              Level statistics (L1 → L{data.govLevel})
-            </h2>
-            <div className="space-y-4">
-              {data.levelStats.map((block) => (
-                <LevelStatCard key={block.level} block={block} />
-              ))}
-            </div>
-          </div>
+        <div className="min-h-0 lg:col-span-4">
+          <LevelStatsPanel blocks={data.levelStats} govLevel={data.govLevel} />
         </div>
       </div>
 
-      <Card padding="none" className="overflow-hidden w-full">
-        <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="font-semibold text-slate-800">Bond records</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{data.bonds.length} from database</p>
+      <Card padding="none" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 py-2">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-slate-800">Bond records</h2>
+            <p className="text-[11px] text-slate-600">{data.bonds.length} from database</p>
           </div>
           {queueHref && (
             <Link
               href={queueHref}
-              className="text-sm font-medium text-apcrda-primary hover:underline shrink-0"
+              className="shrink-0 text-xs font-medium text-apcrda-primary hover:underline"
             >
-              Open approval queue →
+              Queue →
             </Link>
           )}
         </div>
@@ -146,16 +186,17 @@ export function OfficialDashboardView({ data, portal, roleLabel }: OfficialDashb
             }
             actionLabel={isDeo ? 'Create Bond Entry' : undefined}
             actionHref={isDeo ? '/deo/bonds/new' : undefined}
+            className="py-10"
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="data-table w-full">
-              <thead>
+          <div className="min-h-0 flex-1 overflow-auto">
+            <table className="data-table data-table-compact w-full">
+              <thead className="sticky top-0 z-10 bg-slate-50 shadow-sm">
                 <tr>
-                  <th className="whitespace-nowrap">TDR Number</th>
+                  <th className="whitespace-nowrap">TDR No.</th>
                   <th className="whitespace-nowrap">Holder</th>
-                  <th className="whitespace-nowrap">Survey No.</th>
-                  <th className="whitespace-nowrap text-right">Area (Sq Yds)</th>
+                  <th className="whitespace-nowrap">Survey</th>
+                  <th className="whitespace-nowrap text-right">Sq Yds</th>
                   <th className="whitespace-nowrap">Status</th>
                   <th className="whitespace-nowrap text-right">Action</th>
                 </tr>
@@ -163,14 +204,14 @@ export function OfficialDashboardView({ data, portal, roleLabel }: OfficialDashb
               <tbody>
                 {data.bonds.map((bond) => (
                   <tr key={bond.id}>
-                    <td className="whitespace-nowrap">
-                      <span className="font-semibold text-apcrda-primary">{bond.tdrNumber}</span>
+                    <td className="whitespace-nowrap font-semibold text-apcrda-primary">
+                      {bond.tdrNumber}
                     </td>
-                    <td className="max-w-[180px] truncate">{bond.holderName ?? '—'}</td>
-                    <td className="font-mono text-xs whitespace-nowrap">
+                    <td className="max-w-[140px] truncate">{bond.holderName ?? '—'}</td>
+                    <td className="whitespace-nowrap font-mono text-[11px]">
                       {bond.surveyNumber ?? '—'}
                     </td>
-                    <td className="text-right tabular-nums whitespace-nowrap">
+                    <td className="whitespace-nowrap text-right tabular-nums">
                       {bond.surrenderedAreaSqYds != null
                         ? bond.surrenderedAreaSqYds.toLocaleString('en-IN')
                         : '—'}
@@ -178,25 +219,25 @@ export function OfficialDashboardView({ data, portal, roleLabel }: OfficialDashb
                     <td className="whitespace-nowrap">
                       <Badge status={bond.status} />
                     </td>
-                    <td className="text-right whitespace-nowrap">
+                    <td className="whitespace-nowrap text-right">
                       {bond.status === BondStatus.DRAFT && isDeo ? (
                         <Link
                           href={resumeHref(bond.id)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-apcrda-primary hover:text-apcrda-primary-light"
+                          className="inline-flex items-center gap-0.5 text-xs font-medium text-apcrda-primary hover:text-apcrda-primary-light"
                         >
                           Resume
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          <ArrowRight className="h-3 w-3" />
                         </Link>
                       ) : !isDeo && bond.status.startsWith('PENDING') ? (
                         <Link
                           href={resumeHref(bond.id)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-apcrda-primary hover:text-apcrda-primary-light"
+                          className="inline-flex items-center gap-0.5 text-xs font-medium text-apcrda-primary hover:text-apcrda-primary-light"
                         >
                           Review
-                          <ArrowRight className="h-3.5 w-3.5" />
+                          <ArrowRight className="h-3 w-3" />
                         </Link>
                       ) : (
-                        <span className="text-xs text-slate-400">
+                        <span className="text-[10px] text-slate-400">
                           {new Date(bond.updatedAt).toLocaleDateString('en-IN')}
                         </span>
                       )}
