@@ -8,7 +8,11 @@ import { withCerbos } from '@/lib/cerbos/enforce';
 import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { documentUploadSchema } from '@/lib/validations/bond';
-import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
+import {
+  getBondWithRelations,
+  getClientIp,
+  getEffectiveBondDistrictCode,
+} from '@/lib/bond-helpers';
 import { DocumentType } from '@prisma/client';
 import { isOfficialRole } from '@/types';
 
@@ -37,7 +41,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   if (file.size > 10 * 1024 * 1024) throw new ValidationError('File exceeds 10MB limit');
 
   const bond = await getBondWithRelations(bondId);
-  const districtCode = bond.holder?.district ?? '';
+  const districtCode = getEffectiveBondDistrictCode(bond);
 
   const cerbosCallId = await withCerbos(
     user,

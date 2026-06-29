@@ -4,7 +4,7 @@ import { ok } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
 import { prisma } from '@/lib/prisma';
-import { getBondWithRelations } from '@/lib/bond-helpers';
+import { getBondWithRelations, getEffectiveBondDistrictCode } from '@/lib/bond-helpers';
 
 export const GET = withErrorHandling(async (_req, { params }: { params: { bondId: string } }) => {
   const user = await getCurrentUser(cookies());
@@ -19,7 +19,7 @@ export const GET = withErrorHandling(async (_req, { params }: { params: { bondId
       id: params.bondId,
       attributes: {
         status: bond.status,
-        districtCode: bond.holder?.district ?? '',
+        districtCode: getEffectiveBondDistrictCode(bond),
         farmerId: bond.farmerId,
       },
     },

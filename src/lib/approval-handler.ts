@@ -8,7 +8,11 @@ import { withCerbos } from '@/lib/cerbos/enforce';
 import { prisma, withTransaction } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { generateApprovalSignature } from '@/lib/security/hmac';
-import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
+import {
+  getBondWithRelations,
+  getClientIp,
+  getEffectiveBondDistrictCode,
+} from '@/lib/bond-helpers';
 import { getExpectedLevel, validateTransition, mapDecisionToEvent } from '@/lib/bond-state-machine';
 import * as fabric from '@/lib/fabric/gateway';
 import { isOfficialRole } from '@/types';
@@ -22,6 +26,33 @@ interface ProcessApprovalParams {
   req: NextRequest;
 }
 
+function isApprovalOtpBypassEnabled(): boolean {
+  return process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true';
+}
+
+async function verifyApprovalOtp(userId: string, otp: string): Promise<void> {
+  if (isApprovalOtpBypassEnabled()) {
+    if (!/^\d{6}$/.test(otp)) {
+      throw new AuthenticationError('Enter any 6-digit OTP in development');
+    }
+    return;
+  }
+
+  const otpRecord = await prisma.otpRequest.findFirst({
+    where: {
+      userId,
+      purpose: 'APPROVAL',
+      used: false,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+  if (!otpRecord) throw new AuthenticationError('OTP expired or not found');
+  const valid = await bcrypt.compare(otp, otpRecord.otpHash);
+  if (!valid) throw new AuthenticationError('Invalid OTP');
+  await prisma.otpRequest.update({ where: { id: otpRecord.id }, data: { used: true } });
+}
+
 export async function processApproval({
   bondId,
   decision,
@@ -33,7 +64,7 @@ export async function processApproval({
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
   const bond = await getBondWithRelations(bondId);
-  const districtCode = bond.holder?.district ?? '';
+  const districtCode = getEffectiveBondDistrictCode(bond);
   const level = getExpectedLevel(bond.status);
 
   if (!level) throw new ValidationError(`Bond cannot be approved in status ${bond.status}`);
@@ -57,19 +88,7 @@ export async function processApproval({
 
   if (decision !== ApprovalDecision.RETURNED) {
     if (!otp) throw new AuthenticationError('OTP required');
-    const otpRecord = await prisma.otpRequest.findFirst({
-      where: {
-        userId: user.id,
-        purpose: 'APPROVAL',
-        used: false,
-        expiresAt: { gt: new Date() },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!otpRecord) throw new AuthenticationError('OTP expired or not found');
-    const valid = await bcrypt.compare(otp, otpRecord.otpHash);
-    if (!valid) throw new AuthenticationError('Invalid OTP');
-    await prisma.otpRequest.update({ where: { id: otpRecord.id }, data: { used: true } });
+    await verifyApprovalOtp(user.id, otp);
   }
 
   const event = mapDecisionToEvent(decision);

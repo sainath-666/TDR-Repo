@@ -4,6 +4,7 @@ import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { prisma } from '@/lib/prisma';
+import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
 import { isOfficialRole } from '@/types';
 
 export const GET = withErrorHandling(async () => {
@@ -20,12 +21,13 @@ export const GET = withErrorHandling(async () => {
   };
 
   const status = statusMap[user.role];
+  const districtScope = buildDistrictScopeWhere(user.districtCode);
   const where =
     user.role === 'COMMISSIONER' || user.role === 'ADDL_COMMISSIONER'
       ? { status: BondStatus.PENDING_L4 }
       : {
           status,
-          holder: user.districtCode ? { district: user.districtCode } : undefined,
+          ...districtScope,
         };
 
   const bonds = await prisma.tdrBond.findMany({

@@ -13,20 +13,21 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
 
 export default async function OfficialQueuePage() {
   const user = await getCurrentUser(cookies());
   if (!user) redirect('/official-login');
 
   const queueStatus = getQueueStatusForRole(user.role);
-  const districtFilter = user.districtCode ? { district: user.districtCode } : undefined;
+  const districtScope = buildDistrictScopeWhere(user.districtCode);
 
   const where =
     user.role === 'COMMISSIONER' || user.role === 'ADDL_COMMISSIONER'
       ? { status: BondStatus.PENDING_L4 }
       : {
           status: queueStatus ?? undefined,
-          holder: districtFilter,
+          ...districtScope,
         };
 
   const [bonds, activeCount, rejectedCount] = await Promise.all([
@@ -36,10 +37,10 @@ export default async function OfficialQueuePage() {
       orderBy: { updatedAt: 'asc' },
     }),
     prisma.tdrBond.count({
-      where: { status: BondStatus.ACTIVE, holder: districtFilter },
+      where: { status: BondStatus.ACTIVE, ...districtScope },
     }),
     prisma.tdrBond.count({
-      where: { status: BondStatus.REJECTED, holder: districtFilter },
+      where: { status: BondStatus.REJECTED, ...districtScope },
     }),
   ]);
 

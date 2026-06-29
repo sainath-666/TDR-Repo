@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { NotFoundError } from '@/lib/errors';
+import type { Prisma } from '@prisma/client';
 import type { TdrBondWithRelations } from '@/types';
 
 export const bondInclude = {
@@ -11,6 +12,28 @@ export const bondInclude = {
   creator: true,
 };
 
+/** District used for queue filters and Cerbos — prefers creating official's district code. */
+export function getEffectiveBondDistrictCode(bond: {
+  holder?: { district: string } | null;
+  creator?: { districtCode: string } | null;
+}): string {
+  const creatorDistrict = bond.creator?.districtCode;
+  if (creatorDistrict && creatorDistrict !== 'ALL') {
+    return creatorDistrict;
+  }
+  return bond.holder?.district ?? '';
+}
+
+/** Prisma filter: bonds in an official's district (holder or creator). */
+export function buildDistrictScopeWhere(
+  districtCode?: string,
+): Prisma.TdrBondWhereInput | undefined {
+  if (!districtCode || districtCode === 'ALL') return undefined;
+  return {
+    OR: [{ holder: { district: districtCode } }, { creator: { districtCode } }],
+  };
+}
+
 export async function getBondWithRelations(id: string): Promise<TdrBondWithRelations> {
   const bond = await prisma.tdrBond.findUnique({
     where: { id },
@@ -21,11 +44,12 @@ export async function getBondWithRelations(id: string): Promise<TdrBondWithRelat
 }
 
 export async function getBondDistrictCode(bondId: string): Promise<string> {
-  const holder = await prisma.bondHolder.findUnique({
-    where: { bondId },
-    select: { district: true },
+  const bond = await prisma.tdrBond.findUnique({
+    where: { id: bondId },
+    include: { holder: true, creator: true },
   });
-  return holder?.district ?? '';
+  if (!bond) return '';
+  return getEffectiveBondDistrictCode(bond);
 }
 
 export function getClientIp(headers: Headers): string {

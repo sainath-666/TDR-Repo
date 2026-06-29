@@ -1,6 +1,7 @@
 import { BondStatus, type Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { isPendingStatus } from '@/lib/bond-status';
+import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
 import {
   getGovApprovalLevel,
   GOV_LEVEL_LABELS,
@@ -69,7 +70,7 @@ function buildBondWhere(user: CurrentUser, govLevel: number): Prisma.TdrBondWher
     return { createdBy: user.id };
   }
   if (user.districtCode) {
-    return { holder: { district: user.districtCode } };
+    return buildDistrictScopeWhere(user.districtCode) ?? {};
   }
   return {};
 }

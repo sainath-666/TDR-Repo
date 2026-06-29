@@ -3,7 +3,7 @@ import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
-import { getBondWithRelations } from '@/lib/bond-helpers';
+import { getBondWithRelations, getEffectiveBondDistrictCode } from '@/lib/bond-helpers';
 import { isOfficialRole } from '@/types';
 
 export const GET = withErrorHandling(async (_req, { params }: { params: { bondId: string } }) => {
@@ -17,7 +17,7 @@ export const GET = withErrorHandling(async (_req, { params }: { params: { bondId
     {
       kind: 'approval',
       id: params.bondId,
-      attributes: { status: bond.status, districtCode: bond.holder?.district ?? '' },
+      attributes: { status: bond.status, districtCode: getEffectiveBondDistrictCode(bond) },
     },
     'view',
   );

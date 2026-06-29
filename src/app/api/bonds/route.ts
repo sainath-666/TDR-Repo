@@ -9,7 +9,7 @@ import { prisma, withTransaction } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { createBondSchema } from '@/lib/validations/bond';
 import { hashAadhaar, encryptAadhaar } from '@/lib/security/hmac';
-import { getClientIp } from '@/lib/bond-helpers';
+import { getClientIp, buildDistrictScopeWhere } from '@/lib/bond-helpers';
 import { isOfficialRole, getQueueStatusForRole } from '@/types';
 import { APPROVAL_LEVELS } from '@/lib/bond-state-machine';
 
@@ -103,12 +103,13 @@ export const GET = withErrorHandling(async (req: NextRequest) => {
   const statusFilter = searchParams.get('status') as BondStatus | null;
 
   const queueStatus = getQueueStatusForRole(user.role);
+  const districtScope = buildDistrictScopeWhere(user.districtCode);
   const where =
     user.role === 'COMMISSIONER' || user.role === 'ADDL_COMMISSIONER'
       ? { ...(statusFilter ? { status: statusFilter } : {}) }
       : {
           status: statusFilter ?? queueStatus ?? undefined,
-          holder: user.districtCode ? { district: user.districtCode } : undefined,
+          ...districtScope,
         };
 
   const [items, total] = await Promise.all([

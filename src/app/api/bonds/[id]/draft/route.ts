@@ -8,7 +8,11 @@ import { prisma, withTransaction } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { updateDraftSchema } from '@/lib/validations/bond';
 import { hashAadhaar, encryptAadhaar } from '@/lib/security/hmac';
-import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
+import {
+  getBondWithRelations,
+  getClientIp,
+  getEffectiveBondDistrictCode,
+} from '@/lib/bond-helpers';
 import { BondStatus } from '@prisma/client';
 
 export const PUT = withErrorHandling(
@@ -26,7 +30,7 @@ export const PUT = withErrorHandling(
       {
         kind: 'bond',
         id: bond.id,
-        attributes: { status: bond.status, districtCode: bond.holder?.district ?? '' },
+        attributes: { status: bond.status, districtCode: getEffectiveBondDistrictCode(bond) },
       },
       'update',
     );

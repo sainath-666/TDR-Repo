@@ -8,7 +8,11 @@ import { withCerbos } from '@/lib/cerbos/enforce';
 import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { submitBondSchema, REQUIRED_DOCUMENT_TYPES } from '@/lib/validations/bond';
-import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
+import {
+  getBondWithRelations,
+  getClientIp,
+  getEffectiveBondDistrictCode,
+} from '@/lib/bond-helpers';
 import * as fabric from '@/lib/fabric/gateway';
 
 export const POST = withErrorHandling(
@@ -41,12 +45,20 @@ export const POST = withErrorHandling(
       }
     }
 
+    const districtCode = getEffectiveBondDistrictCode(bond);
+    if (bond.holder && districtCode && bond.holder.district !== districtCode) {
+      await prisma.bondHolder.update({
+        where: { bondId: bond.id },
+        data: { district: districtCode },
+      });
+    }
+
     const cerbosCallId = await withCerbos(
       user,
       {
         kind: 'bond',
         id: bond.id,
-        attributes: { status: bond.status, districtCode: bond.holder?.district ?? '' },
+        attributes: { status: bond.status, districtCode },
       },
       'submit',
     );
