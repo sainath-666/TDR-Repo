@@ -76,6 +76,9 @@ export async function processApproval({
         ? 'reject'
         : 'return';
 
+  const event = mapDecisionToEvent(decision);
+  const newStatus = validateTransition(bond.status, event, user.role as UserRole);
+
   const cerbosCallId = await withCerbos(
     user,
     {
@@ -91,8 +94,6 @@ export async function processApproval({
     await verifyApprovalOtp(user.id, otp);
   }
 
-  const event = mapDecisionToEvent(decision);
-  const newStatus = validateTransition(bond.status, event, user.role as UserRole);
   const timestamp = Date.now();
   const signatureHash = user.employeeId
     ? generateApprovalSignature(user.employeeId, bondId, decision, timestamp)

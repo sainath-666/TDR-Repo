@@ -39,7 +39,10 @@ derivedRoles:
         match:
           expr: >
             request.resource.attr.status == "PENDING_L3"
-            && request.principal.attr.districtCode == request.resource.attr.districtCode
+            && (
+              request.principal.attr.districtCode == "ALL"
+              || request.principal.attr.districtCode == request.resource.attr.districtCode
+            )
 
     - name: l4_approver
       parentRoles: ['COMMISSIONER', 'ADDL_COMMISSIONER']

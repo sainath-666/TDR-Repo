@@ -14,7 +14,7 @@ export function BondReviewPanel({ bond, userRole }: Props) {
   const router = useRouter();
   const [otp, setOtp] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
-  const [action, setAction] = useState<'approve' | 'reject' | null>(null);
+  const [action, setAction] = useState<'approve' | 'reject' | 'return' | null>(null);
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,15 +39,24 @@ export function BondReviewPanel({ bond, userRole }: Props) {
             : `/api/approvals/${bond.id}/return`;
 
       const body =
-        type === 'return' ? { remarks } : { otp, remarks: type === 'reject' ? remarks : undefined };
+        type === 'return'
+          ? { remarks: remarks.trim() }
+          : { otp, remarks: type === 'reject' ? remarks.trim() : undefined };
 
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      const data = (await res.json()) as {
+        success: boolean;
+        error?: string;
+        fields?: Record<string, string>;
+      };
+      if (!data.success) {
+        const fieldMsg = data.fields ? Object.values(data.fields).join(' ') : '';
+        throw new Error(fieldMsg || data.error || 'Action failed');
+      }
       router.push('/official/queue');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Action failed');
@@ -129,7 +138,11 @@ export function BondReviewPanel({ bond, userRole }: Props) {
           Reject
         </button>
         <button
-          onClick={() => handleAction('return')}
+          onClick={() => {
+            setAction('return');
+            setRemarks('');
+            setShowOtpModal(true);
+          }}
           disabled={loading}
           className="bg-amber-500 text-white px-4 py-2 rounded-lg"
         >
@@ -141,28 +154,45 @@ export function BondReviewPanel({ bond, userRole }: Props) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-4">
             <h3 className="font-semibold">
-              {action === 'approve' ? 'Confirm Approval' : 'Confirm Rejection'}
+              {action === 'approve'
+                ? 'Confirm Approval'
+                : action === 'reject'
+                  ? 'Confirm Rejection'
+                  : 'Return to DEO'}
             </h3>
-            {action === 'reject' && (
+            {(action === 'reject' || action === 'return') && (
               <textarea
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
-                placeholder="Rejection reason (min 10 chars)"
+                placeholder={
+                  action === 'return'
+                    ? 'Return reason (min 10 characters)'
+                    : 'Rejection reason (min 10 chars)'
+                }
                 className="w-full border rounded p-2 text-sm"
                 rows={3}
               />
             )}
-            <input
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              maxLength={6}
-              placeholder="Enter 6-digit OTP"
-              className="w-full border rounded p-2 text-center text-xl tracking-widest"
-            />
+            {action !== 'return' && (
+              <input
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                maxLength={6}
+                placeholder="Enter 6-digit OTP"
+                className="w-full border rounded p-2 text-center text-xl tracking-widest"
+              />
+            )}
             <div className="flex gap-2">
               <button
                 onClick={() => action && handleAction(action)}
-                disabled={loading || otp.length !== 6}
+                disabled={
+                  loading ||
+                  (action === 'return'
+                    ? remarks.trim().length < 10
+                    : action === 'reject'
+                      ? remarks.trim().length < 10 || otp.length !== 6
+                      : otp.length !== 6)
+                }
                 className="flex-1 bg-apcrda-primary text-white py-2 rounded disabled:opacity-50"
               >
                 Confirm
