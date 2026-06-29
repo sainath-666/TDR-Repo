@@ -1,20 +1,17 @@
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { FileText, Clock, CheckCircle2, XCircle, Plus, ArrowRight } from 'lucide-react';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { prisma } from '@/lib/prisma';
 import { BondStatus } from '@prisma/client';
-
-const statusColors: Record<string, string> = {
-  DRAFT: 'bg-slate-100 text-slate-700',
-  PENDING_L1: 'bg-yellow-100 text-yellow-800',
-  PENDING_L2: 'bg-orange-100 text-orange-800',
-  PENDING_L3: 'bg-blue-100 text-blue-800',
-  PENDING_L4: 'bg-purple-100 text-purple-800',
-  ACTIVE: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-800',
-  REVOKED: 'bg-gray-100 text-gray-800',
-};
+import { PageHeader } from '@/components/ui/PageHeader';
+import { StatCard } from '@/components/ui/StatCard';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { isPendingStatus } from '@/lib/bond-status';
 
 export default async function DeoDashboardPage() {
   const user = await getCurrentUser(cookies());
@@ -23,82 +20,112 @@ export default async function DeoDashboardPage() {
   const bonds = await prisma.tdrBond.findMany({
     where: { createdBy: user.id },
     include: { holder: true, landDetails: true },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { updatedAt: 'desc' },
   });
 
   const stats = {
     total: bonds.length,
-    pending: bonds.filter((b) => b.status.startsWith('PENDING')).length,
+    pending: bonds.filter((b) => isPendingStatus(b.status)).length,
     approved: bonds.filter((b) => b.status === BondStatus.ACTIVE).length,
     rejected: bonds.filter((b) => b.status === BondStatus.REJECTED).length,
+    drafts: bonds.filter((b) => b.status === BondStatus.DRAFT).length,
   };
 
   return (
-    <main className="min-h-screen p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-apcrda-primary">DEO Dashboard</h1>
-          <p className="text-slate-500">Offline TDR Bond Data Entry</p>
-        </div>
-        <Link
-          href="/deo/bonds/new"
-          className="bg-apcrda-primary text-white px-4 py-2 rounded-lg"
-        >
+    <>
+      <PageHeader
+        title="Dashboard"
+        description="Offline TDR bond data entry — Capital City migration"
+        breadcrumb="DEO Portal"
+      >
+        <Button href="/deo/bonds/new" size="md">
+          <Plus className="h-4 w-4" />
           New Bond Entry
-        </Link>
+        </Button>
+      </PageHeader>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard label="Total Bonds" value={stats.total} icon={FileText} accent="primary" />
+        <StatCard
+          label="Pending Approval"
+          value={stats.pending}
+          icon={Clock}
+          accent="amber"
+          trend={
+            stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : undefined
+          }
+        />
+        <StatCard label="Approved" value={stats.approved} icon={CheckCircle2} accent="green" />
+        <StatCard label="Rejected" value={stats.rejected} icon={XCircle} accent="red" />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Total', value: stats.total },
-          { label: 'Pending', value: stats.pending },
-          { label: 'Approved', value: stats.approved },
-          { label: 'Rejected', value: stats.rejected },
-        ].map((s) => (
-          <div key={s.label} className="bg-white rounded-lg border p-4">
-            <p className="text-sm text-slate-500">{s.label}</p>
-            <p className="text-2xl font-bold">{s.value}</p>
+      <Card padding="none" className="overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div>
+            <h2 className="font-semibold text-slate-800">Recent Bond Entries</h2>
+            <p className="text-xs text-slate-500 mt-0.5">{bonds.length} total records</p>
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="bg-white rounded-lg border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="text-left p-3">TDR No</th>
-              <th className="text-left p-3">Holder</th>
-              <th className="text-left p-3">Survey</th>
-              <th className="text-left p-3">Area (Sq Yds)</th>
-              <th className="text-left p-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bonds.map((bond) => (
-              <tr key={bond.id} className="border-t">
-                <td className="p-3 font-medium">{bond.tdrNumber}</td>
-                <td className="p-3">{bond.holder?.name ?? '—'}</td>
-                <td className="p-3">{bond.landDetails?.surveyNumber ?? '—'}</td>
-                <td className="p-3">
-                  {bond.landDetails ? Number(bond.landDetails.surrenderedAreaSqYds) : '—'}
-                </td>
-                <td className="p-3">
-                  <span className={`px-2 py-1 rounded text-xs ${statusColors[bond.status]}`}>
-                    {bond.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {bonds.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-400">
-                  No bonds yet. Create your first bond entry.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </main>
+        {bonds.length === 0 ? (
+          <EmptyState
+            icon={FileText}
+            title="No bonds yet"
+            description="Start your first TDR bond entry. The 3-phase form covers holder details, land surrender, and document upload."
+            actionLabel="Create Bond Entry"
+            actionHref="/deo/bonds/new"
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>TDR Number</th>
+                  <th>Holder</th>
+                  <th>Survey No.</th>
+                  <th>Area (Sq Yds)</th>
+                  <th>Status</th>
+                  <th className="text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bonds.map((bond) => (
+                  <tr key={bond.id}>
+                    <td>
+                      <span className="font-semibold text-apcrda-primary">{bond.tdrNumber}</span>
+                    </td>
+                    <td>{bond.holder?.name ?? '—'}</td>
+                    <td className="font-mono text-xs">{bond.landDetails?.surveyNumber ?? '—'}</td>
+                    <td>
+                      {bond.landDetails
+                        ? Number(bond.landDetails.surrenderedAreaSqYds).toLocaleString('en-IN')
+                        : '—'}
+                    </td>
+                    <td>
+                      <Badge status={bond.status} />
+                    </td>
+                    <td className="text-right">
+                      {bond.status === BondStatus.DRAFT ? (
+                        <Link
+                          href={`/deo/bonds/new?bondId=${bond.id}`}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-apcrda-primary hover:text-apcrda-primary-light"
+                        >
+                          Resume
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-slate-400">
+                          {bond.updatedAt.toLocaleDateString('en-IN')}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+    </>
   );
 }

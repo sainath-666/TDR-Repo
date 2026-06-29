@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/client';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function GET(req: NextRequest) {
@@ -10,7 +10,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/official-login?error=missing_code', req.url));
   }
 
-  const supabase = createServerClient(cookies());
+  const redirectTo = new URL(next, req.url);
+  let response = NextResponse.redirect(redirectTo);
+
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    },
+  );
+
   const { error } = await supabase.auth.exchangeCodeForSession(code);
 
   if (error) {
@@ -19,5 +40,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.redirect(new URL(next, req.url));
+  response.cookies.set('last_active', String(Date.now()), {
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 1800,
+  });
+
+  return response;
 }

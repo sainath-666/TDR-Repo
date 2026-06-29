@@ -4,6 +4,7 @@ import type { UserRole } from '@/types';
 import { isOfficialRole } from '@/types';
 
 const PUBLIC_ROUTES = [
+  '/',
   '/farmer-login',
   '/official-login',
   '/verify',
@@ -119,7 +120,13 @@ export async function middleware(request: NextRequest) {
     : null;
 
   const role = jwtUser?.role;
-  if (role && !checkRouteAccess(pathname, role)) {
+  if (!role) {
+    const loginUrl = new URL(getLoginRedirect(pathname), request.url);
+    loginUrl.searchParams.set('reason', 'unauthorized');
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!checkRouteAccess(pathname, role)) {
     return NextResponse.redirect(new URL('/official-login?reason=unauthorized', request.url));
   }
 

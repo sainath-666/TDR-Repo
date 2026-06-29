@@ -1,0 +1,103 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { withErrorHandling, AuthenticationError } from '@/lib/errors';
+import { officialLoginSchema } from '@/lib/validations/auth';
+import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
+import { prisma } from '@/lib/prisma';
+import { writeAuditLog } from '@/lib/audit';
+import { getClientIp } from '@/lib/bond-helpers';
+import { isOfficialRole, type UserRole } from '@/types';
+
+function getRedirectForRole(role: UserRole): string {
+  return role === 'DEO' || role === 'SURVEYOR' ? '/deo/dashboard' : '/official/queue';
+}
+
+async function parseLoginBody(req: NextRequest): Promise<{ email: string; password: string }> {
+  const contentType = req.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return officialLoginSchema.parse(await req.json());
+  }
+  const form = await req.formData();
+  return officialLoginSchema.parse({
+    email: form.get('email'),
+    password: form.get('password'),
+  });
+}
+
+async function resolveOfficialRole(
+  userId: string,
+  appMeta: Record<string, string | undefined>,
+): Promise<UserRole | null> {
+  const metaRole = appMeta.role as UserRole | undefined;
+  if (metaRole && isOfficialRole(metaRole)) return metaRole;
+
+  const official = await prisma.official.findUnique({
+    where: { id: userId },
+    select: { role: true, isActive: true },
+  });
+  if (official?.isActive) return official.role as UserRole;
+
+  return null;
+}
+
+export const POST = withErrorHandling(async (req: NextRequest) => {
+  const { email, password } = await parseLoginBody(req);
+  const wantsJson = req.headers.get('accept')?.includes('application/json');
+
+  const response = createAuthJsonResponse({ redirectTo: '/' });
+  const supabase = createRouteHandlerClient(req, response);
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim().toLowerCase(),
+    password,
+  });
+
+  if (error || !data.user) {
+    throw new AuthenticationError(error?.message ?? 'Invalid email or password');
+  }
+
+  const appMeta = (data.user.app_metadata ?? {}) as Record<string, string | undefined>;
+  const role = await resolveOfficialRole(data.user.id, appMeta);
+
+  if (!role || !isOfficialRole(role)) {
+    await supabase.auth.signOut();
+    throw new AuthenticationError('This account is not authorized for the official portal');
+  }
+
+  // AUDIT: Records official email/password login
+  await writeAuditLog({
+    actorId: data.user.id,
+    actorRole: role,
+    action: 'OFFICIAL_LOGIN',
+    details: { method: 'email_password' },
+    ipAddress: getClientIp(req.headers),
+  });
+
+  const redirectTo = getRedirectForRole(role);
+
+  response.cookies.set('last_active', String(Date.now()), {
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 1800,
+  });
+
+  if (wantsJson) {
+    return NextResponse.json(
+      { success: true, data: { redirectTo, role } },
+      { status: 200, headers: response.headers },
+    );
+  }
+
+  const redirectResponse = NextResponse.redirect(new URL(redirectTo, req.url));
+  response.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+  redirectResponse.cookies.set('last_active', String(Date.now()), {
+    httpOnly: true,
+    sameSite: 'strict',
+    path: '/',
+    maxAge: 1800,
+  });
+
+  return redirectResponse;
+});

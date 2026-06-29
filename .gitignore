@@ -23,9 +23,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
-.env
 
 # vercel
 .vercel
@@ -43,3 +40,4 @@ fabric/network/channel-artifacts/
 
 # cerbos logs
 cerbos_logs/
+.bin/

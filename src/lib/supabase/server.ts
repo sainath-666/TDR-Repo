@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import type { CurrentUser, UserRole } from '@/types';
+import { prisma } from '@/lib/prisma';
 
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -41,6 +42,43 @@ export function createAdminClient() {
   });
 }
 
+function parsePhoneFromAuthUser(phone: string | undefined): string | undefined {
+  if (!phone) return undefined;
+  return phone.replace(/^\+91/, '');
+}
+
+async function resolveUserFromPrisma(
+  userId: string,
+  phone: string | undefined,
+): Promise<CurrentUser | null> {
+  const official = await prisma.official.findUnique({ where: { id: userId } });
+  if (official?.isActive) {
+    return {
+      id: userId,
+      role: official.role as UserRole,
+      districtCode: official.districtCode,
+      employeeId: official.employeeId,
+    };
+  }
+
+  const farmerById = await prisma.farmer.findUnique({ where: { id: userId } });
+  if (farmerById) {
+    return { id: userId, role: 'FARMER', farmerId: farmerById.id };
+  }
+
+  const normalizedPhone = parsePhoneFromAuthUser(phone);
+  if (normalizedPhone) {
+    const farmerByPhone = await prisma.farmer.findFirst({
+      where: { aadhaarPhone: normalizedPhone },
+    });
+    if (farmerByPhone) {
+      return { id: userId, role: 'FARMER', farmerId: farmerByPhone.id };
+    }
+  }
+
+  return null;
+}
+
 export async function getCurrentUser(
   cookieStore?: ReadonlyRequestCookies,
 ): Promise<CurrentUser | null> {
@@ -55,13 +93,17 @@ export async function getCurrentUser(
 
   const meta = user.app_metadata as Record<string, string | undefined>;
   const role = meta.role as UserRole | undefined;
-  if (!role) return null;
 
-  return {
-    id: user.id,
-    role,
-    districtCode: meta.district_code,
-    employeeId: meta.employee_id,
-    farmerId: meta.farmer_id,
-  };
+  if (role) {
+    return {
+      id: user.id,
+      role,
+      districtCode: meta.district_code,
+      employeeId: meta.employee_id,
+      farmerId: meta.farmer_id,
+    };
+  }
+
+  // Fallback: JWT may lack claims before auth hook / sync — resolve from Prisma
+  return resolveUserFromPrisma(user.id, user.phone);
 }

@@ -1,5 +1,5 @@
 import { getCerbosClient } from './client';
-import { AuthorizationError } from '@/lib/errors';
+import { AuthorizationError, IntegrationError } from '@/lib/errors';
 import { writeAuditLog } from '@/lib/audit';
 import { logger } from '@/lib/logger';
 import type { CurrentUser, CerbosResource } from '@/types';
@@ -88,15 +88,19 @@ export async function withCerbos(
 
     return cerbosCallId;
   } catch (err) {
-    if (process.env.NODE_ENV === 'development' && isCerbosUnavailableError(err)) {
-      const cerbosCallId = mockCerbosCallId();
-      logger.warn('Cerbos PDP not running — allowing action in development', {
-        role: user.role,
-        action,
-        hint: 'Start Cerbos with: npm run cerbos:start',
-        cerbosCallId,
-      });
-      return cerbosCallId;
+    if (err instanceof AuthorizationError) throw err;
+
+    if (isCerbosUnavailableError(err)) {
+      if (isCerbosMockMode()) {
+        const cerbosCallId = mockCerbosCallId();
+        logger.warn('Cerbos PDP not running — mock mode allows action', { cerbosCallId });
+        return cerbosCallId;
+      }
+      throw new IntegrationError(
+        'Cerbos',
+        503,
+        'Authorization service unavailable. Start Cerbos: npm run stack:up',
+      );
     }
     throw err;
   }

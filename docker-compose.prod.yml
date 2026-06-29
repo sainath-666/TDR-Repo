@@ -1,0 +1,178 @@
+# Production overlay — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Prerequisites:
+#   1. cp .env.production.example .env.production  (fill all secrets)
+#   2. Place TLS certs in deploy/nginx/ssl/tdr.crt and tdr.key
+#   3. docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-apcrda_tdr}
+    ports: !reset []
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-apcrda_tdr}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: apcrda-tdr:${APP_VERSION:-latest}
+    restart: unless-stopped
+    env_file: .env.production
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-apcrda_tdr}
+      CERBOS_PDP_URL: cerbos:3593
+      CERBOS_MOCK_MODE: 'false'
+      IPFS_API_URL: http://ipfs:5001
+    ports: !reset []
+    expose:
+      - '3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cerbos:
+        condition: service_healthy
+      ipfs:
+        condition: service_started
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: '20m'
+        max-file: '5'
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+
+  cerbos:
+    image: ghcr.io/cerbos/cerbos:0.38.0
+    restart: unless-stopped
+    ports: !reset []
+    expose:
+      - '3592'
+      - '3593'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:3592/_cerbos/health']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  ipfs:
+    image: ipfs/kubo:v0.32.1
+    restart: unless-stopped
+    ports: !reset []
+    expose:
+      - '5001'
+    environment:
+      IPFS_PROFILE: server
+    healthcheck:
+      test: ['CMD', 'ipfs', 'id']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:80']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: '20m'
+        max-file: '5'
+    networks:
+      - apcrda-internal
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Optional: nightly Postgres backup (enable with --profile backup)
+  postgres-backup:
+    image: postgres:16-alpine
+    profiles: [backup]
+    restart: unless-stopped
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-apcrda_tdr}
+    volumes:
+      - postgres_backups:/backups
+    entrypoint: >
+      /bin/sh -c "
+      while true; do
+        pg_dump -Fc > /backups/apcrda_tdr-$$(date +%Y%m%d-%H%M%S).dump;
+        find /backups -name '*.dump' -mtime +30 -delete;
+        sleep 86400;
+      done"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - apcrda-internal
+
+volumes:
+  postgres_backups:

@@ -3,11 +3,72 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #1e3a5f;
-  --background: #f8fafc;
+  --foreground: #0f2744;
+  --background: #f1f5f9;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --muted: #64748b;
+  --primary: #1e3a5f;
+  --secondary: #c9a227;
+  --accent: #2d6a4f;
+  --sidebar: #0f2744;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-muted: #94a3b8;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+@layer base {
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+}
+
+@layer components {
+  .portal-content {
+    @apply flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-slate-100;
+  }
+
+  .data-table {
+    @apply w-full text-sm;
+  }
+
+  .data-table thead {
+    @apply bg-slate-50/80 border-b border-slate-200;
+  }
+
+  .data-table th {
+    @apply text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500;
+  }
+
+  .data-table td {
+    @apply px-4 py-3.5 text-slate-700;
+  }
+
+  .data-table tbody tr {
+    @apply border-b border-slate-100 transition-colors hover:bg-slate-50/60;
+  }
+
+  .data-table tbody tr:last-child {
+    @apply border-b-0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #1e3a5f 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, #c9a227 0%, #e8c547 100%);
+  }
 }

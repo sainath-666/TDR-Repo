@@ -6,8 +6,6 @@ import { createServerClient } from '@/lib/supabase/client';
 import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
 
-const DEV_PASSWORD = 'DevPassword123!';
-
 async function startOAuth(req: NextRequest) {
   const supabase = createServerClient(cookies());
 
@@ -66,5 +64,3 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   return ok({ url: result.url });
 });
-
-export const DEV_PASSWORD_EXPORT = DEV_PASSWORD;

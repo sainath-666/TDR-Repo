@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withErrorHandling } from '@/lib/errors';
-import { ok } from '@/lib/api-response';
 
 export const GET = withErrorHandling(async () => {
   const checks: Record<string, string> = {
@@ -32,7 +31,24 @@ export const GET = withErrorHandling(async () => {
     checks.fabric = 'mock';
   }
 
-  const healthy = checks.database === 'ok';
+  const ipfsUrl = process.env.IPFS_API_URL;
+  if (ipfsUrl) {
+    try {
+      const response = await fetch(`${ipfsUrl}/api/v0/id`, {
+        method: 'POST',
+        signal: AbortSignal.timeout(2000),
+      });
+      checks.ipfs = response.ok ? 'ok' : 'error';
+    } catch {
+      checks.ipfs = process.env.NODE_ENV === 'development' ? 'offline' : 'error';
+    }
+  }
+
+  const isDev = process.env.NODE_ENV === 'development';
+  const healthy =
+    checks.database === 'ok' &&
+    (checks.cerbos === 'ok' || (isDev && checks.cerbos === 'offline')) &&
+    (!checks.ipfs || checks.ipfs === 'ok' || (isDev && checks.ipfs === 'offline'));
   return NextResponse.json(
     { success: healthy, data: { status: healthy ? 'healthy' : 'degraded', checks } },
     { status: healthy ? 200 : 503 },

@@ -1,19 +1,31 @@
-import { cookies } from 'next/headers';
-import { withErrorHandling } from '@/lib/errors';
-import { ok } from '@/lib/api-response';
-import { createServerClient } from '@/lib/supabase/client';
+import { NextRequest } from 'next/server';
+import { withErrorHandling, AuthenticationError } from '@/lib/errors';
+import { prisma } from '@/lib/prisma';
 import { otpRequestSchema } from '@/lib/validations/approval';
-import { ValidationError } from '@/lib/errors';
+import { ensureFarmerAuthUser } from '@/lib/supabase/auth-users';
+import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
 
-export const POST = withErrorHandling(async (req: Request) => {
+export const POST = withErrorHandling(async (req: NextRequest) => {
   const body = otpRequestSchema.parse(await req.json());
-  const supabase = createServerClient(cookies());
+
+  const farmer = await prisma.farmer.findFirst({
+    where: { aadhaarPhone: body.phone },
+  });
+  if (!farmer) {
+    throw new AuthenticationError('This mobile number is not registered with APCRDA');
+  }
+
+  await ensureFarmerAuthUser(farmer);
+
+  const response = createAuthJsonResponse({ message: 'OTP sent' });
+  const supabase = createRouteHandlerClient(req, response);
 
   const { error } = await supabase.auth.signInWithOtp({
     phone: `+91${body.phone}`,
+    options: { shouldCreateUser: false },
   });
 
-  if (error) throw new ValidationError(error.message);
+  if (error) throw new AuthenticationError(error.message);
 
-  return ok({ message: 'OTP sent' });
+  return response;
 });

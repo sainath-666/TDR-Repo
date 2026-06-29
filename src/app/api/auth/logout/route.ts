@@ -1,15 +1,18 @@
-import { cookies } from 'next/headers';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandling } from '@/lib/errors';
-import { ok } from '@/lib/api-response';
-import { createServerClient, getCurrentUser } from '@/lib/supabase/client';
+import { getCurrentUser } from '@/lib/supabase/client';
 import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
+import { createRouteHandlerClient } from '@/lib/supabase/route-handler';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const user = await getCurrentUser(cookies());
-  const supabase = createServerClient(cookies());
+  const user = await getCurrentUser();
+
+  const response = NextResponse.json({ success: true, data: { message: 'Logged out' } });
+  const supabase = createRouteHandlerClient(req, response);
   await supabase.auth.signOut();
+
+  response.cookies.delete('last_active');
 
   if (user) {
     await writeAuditLog({
@@ -20,5 +23,5 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     });
   }
 
-  return ok({ message: 'Logged out' });
+  return response;
 });
