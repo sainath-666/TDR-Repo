@@ -13,7 +13,7 @@ import { DocumentUploadPhase } from './DocumentUploadPhase';
 type Phase1Data = z.infer<typeof createBondSchema>;
 type Phase2Data = z.infer<typeof phase2Schema>;
 
-export function BondEntryForm() {
+export function BondEntryForm({ officialDistrictCode }: { officialDistrictCode?: string }) {
   const [phase, setPhase] = useState(1);
   const [bondId, setBondId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -21,7 +21,10 @@ export function BondEntryForm() {
 
   const phase1Form = useForm<Phase1Data>({
     resolver: zodResolver(createBondSchema),
-    defaultValues: { relationType: RelationType.S_O },
+    defaultValues: {
+      relationType: RelationType.S_O,
+      ...(officialDistrictCode ? { district: officialDistrictCode } : {}),
+    },
   });
 
   const phase2Form = useForm<Phase2Data>({
@@ -106,7 +109,12 @@ export function BondEntryForm() {
       {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
 
       {phase === 1 && (
-        <Phase1HolderForm form={phase1Form} onSubmit={submitPhase1} loading={loading} />
+        <Phase1HolderForm
+          form={phase1Form}
+          onSubmit={submitPhase1}
+          loading={loading}
+          officialDistrictCode={officialDistrictCode}
+        />
       )}
       {phase === 2 && (
         <Phase2LandForm

@@ -63,7 +63,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
             street: data.street,
             village: data.village,
             mandal: data.mandal,
-            district: data.district,
+            district: user.districtCode ?? data.district,
           },
         },
         approvalSteps: {

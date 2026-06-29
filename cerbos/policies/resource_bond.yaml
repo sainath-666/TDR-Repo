@@ -1,4 +1,6 @@
 ---
+# Default decision is DENY — never add catch-all `roles: ['*']` EFFECT_DENY rules;
+# they override explicit ALLOW rules (Cerbos deny-wins semantics).
 apiVersion: api.cerbos.dev/v1
 resourcePolicy:
   version: 'default'
@@ -9,7 +11,7 @@ resourcePolicy:
       roles: [DEO, SURVEYOR]
       effect: EFFECT_ALLOW
 
-    - actions: [update, submit]
+    - actions: [update, submit, upload_document]
       roles: [DEO, SURVEYOR]
       condition:
         match:
@@ -44,7 +46,3 @@ resourcePolicy:
         match:
           expr: request.resource.attr.status == "ACTIVE"
       effect: EFFECT_ALLOW
-
-    - actions: ['*']
-      roles: ['*']
-      effect: EFFECT_DENY

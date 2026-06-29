@@ -11,9 +11,10 @@ interface Props {
   form: UseFormReturn<Phase1Data>;
   onSubmit: (data: Phase1Data) => void;
   loading: boolean;
+  officialDistrictCode?: string;
 }
 
-export function Phase1HolderForm({ form, onSubmit, loading }: Props) {
+export function Phase1HolderForm({ form, onSubmit, loading, officialDistrictCode }: Props) {
   const {
     register,
     handleSubmit,
@@ -88,7 +89,11 @@ export function Phase1HolderForm({ form, onSubmit, loading }: Props) {
         </div>
         <div>
           <label className="text-sm font-medium">District *</label>
-          <input {...register('district')} className="w-full border rounded px-3 py-2 mt-1" />
+          <input
+            {...register('district')}
+            readOnly={!!officialDistrictCode}
+            className="w-full border rounded px-3 py-2 mt-1 read-only:bg-gray-50"
+          />
         </div>
       </div>
 

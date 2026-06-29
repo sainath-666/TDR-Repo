@@ -22,7 +22,3 @@ resourcePolicy:
     - actions: [verify]
       roles: ['*']
       effect: EFFECT_ALLOW
-
-    - actions: ['*']
-      roles: ['*']
-      effect: EFFECT_DENY

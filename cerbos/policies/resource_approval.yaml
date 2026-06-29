@@ -28,7 +28,3 @@ resourcePolicy:
     - actions: [view]
       roles: [COMMISSIONER, ADDL_COMMISSIONER]
       effect: EFFECT_ALLOW
-
-    - actions: ['*']
-      roles: ['*']
-      effect: EFFECT_DENY

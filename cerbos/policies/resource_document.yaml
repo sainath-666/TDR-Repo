@@ -28,7 +28,3 @@ resourcePolicy:
     - actions: [view, download]
       derivedRoles: [bond_owner_farmer]
       effect: EFFECT_ALLOW
-
-    - actions: ['*']
-      roles: ['*']
-      effect: EFFECT_DENY

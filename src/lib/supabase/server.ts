@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import type { CurrentUser, UserRole } from '@/types';
+import { isOfficialRole } from '@/types';
 import { prisma } from '@/lib/prisma';
 
 function getSupabaseUrl(): string {
@@ -95,6 +96,22 @@ export async function getCurrentUser(
   const role = meta.role as UserRole | undefined;
 
   if (role) {
+    if (isOfficialRole(role)) {
+      const official = await prisma.official.findUnique({
+        where: { id: user.id },
+        select: { districtCode: true, employeeId: true, isActive: true },
+      });
+      if (official?.isActive) {
+        return {
+          id: user.id,
+          role,
+          districtCode: meta.district_code ?? official.districtCode,
+          employeeId: meta.employee_id ?? official.employeeId,
+          farmerId: meta.farmer_id,
+        };
+      }
+    }
+
     return {
       id: user.id,
       role,

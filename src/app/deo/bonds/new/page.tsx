@@ -1,7 +1,11 @@
+import { cookies } from 'next/headers';
 import { BondEntryForm } from '@/components/bond-form/BondEntryForm';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { getCurrentUser } from '@/lib/supabase/client';
 
-export default function NewBondPage() {
+export default async function NewBondPage() {
+  const user = await getCurrentUser(cookies());
+
   return (
     <>
       <PageHeader
@@ -9,7 +13,7 @@ export default function NewBondPage() {
         description="Phase 1: Holder details · Phase 2: Land surrender · Phase 3: Documents"
       />
       <div className="max-w-4xl">
-        <BondEntryForm />
+        <BondEntryForm officialDistrictCode={user?.districtCode} />
       </div>
     </>
   );
