@@ -29,12 +29,19 @@
 @layer components {
   /* ── APCRDA TDR official portal chrome ── */
   .gov-header-brand {
-    @apply bg-white border-b border-slate-300;
+    @apply bg-white border-b border-slate-300 py-4 sm:py-5;
   }
 
   .gov-header-title {
-    font-family: Georgia, 'Times New Roman', Times, serif;
-    @apply text-black font-bold uppercase tracking-wide leading-snug;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--portal-maroon);
+    @apply font-bold uppercase tracking-wide leading-tight;
+  }
+
+  .gov-header-title-te {
+    font-family: Arial, 'Noto Sans Telugu', sans-serif;
+    color: var(--portal-maroon);
+    @apply font-bold leading-tight;
   }
 
   .gov-header-subtitle {
@@ -42,13 +49,13 @@
   }
 
   .gov-header-tdr {
-    color: var(--portal-red);
-    @apply font-semibold;
+    color: #dc2626;
+    @apply font-semibold leading-snug;
   }
 
   .gov-nav-bar {
     background-color: var(--portal-purple);
-    @apply shadow-sm;
+    @apply shadow-sm overflow-visible;
   }
 
   .gov-nav-link {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -79,11 +80,39 @@ function NavDropdown({
   active?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+    const rect = button.getBoundingClientRect();
+    setMenuStyle({
+      position: 'fixed',
+      top: rect.bottom,
+      left: rect.left,
+      minWidth: '210px',
+      zIndex: 9999,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    updateMenuPosition();
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+    };
+  }, [open, updateMenuPosition]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (buttonRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -111,30 +140,45 @@ function NavDropdown({
   }
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div className="relative shrink-0">
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (!open) updateMenuPosition();
+          setOpen((prev) => !prev);
+        }}
         className={cn('gov-nav-link', active && 'gov-nav-link-active')}
+        aria-expanded={open}
+        aria-haspopup="true"
       >
         <Icon className="h-4 w-4 shrink-0 opacity-90" />
         {label}
         <ChevronDown className={cn('h-3 w-3 opacity-80', open && 'rotate-180')} />
       </button>
-      {open && (
-        <div className="absolute top-full left-0 min-w-[210px] bg-white shadow-xl border border-slate-200 py-1 z-50">
-          {children.map((child) => (
-            <Link
-              key={child.href}
-              href={child.href}
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-[#f5f0f8] hover:text-[#7d007d]"
-            >
-              {child.label}
-            </Link>
-          ))}
-        </div>
-      )}
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={menuRef}
+            style={menuStyle}
+            className="rounded-sm border border-slate-200 bg-white py-1 shadow-xl"
+            role="menu"
+          >
+            {children.map((child) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-[#f5f0f8] hover:text-[#7d007d]"
+              >
+                {child.label}
+              </Link>
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -144,13 +188,13 @@ export function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="shadow-md">
+    <header className="relative z-50 shadow-md">
       {/* Official white brand band */}
       <div className="gov-header-brand">
-        <div className="max-w-[1140px] mx-auto px-3 sm:px-6 py-4">
-          <div className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-6 items-center">
+        <div className="max-w-[1280px] mx-auto px-3 sm:px-6">
+          <div className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-8 items-center">
             <div className="flex flex-col items-center gap-1.5">
-              <ApStateEmblem className="h-14 w-14 sm:h-[72px] sm:w-[72px]" />
+              <ApStateEmblem className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" />
               <select
                 defaultValue="en"
                 className="text-[11px] border border-slate-400 rounded-sm px-1.5 py-0.5 text-slate-700 bg-white min-w-[72px]"
@@ -161,29 +205,29 @@ export function PublicHeader() {
               </select>
             </div>
 
-            <div className="text-center min-w-0 px-1">
-              <p className="gov-header-title text-[10px] sm:text-sm md:text-base">
+            <div className="text-center min-w-0 px-1 sm:px-2">
+              <p className="gov-header-title text-[0.7rem] leading-tight sm:text-base md:text-xl lg:text-[1.65rem] xl:text-[2rem]">
                 Andhra Pradesh Capital Region Development Authority
               </p>
-              <p className="gov-header-title text-[9px] sm:text-xs md:text-sm mt-1 hidden sm:block font-normal">
+              <p className="gov-header-title-te mt-1 text-[0.65rem] sm:text-sm md:text-lg lg:text-[1.4rem] xl:text-[1.65rem]">
                 ఆంధ్ర ప్రదేశ్ రాజధాని ప్రాంత అభివృద్ధి ప్రాధికార సంస్థ
               </p>
-              <p className="gov-header-tdr text-xs sm:text-sm mt-1.5">
+              <p className="gov-header-tdr mt-1.5 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl">
                 Transferable Development Rights-TDR
               </p>
             </div>
 
             <div className="flex justify-end">
-              <AmaravatiLogo className="h-14 sm:h-[72px] w-auto" />
+              <AmaravatiLogo className="h-16 w-auto sm:h-20 md:h-24" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Purple navigation — full width, official style */}
-      <div className="gov-nav-bar">
-        <div className="max-w-[1140px] mx-auto px-2 flex items-center h-12">
-          <nav className="hidden md:flex items-center justify-center flex-1 overflow-x-auto scrollbar-none">
+      <div className="gov-nav-bar overflow-visible">
+        <div className="max-w-[1140px] mx-auto flex h-12 items-center overflow-visible px-2">
+          <nav className="hidden md:flex flex-1 flex-wrap items-center justify-center overflow-visible">
             {NAV_ITEMS.map((item) => {
               if ('children' in item && item.children) {
                 const dropdownActive = isDropdownActive(
