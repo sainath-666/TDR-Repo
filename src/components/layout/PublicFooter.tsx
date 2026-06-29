@@ -39,7 +39,7 @@ export function PublicFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/verify/TDR-2025-003" className="hover:text-white transition-colors">
+                <Link href="/verify" className="hover:text-white transition-colors">
                   Verify Certificate
                 </Link>
               </li>

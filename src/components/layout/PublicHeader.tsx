@@ -7,7 +7,7 @@ import { Landmark, Menu, X, UserCircle, Wheat, FileEdit, ShieldCheck, Home } fro
 import { cn } from '@/lib/utils';
 
 const UTILITY_LINKS = [
-  { href: '/verify/TDR-2025-003', label: 'Verify Certificate' },
+  { href: '/verify', label: 'Verify Certificate' },
   { href: '#services', label: 'Services' },
   { href: '#contact', label: 'Contact' },
 ] as const;
@@ -69,10 +69,7 @@ export function PublicHeader({ showLogins = true }: PublicHeaderProps) {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/verify/TDR-2025-003"
-                className="text-slate-300 hover:text-white sm:hidden"
-              >
+              <Link href="/verify" className="text-slate-300 hover:text-white sm:hidden">
                 Verify
               </Link>
             </div>

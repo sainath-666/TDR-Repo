@@ -16,24 +16,61 @@ function chainHash(prev: string, payload: object): string {
     .digest('hex');
 }
 
+async function clearSeedData() {
+  await prisma.auditLog.deleteMany();
+  await prisma.approvalStep.deleteMany();
+  await prisma.bondDocument.deleteMany();
+  await prisma.bondHolder.deleteMany();
+  await prisma.bondLandDetail.deleteMany();
+  await prisma.tdrBond.deleteMany();
+  await prisma.farmer.deleteMany();
+  await prisma.official.deleteMany();
+  await prisma.village.deleteMany();
+}
+
 async function main() {
+  console.log('Clearing existing seed data...');
+  await clearSeedData();
+
   const officialIds = {
     deo: '11111111-1111-1111-1111-111111111101',
     tah: '11111111-1111-1111-1111-111111111102',
     sdc: '11111111-1111-1111-1111-111111111103',
     dir: '11111111-1111-1111-1111-111111111104',
     com: '11111111-1111-1111-1111-111111111105',
+    sur: '11111111-1111-1111-1111-111111111106',
   };
 
   const farmerIds = {
     f1: '22222222-2222-2222-2222-222222222201',
     f2: '22222222-2222-2222-2222-222222222202',
     f3: '22222222-2222-2222-2222-222222222203',
+    f4: '22222222-2222-2222-2222-222222222204',
   };
 
   const aadhaarHash = createHash('sha256').update('999999999999').digest('hex');
 
+  const villages = [
+    { gisCode: 'KR-KAN-001', villageName: 'Kanuru', mandal: 'Penamaluru', district: 'KRISHNA' },
+    {
+      gisCode: 'KR-UDA-002',
+      villageName: 'Udandarayunipaalem',
+      mandal: 'Penamaluru',
+      district: 'KRISHNA',
+    },
+    { gisCode: 'KR-NEE-003', villageName: 'Neerukonda', mandal: 'Thullur', district: 'KRISHNA' },
+    {
+      gisCode: 'KR-MAN-004',
+      villageName: 'Mangalagiri',
+      mandal: 'Mangalagiri',
+      district: 'KRISHNA',
+    },
+    { gisCode: 'KR-TUL-005', villageName: 'Tullur', mandal: 'Tullur', district: 'KRISHNA' },
+  ];
+
   await prisma.$transaction(async (tx) => {
+    await tx.village.createMany({ data: villages });
+
     const officials = await Promise.all([
       tx.official.create({
         data: {
@@ -85,6 +122,16 @@ async function main() {
           phone: '9000000005',
         },
       }),
+      tx.official.create({
+        data: {
+          id: officialIds.sur,
+          employeeId: 'SUR001',
+          name: 'Sri N. Kumar',
+          role: OfficialRole.SURVEYOR,
+          districtCode: 'KRISHNA',
+          phone: '9000000006',
+        },
+      }),
     ]);
 
     const farmers = await Promise.all([
@@ -94,6 +141,7 @@ async function main() {
           name: 'Sri Venkata Rao',
           aadhaarHash,
           aadhaarPhone: '9999999999',
+          kycVerified: true,
         },
       }),
       tx.farmer.create({
@@ -102,6 +150,7 @@ async function main() {
           name: 'Sri Rama Devi',
           aadhaarHash,
           aadhaarPhone: '9999999998',
+          kycVerified: true,
         },
       }),
       tx.farmer.create({
@@ -110,11 +159,28 @@ async function main() {
           name: 'Sri Krishna Murthy',
           aadhaarHash,
           aadhaarPhone: '9999999997',
+          kycVerified: true,
+        },
+      }),
+      tx.farmer.create({
+        data: {
+          id: farmerIds.f4,
+          name: 'Smt. Lakshmi Devi',
+          aadhaarHash,
+          aadhaarPhone: '9999999996',
+          kycVerified: false,
         },
       }),
     ]);
 
-    console.log('Created officials:', officials.length, 'farmers:', farmers.length);
+    console.log(
+      'Created officials:',
+      officials.length,
+      'farmers:',
+      farmers.length,
+      'villages:',
+      villages.length,
+    );
 
     const approvalStepsTemplate = [
       { level: 1, role: OfficialRole.DY_TAHSILDAR },
@@ -123,27 +189,27 @@ async function main() {
       { level: 4, role: OfficialRole.COMMISSIONER },
     ];
 
+    const holderBase = (name: string, phone: string, village: string, mandal: string) => ({
+      name,
+      relationType: RelationType.S_O,
+      relationName: 'Rama Rao',
+      aadhaarHash,
+      aadhaarEncrypted: 'ENCRYPTED_PLACEHOLDER',
+      aadhaarPhone: phone,
+      doorNo: '12-34',
+      street: 'Main Road',
+      village,
+      mandal,
+      district: 'KRISHNA',
+    });
+
     const bondA = await tx.tdrBond.create({
       data: {
         tdrNumber: 'TDR-2025-001',
         status: BondStatus.DRAFT,
         farmerId: farmerIds.f1,
         createdBy: officialIds.deo,
-        holder: {
-          create: {
-            name: 'Sri Venkata Rao',
-            relationType: RelationType.S_O,
-            relationName: 'Rama Rao',
-            aadhaarHash,
-            aadhaarEncrypted: 'ENCRYPTED_PLACEHOLDER',
-            aadhaarPhone: '9999999999',
-            doorNo: '12-34',
-            street: 'Main Road',
-            village: 'Kanuru',
-            mandal: 'Penamaluru',
-            district: 'KRISHNA',
-          },
-        },
+        holder: { create: holderBase('Sri Venkata Rao', '9999999999', 'Kanuru', 'Penamaluru') },
         approvalSteps: {
           create: approvalStepsTemplate.map((s) => ({
             level: s.level,
@@ -162,17 +228,11 @@ async function main() {
         createdBy: officialIds.deo,
         holder: {
           create: {
-            name: 'Sri Rama Devi',
+            ...holderBase('Sri Rama Devi', '9999999998', 'Udandarayunipaalem', 'Penamaluru'),
             relationType: RelationType.W_O,
             relationName: 'Venkateswara Rao',
-            aadhaarHash,
-            aadhaarEncrypted: 'ENCRYPTED_PLACEHOLDER',
-            aadhaarPhone: '9999999998',
             doorNo: '5-67',
             street: 'Canal Road',
-            village: 'Udandarayunipaalem',
-            mandal: 'Penamaluru',
-            district: 'KRISHNA',
           },
         },
         landDetails: {
@@ -229,17 +289,9 @@ async function main() {
         mintedAt: new Date(Date.now() - 2 * 86400000),
         holder: {
           create: {
-            name: 'Sri Krishna Murthy',
-            relationType: RelationType.S_O,
-            relationName: 'Subba Rao',
-            aadhaarHash,
-            aadhaarEncrypted: 'ENCRYPTED_PLACEHOLDER',
-            aadhaarPhone: '9999999997',
+            ...holderBase('Sri Krishna Murthy', '9999999997', 'Neerukonda', 'Thullur'),
             doorNo: '8-12',
             street: 'Temple Street',
-            village: 'Neerukonda',
-            mandal: 'Thullur',
-            district: 'KRISHNA',
           },
         },
         landDetails: {
@@ -271,21 +323,7 @@ async function main() {
         farmerId: farmerIds.f1,
         createdBy: officialIds.deo,
         rejectionReason: 'Documents incomplete - ownership deed not legible',
-        holder: {
-          create: {
-            name: 'Sri Venkata Rao',
-            relationType: RelationType.S_O,
-            relationName: 'Rama Rao',
-            aadhaarHash,
-            aadhaarEncrypted: 'ENCRYPTED_PLACEHOLDER',
-            aadhaarPhone: '9999999999',
-            doorNo: '12-34',
-            street: 'Main Road',
-            village: 'Kanuru',
-            mandal: 'Penamaluru',
-            district: 'KRISHNA',
-          },
-        },
+        holder: { create: holderBase('Sri Venkata Rao', '9999999999', 'Kanuru', 'Penamaluru') },
         approvalSteps: {
           create: [
             {
@@ -304,7 +342,142 @@ async function main() {
       },
     });
 
-    const bonds = [bondA, bondB, bondC, bondD];
+    const bondE = await tx.tdrBond.create({
+      data: {
+        tdrNumber: 'TDR-2025-005',
+        status: BondStatus.PENDING_L1,
+        farmerId: farmerIds.f4,
+        createdBy: officialIds.deo,
+        holder: {
+          create: {
+            ...holderBase('Smt. Lakshmi Devi', '9999999996', 'Mangalagiri', 'Mangalagiri'),
+            relationType: RelationType.W_O,
+            relationName: 'Srinivas Rao',
+            doorNo: '3-21',
+            street: 'Guntur Road',
+          },
+        },
+        landDetails: {
+          create: {
+            surrenderedVillage: 'Mangalagiri',
+            surveyNumber: '88/1B',
+            surrenderedAreaSqYds: 770,
+            tdrIssuedExtentSqYds: 1155,
+            issuedRatio: '1.5:1',
+          },
+        },
+        approvalSteps: {
+          create: approvalStepsTemplate.map((s) => ({
+            level: s.level,
+            role: s.role,
+            decision: ApprovalDecision.PENDING,
+          })),
+        },
+      },
+    });
+
+    const bondF = await tx.tdrBond.create({
+      data: {
+        tdrNumber: 'TDR-2025-006',
+        status: BondStatus.PENDING_L3,
+        farmerId: farmerIds.f2,
+        createdBy: officialIds.deo,
+        holder: {
+          create: {
+            ...holderBase('Sri Rama Devi', '9999999998', 'Tullur', 'Tullur'),
+            doorNo: '7-15',
+            street: 'Ring Road',
+          },
+        },
+        landDetails: {
+          create: {
+            surrenderedVillage: 'Tullur',
+            surveyNumber: '201/4',
+            surrenderedAreaSqYds: 500,
+            tdrIssuedExtentSqYds: 500,
+            issuedRatio: '1:1',
+          },
+        },
+        approvalSteps: {
+          create: [
+            {
+              level: 1,
+              role: OfficialRole.DY_TAHSILDAR,
+              decision: ApprovalDecision.APPROVED,
+              officialId: officialIds.tah,
+              signatureHash: 'test-hash-l1',
+              decidedAt: new Date(Date.now() - 5 * 86400000),
+            },
+            {
+              level: 2,
+              role: OfficialRole.SDC,
+              decision: ApprovalDecision.APPROVED,
+              officialId: officialIds.sdc,
+              signatureHash: 'test-hash-l2',
+              decidedAt: new Date(Date.now() - 3 * 86400000),
+            },
+            { level: 3, role: OfficialRole.DIRECTOR_LANDS, decision: ApprovalDecision.PENDING },
+            { level: 4, role: OfficialRole.COMMISSIONER, decision: ApprovalDecision.PENDING },
+          ],
+        },
+      },
+    });
+
+    const bondG = await tx.tdrBond.create({
+      data: {
+        tdrNumber: 'TDR-2025-007',
+        status: BondStatus.PENDING_L4,
+        farmerId: farmerIds.f3,
+        createdBy: officialIds.deo,
+        holder: {
+          create: {
+            ...holderBase('Sri Krishna Murthy', '9999999997', 'Kanuru', 'Penamaluru'),
+            doorNo: '15-8',
+            street: 'School Street',
+          },
+        },
+        landDetails: {
+          create: {
+            surrenderedVillage: 'Kanuru',
+            surveyNumber: '55/3',
+            surrenderedAreaSqYds: 1200,
+            tdrIssuedExtentSqYds: 1800,
+            issuedRatio: '1.5:1',
+          },
+        },
+        approvalSteps: {
+          create: [
+            {
+              level: 1,
+              role: OfficialRole.DY_TAHSILDAR,
+              decision: ApprovalDecision.APPROVED,
+              officialId: officialIds.tah,
+              signatureHash: 'test-hash-l1',
+              decidedAt: new Date(Date.now() - 10 * 86400000),
+            },
+            {
+              level: 2,
+              role: OfficialRole.SDC,
+              decision: ApprovalDecision.APPROVED,
+              officialId: officialIds.sdc,
+              signatureHash: 'test-hash-l2',
+              decidedAt: new Date(Date.now() - 7 * 86400000),
+            },
+            {
+              level: 3,
+              role: OfficialRole.DIRECTOR_LANDS,
+              decision: ApprovalDecision.APPROVED,
+              officialId: officialIds.dir,
+              signatureHash: 'test-hash-l3',
+              decidedAt: new Date(Date.now() - 2 * 86400000),
+            },
+            { level: 4, role: OfficialRole.COMMISSIONER, decision: ApprovalDecision.PENDING },
+          ],
+        },
+      },
+    });
+
+    const bonds = [bondA, bondB, bondC, bondD, bondE, bondF, bondG];
     let prevHash = GENESIS_HASH;
 
     for (const bond of bonds) {
@@ -326,6 +499,8 @@ async function main() {
       console.log(`Created bond ${bond.tdrNumber} (${bond.status})`);
     }
   });
+
+  console.log('Seed complete. Run: npm run auth:sync');
 }
 
 main()

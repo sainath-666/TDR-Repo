@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Shield, Eye, EyeOff, Mail, Lock } from 'lucide-react';
@@ -8,10 +8,11 @@ import { Shield, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 const SSO_ENABLED = process.env.NEXT_PUBLIC_OFFICIAL_SSO_ENABLED === 'true';
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
-const DEV_HINT = {
-  email: 'deo001@dev.apcrda.local',
-  password: 'DevPassword123!',
-};
+interface DevOfficial {
+  email: string;
+  name: string;
+  role: string;
+}
 
 export default function OfficialLoginClient() {
   const router = useRouter();
@@ -21,9 +22,24 @@ export default function OfficialLoginClient() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [devOfficials, setDevOfficials] = useState<DevOfficial[]>([]);
+  const [devPassword, setDevPassword] = useState('');
 
   const urlError = searchParams.get('error');
   const reason = searchParams.get('reason');
+
+  useEffect(() => {
+    if (!IS_DEV) return;
+    fetch('/api/dev/officials')
+      .then((res) => res.json())
+      .then((data: { success: boolean; data?: DevOfficial[]; devPassword?: string }) => {
+        if (data.success && data.data) {
+          setDevOfficials(data.data);
+          if (data.devPassword) setDevPassword(data.devPassword);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -153,20 +169,27 @@ export default function OfficialLoginClient() {
             </button>
           </form>
 
-          {IS_DEV && (
+          {IS_DEV && devOfficials.length > 0 && (
             <div className="mt-6 rounded-xl bg-slate-50 border border-slate-200 p-4 text-xs text-slate-600">
-              <p className="font-semibold text-apcrda-primary mb-2">Dev test credentials</p>
+              <p className="font-semibold text-apcrda-primary mb-2">
+                Dev test accounts (from database)
+              </p>
               <p>
-                Run <code className="bg-white px-1 rounded border">npm run auth:sync</code> first,
-                then use:
+                Run <code className="bg-white px-1 rounded border">npm run auth:sync</code> first.
+                {devPassword && (
+                  <>
+                    {' '}
+                    Password: <span className="font-mono">{devPassword}</span>
+                  </>
+                )}
               </p>
               <ul className="mt-2 space-y-1 font-mono text-[11px]">
-                <li>Email: {DEV_HINT.email}</li>
-                <li>Password: {DEV_HINT.password}</li>
+                {devOfficials.map((o) => (
+                  <li key={o.email}>
+                    {o.email} — {o.name} ({o.role})
+                  </li>
+                ))}
               </ul>
-              <p className="mt-2 text-slate-500">
-                Other officials: tah001@, sdc001@, dir001@, com001@dev.apcrda.local
-              </p>
             </div>
           )}
 

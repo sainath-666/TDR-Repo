@@ -12,6 +12,8 @@ import {
   Users,
 } from 'lucide-react';
 import { PublicPageLayout } from '@/components/layout/PublicPageLayout';
+import { Badge } from '@/components/ui/Badge';
+import { getPortalStats, getRecentPublicBonds } from '@/lib/portal-stats';
 
 const SERVICES = [
   {
@@ -42,7 +44,7 @@ const SERVICES = [
     iconBg: 'bg-emerald-50 text-emerald-700',
   },
   {
-    href: '/verify/TDR-2025-003',
+    href: '/verify',
     title: 'Certificate Verification',
     description: 'Public verification of TDR bond authenticity',
     icon: Search,
@@ -59,14 +61,16 @@ const STEPS = [
   { step: '04', title: 'Certificate', desc: 'Digital TDR certificate issued to farmer' },
 ] as const;
 
-const STATS = [
-  { label: 'Approval Levels', value: '5' },
-  { label: 'Area Unit', value: 'Sq Yds' },
-  { label: 'Audit Trail', value: '3-Layer' },
-  { label: 'Legal Basis', value: 'G.O.207' },
-] as const;
+export default async function HomePage() {
+  const [stats, recentBonds] = await Promise.all([getPortalStats(), getRecentPublicBonds(6)]);
 
-export default function HomePage() {
+  const heroStats = [
+    { label: 'Total Bonds', value: String(stats.totalBonds) },
+    { label: 'Active Certificates', value: String(stats.activeBonds) },
+    { label: 'In Approval', value: String(stats.pendingBonds) },
+    { label: 'Registered Farmers', value: String(stats.registeredFarmers) },
+  ];
+
   return (
     <PublicPageLayout>
       {/* Hero */}
@@ -113,9 +117,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Stats bar */}
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-            {STATS.map((stat) => (
+            {heroStats.map((stat) => (
               <div
                 key={stat.label}
                 className="rounded-xl bg-white/10 backdrop-blur-sm ring-1 ring-white/20 px-4 py-4 text-center"
@@ -165,8 +168,61 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Recent bonds from database */}
+      {recentBonds.length > 0 && (
+        <section className="bg-white border-y border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold text-apcrda-primary">
+                  Recent Bond Activity
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">Live data from the TDR registry</p>
+              </div>
+              <Link
+                href="/verify"
+                className="text-sm font-semibold text-apcrda-primary hover:underline hidden sm:inline"
+              >
+                Verify certificate →
+              </Link>
+            </div>
+            <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-card">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-left text-xs uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">TDR Number</th>
+                    <th className="px-4 py-3 font-semibold">Holder</th>
+                    <th className="px-4 py-3 font-semibold">Village</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {recentBonds.map((bond) => (
+                    <tr key={bond.tdrNumber} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/verify/${bond.tdrNumber}`}
+                          className="font-semibold text-apcrda-primary hover:underline"
+                        >
+                          {bond.tdrNumber}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{bond.holderName ?? '—'}</td>
+                      <td className="px-4 py-3 text-slate-500">{bond.village ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <Badge status={bond.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* How it works */}
-      <section id="about" className="bg-white border-y border-slate-200">
+      <section id="about" className="bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 md:py-20">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold text-apcrda-primary">How It Works</h2>
