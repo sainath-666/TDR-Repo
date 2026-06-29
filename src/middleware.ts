@@ -3,7 +3,14 @@ import { createServerClient } from '@supabase/ssr';
 import type { UserRole } from '@/types';
 import { isOfficialRole } from '@/types';
 
-const PUBLIC_ROUTES = ['/farmer-login', '/official-login', '/verify', '/api/auth', '/api/health'];
+const PUBLIC_ROUTES = [
+  '/farmer-login',
+  '/official-login',
+  '/verify',
+  '/auth/callback',
+  '/api/auth',
+  '/api/health',
+];
 
 function isPublicApiRoute(pathname: string): boolean {
   if (pathname.match(/^\/api\/certificates\/[^/]+\/verify$/)) return true;
