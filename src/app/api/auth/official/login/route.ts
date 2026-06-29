@@ -6,9 +6,10 @@ import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
 import { isOfficialRole, type UserRole } from '@/types';
+import { getOfficialDashboardPath } from '@/lib/approval-levels';
 
 function getRedirectForRole(role: UserRole): string {
-  return role === 'DEO' || role === 'SURVEYOR' ? '/deo/dashboard' : '/official/queue';
+  return getOfficialDashboardPath(role);
 }
 
 async function parseLoginBody(req: NextRequest): Promise<{ email: string; password: string }> {

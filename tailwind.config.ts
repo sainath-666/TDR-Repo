@@ -8,6 +8,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+        telugu: ['var(--font-telugu)', 'Noto Sans Telugu', 'system-ui', 'sans-serif'],
+      },
       colors: {
         apcrda: {
           primary: '#1e3a5f',
@@ -26,21 +30,23 @@ const config: Config = {
         },
         'apcrda-portal': {
           purple: '#7D007D',
-          'purple-dark': '#662D91',
-          maroon: '#7a1f3d',
+          'purple-dark': '#5a005a',
+          'purple-light': '#962d96',
+          maroon: '#5c1a2e',
           red: '#c0392b',
           blue: '#1a6fb5',
           light: '#f5f0f8',
         },
       },
       boxShadow: {
-        card: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
-        'card-hover': '0 10px 25px -5px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.04)',
-        sidebar: '4px 0 24px -4px rgb(0 0 0 / 0.12)',
+        card: '0 1px 3px 0 rgb(15 23 42 / 0.04), 0 1px 2px -1px rgb(15 23 42 / 0.04)',
+        'card-hover': '0 12px 28px -8px rgb(15 23 42 / 0.12), 0 4px 8px -4px rgb(15 23 42 / 0.06)',
+        sidebar: '4px 0 24px -4px rgb(15 23 42 / 0.18)',
+        header: '0 1px 3px 0 rgb(15 23 42 / 0.06)',
       },
       animation: {
         'fade-in': 'fadeIn 0.4s ease-out',
-        'slide-up': 'slideUp 0.4s ease-out',
+        'slide-up': 'slideUp 0.45s ease-out',
         'pulse-soft': 'pulseSoft 2s ease-in-out infinite',
       },
       keyframes: {
@@ -49,7 +55,7 @@ const config: Config = {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         pulseSoft: {

@@ -18,25 +18,25 @@ export function PageHeader({
   return (
     <div
       className={cn(
-        'mb-6 md:mb-8 animate-fade-in rounded-2xl bg-white border border-slate-200 shadow-card p-5 md:p-6',
+        'mb-6 animate-fade-in rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card ring-1 ring-slate-100/80 md:mb-8 md:p-6',
         className,
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           {breadcrumb && (
-            <p className="text-xs font-medium text-apcrda-secondary uppercase tracking-wider mb-1">
+            <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-apcrda-secondary">
               {breadcrumb}
             </p>
           )}
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-apcrda-primary">
+          <h1 className="text-xl font-bold tracking-tight text-apcrda-primary md:text-2xl">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm text-slate-500 leading-relaxed">{description}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{description}</p>
           )}
         </div>
-        {children && <div className="flex items-center gap-3 shrink-0">{children}</div>}
+        {children && <div className="flex shrink-0 items-center gap-3">{children}</div>}
       </div>
     </div>
   );

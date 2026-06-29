@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   '/calculator',
   '/status',
   '/application',
+  '/api/portal',
   '/auth/callback',
   '/api/auth',
   '/api/health',

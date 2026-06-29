@@ -6,7 +6,7 @@ import { formatRole } from '@/lib/role-labels';
 import type { OfficialDashboardData } from '@/lib/queries/official-dashboard';
 import { OfficialDashboardView } from '@/components/dashboard/OfficialDashboardView';
 
-export default async function DeoDashboardPage() {
+export default async function OfficialDashboardPage() {
   const user = await getCurrentUser(cookies());
   if (!user) redirect('/official-login');
 
@@ -19,5 +19,5 @@ export default async function DeoDashboardPage() {
     headers: { cookie: cookieHeader },
   });
 
-  return <OfficialDashboardView data={data} portal="deo" roleLabel={formatRole(user.role)} />;
+  return <OfficialDashboardView data={data} portal="official" roleLabel={formatRole(user.role)} />;
 }

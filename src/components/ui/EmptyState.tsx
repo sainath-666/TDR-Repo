@@ -21,13 +21,13 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={cn('flex flex-col items-center justify-center py-16 px-6 text-center', className)}
+      className={cn('flex flex-col items-center justify-center px-6 py-16 text-center', className)}
     >
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-4">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 ring-1 ring-slate-200/80">
         <Icon className="h-8 w-8" strokeWidth={1.5} />
       </div>
-      <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
-      <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>
+      <h3 className="text-lg font-semibold tracking-tight text-slate-800">{title}</h3>
+      <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-slate-500">{description}</p>
       {actionLabel && actionHref && (
         <Button href={actionHref} className="mt-6">
           {actionLabel}

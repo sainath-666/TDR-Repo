@@ -84,41 +84,35 @@ export default function FarmerLoginClient() {
         <p className="text-sm text-slate-500 mt-1">Track TDR bonds &amp; download certificates</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden">
-        <div className="h-1 gradient-gold" />
+      <div className="auth-card">
+        <div className="auth-card-accent" />
 
         <div className="p-6 md:p-8">
           {reason === 'idle' && (
-            <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-lg">
-              Session expired. Please login again.
-            </p>
+            <p className="alert-banner-warning">Session expired. Please login again.</p>
           )}
 
           {(error || urlError) && (
-            <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-100 p-3 rounded-lg">
-              {error || decodeURIComponent(urlError!)}
-            </p>
+            <p className="alert-banner-error">{error || decodeURIComponent(urlError!)}</p>
           )}
 
           {step === 'phone' ? (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  Aadhaar-linked Mobile Number
-                </label>
+                <label className="field-label">Aadhaar-linked Mobile Number</label>
                 <input
                   type="tel"
                   maxLength={10}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-apcrda-accent/25 focus:border-apcrda-accent"
+                  className="input-field input-field-accent"
                   placeholder="10-digit mobile number"
                 />
               </div>
               <button
                 onClick={requestOtp}
                 disabled={phone.length !== 10 || loading}
-                className="w-full bg-apcrda-accent text-white py-3 rounded-xl font-semibold disabled:opacity-50 hover:bg-apcrda-accent-light transition-colors"
+                className="btn-submit btn-submit-accent"
               >
                 {loading ? 'Sending OTP...' : 'Send OTP'}
               </button>
@@ -126,22 +120,20 @@ export default function FarmerLoginClient() {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                  OTP sent to +91 {phone}
-                </label>
+                <label className="field-label">OTP sent to +91 {phone}</label>
                 <input
                   type="text"
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-center text-xl tracking-[0.3em] font-mono focus:outline-none focus:ring-2 focus:ring-apcrda-accent/25 focus:border-apcrda-accent"
+                  className="input-field input-field-accent text-center font-mono text-xl tracking-[0.3em]"
                   placeholder="000000"
                 />
               </div>
               <button
                 onClick={verifyOtp}
                 disabled={otp.length !== 6 || loading}
-                className="w-full bg-apcrda-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50 hover:bg-apcrda-primary-light transition-colors"
+                className="btn-submit btn-submit-primary"
               >
                 {loading ? 'Verifying...' : 'Verify & Login'}
               </button>

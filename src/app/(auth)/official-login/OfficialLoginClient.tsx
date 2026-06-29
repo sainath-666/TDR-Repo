@@ -66,7 +66,7 @@ export default function OfficialLoginClient() {
         throw new Error(data.error ?? 'Login failed');
       }
 
-      router.push(data.data?.redirectTo ?? '/official/queue');
+      router.push(data.data?.redirectTo ?? '/official/dashboard');
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
@@ -85,35 +85,33 @@ export default function OfficialLoginClient() {
         <p className="text-sm text-slate-500 mt-1">Sign in with your APCRDA email and password</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden">
-        <div className="h-1 gradient-gold" />
+      <div className="auth-card">
+        <div className="auth-card-accent" />
 
         <div className="p-6 md:p-8">
           {reason === 'idle' && (
-            <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-lg">
+            <p className="alert-banner-warning">
               Session expired due to inactivity. Please sign in again.
             </p>
           )}
 
           {reason === 'unauthorized' && (
-            <p className="mb-4 text-sm text-amber-700 bg-amber-50 border border-amber-100 p-3 rounded-lg">
+            <p className="alert-banner-warning">
               You do not have access to that portal. Sign in with an official account.
             </p>
           )}
 
           {(error || urlError) && (
-            <p className="mb-4 text-sm text-red-700 bg-red-50 border border-red-100 p-3 rounded-lg">
-              {error || decodeURIComponent(urlError!)}
-            </p>
+            <p className="alert-banner-error">{error || decodeURIComponent(urlError!)}</p>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              <label htmlFor="email" className="field-label">
                 Email / Username
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="email"
                   name="email"
@@ -122,21 +120,18 @@ export default function OfficialLoginClient() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apcrda-primary/25 focus:border-apcrda-primary"
+                  className="input-field input-field-with-icon"
                   placeholder="official@apcrda.ap.gov.in"
                 />
               </div>
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
-              >
+              <label htmlFor="password" className="field-label">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="password"
                   name="password"
@@ -146,7 +141,7 @@ export default function OfficialLoginClient() {
                   minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl pl-10 pr-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apcrda-primary/25 focus:border-apcrda-primary"
+                  className="input-field input-field-with-icon pr-11"
                   placeholder="Enter your password"
                 />
                 <button
@@ -163,7 +158,7 @@ export default function OfficialLoginClient() {
             <button
               type="submit"
               disabled={loading || !email || password.length < 8}
-              className="w-full bg-apcrda-primary text-white py-3 rounded-xl font-semibold disabled:opacity-50 hover:bg-apcrda-primary-light transition-colors shadow-sm"
+              className="btn-submit btn-submit-primary"
             >
               {loading ? 'Signing in...' : 'Sign In'}
             </button>

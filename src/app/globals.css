@@ -3,20 +3,45 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #1a1a1a;
-  --background: #ffffff;
+  /* Internal portal brand */
+  --brand-navy: #1e3a5f;
+  --brand-navy-light: #2d5a8e;
+  --brand-navy-dark: #0f2744;
+  --brand-gold: #c9a227;
+  --brand-gold-light: #e8c547;
+  --brand-green: #2d6a4f;
+  --brand-green-light: #40916c;
+
+  /* Public APCRDA portal chrome */
   --portal-purple: #7d007d;
-  --portal-purple-dark: #662d91;
-  --portal-blue: #2e75b5;
-  --portal-red: #b91c1c;
+  --portal-purple-dark: #5a005a;
+  --portal-purple-light: #962d96;
   --portal-maroon: #5c1a2e;
+  --portal-blue: #1a6fb5;
+  --portal-red: #c0392b;
+
+  /* Neutrals */
+  --foreground: #0f172a;
+  --muted-foreground: #64748b;
+  --background: #ffffff;
+  --surface: #f1f5f9;
+  --surface-elevated: #ffffff;
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+
+  /* Legacy aliases */
+  --portal-purple-dark-legacy: #662d91;
 }
 
 @layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
   body {
+    @apply font-sans antialiased;
     color: var(--foreground);
     background: var(--background);
-    font-family: Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -24,93 +49,156 @@
   * {
     @apply border-slate-200;
   }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight text-slate-900;
+  }
+
+  ::selection {
+    background-color: color-mix(in srgb, var(--brand-navy) 18%, transparent);
+  }
 }
 
 @layer components {
   /* ── APCRDA TDR official portal chrome ── */
   .gov-header-brand {
-    @apply bg-white border-b border-slate-300 py-4 sm:py-5;
+    @apply border-b border-slate-200/80 bg-white py-4 shadow-sm sm:py-5;
   }
 
   .gov-header-title {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: var(--font-inter), system-ui, sans-serif;
     color: var(--portal-maroon);
-    @apply font-bold uppercase tracking-wide leading-tight;
+    @apply text-lg font-bold uppercase leading-tight tracking-wide sm:text-xl md:text-2xl;
   }
 
   .gov-header-title-te {
-    font-family: Arial, 'Noto Sans Telugu', sans-serif;
+    font-family: var(--font-telugu), 'Noto Sans Telugu', system-ui, sans-serif;
     color: var(--portal-maroon);
-    @apply font-bold leading-tight;
+    @apply text-base font-bold leading-tight sm:text-lg md:text-xl;
   }
 
   .gov-header-subtitle {
-    @apply text-black font-semibold;
+    @apply font-semibold text-slate-800;
   }
 
   .gov-header-tdr {
-    color: #dc2626;
-    @apply font-semibold leading-snug;
+    color: var(--portal-red);
+    @apply text-sm font-semibold leading-snug sm:text-base;
   }
 
   .gov-nav-bar {
-    background-color: var(--portal-purple);
-    @apply shadow-sm overflow-visible;
+    background: linear-gradient(180deg, var(--portal-purple) 0%, var(--portal-purple-dark) 100%);
+    @apply overflow-visible shadow-md;
   }
 
   .gov-nav-link {
-    @apply flex items-center gap-1.5 px-2 md:px-3 py-3 text-[10px] md:text-[11px] font-bold text-white uppercase tracking-wide whitespace-nowrap transition-colors;
+    @apply flex items-center gap-1.5 whitespace-nowrap px-2 py-3 text-[10px] font-semibold uppercase tracking-wide text-white transition-colors md:px-3 md:text-[11px];
   }
 
   .gov-nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.14);
   }
 
   .gov-nav-link-active {
-    background-color: rgba(255, 255, 255, 0.18);
+    background-color: rgba(255, 255, 255, 0.22);
+    box-shadow: inset 0 -2px 0 rgba(255, 255, 255, 0.5);
   }
 
   .gov-footer {
-    background-color: var(--portal-purple-dark);
+    background: linear-gradient(180deg, var(--portal-purple-dark) 0%, #3d003d 100%);
     @apply text-white;
   }
 
   .portal-section-title {
     color: var(--portal-blue);
-    @apply text-2xl font-semibold text-center mb-2 tracking-tight;
+    @apply mb-2 text-center text-2xl font-bold tracking-tight sm:text-3xl;
   }
 
   .portal-section-accent {
-    @apply mx-auto mb-8 h-1 w-14 rounded-full;
-    background-color: var(--portal-purple);
+    @apply mx-auto mb-8 h-1 w-16 rounded-full;
+    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold));
   }
 
   .portal-section {
-    @apply bg-white border-t border-slate-100;
+    @apply border-t border-slate-100 bg-white;
   }
 
   .portal-section-muted {
-    @apply bg-slate-50 border-t border-slate-100;
+    @apply border-t border-slate-100 bg-slate-50/80;
   }
 
   .portal-content-block {
-    @apply max-w-[960px] mx-auto px-6 sm:px-8 py-12 sm:py-14 text-base text-slate-700 leading-relaxed;
+    @apply mx-auto max-w-[960px] px-6 py-12 text-base leading-relaxed text-slate-700 sm:px-8 sm:py-14;
   }
 
   .portal-content {
-    @apply flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-slate-100;
+    @apply flex-1 overflow-y-auto bg-gradient-to-b from-slate-100 to-slate-50/80 p-4 md:p-6 lg:p-8;
   }
 
+  /* ── Forms & auth ── */
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-700;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition-all placeholder:text-slate-400;
+    @apply focus:border-apcrda-primary focus:outline-none focus:ring-2 focus:ring-apcrda-primary/20;
+  }
+
+  .input-field-accent {
+    @apply focus:border-apcrda-accent focus:ring-apcrda-accent/20;
+  }
+
+  .input-field-with-icon {
+    @apply pl-10;
+  }
+
+  .auth-card {
+    @apply overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-card;
+  }
+
+  .auth-card-accent {
+    @apply h-1 w-full;
+    background: linear-gradient(90deg, var(--brand-gold) 0%, var(--brand-gold-light) 100%);
+  }
+
+  .btn-submit {
+    @apply w-full rounded-xl py-3 text-sm font-semibold text-white shadow-sm transition-all;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-submit-primary {
+    background-color: var(--brand-navy);
+    @apply hover:brightness-110 focus-visible:ring-apcrda-primary/30;
+  }
+
+  .btn-submit-accent {
+    @apply bg-apcrda-accent hover:bg-apcrda-accent-light focus-visible:ring-apcrda-accent/30;
+  }
+
+  .alert-banner-warning {
+    @apply mb-4 rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-800;
+  }
+
+  .alert-banner-error {
+    @apply mb-4 rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700;
+  }
+
+  /* ── Data tables ── */
   .data-table {
     @apply w-full text-sm;
   }
 
   .data-table thead {
-    @apply bg-slate-50/80 border-b border-slate-200;
+    @apply border-b border-slate-200 bg-slate-50;
   }
 
   .data-table th {
-    @apply text-left px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500;
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500;
   }
 
   .data-table td {
@@ -118,11 +206,20 @@
   }
 
   .data-table tbody tr {
-    @apply border-b border-slate-100 transition-colors hover:bg-slate-50/60;
+    @apply border-b border-slate-100 transition-colors hover:bg-slate-50/80;
   }
 
   .data-table tbody tr:last-child {
     @apply border-b-0;
+  }
+
+  /* ── Content prose on public pages ── */
+  .portal-prose p {
+    @apply leading-relaxed text-slate-700;
+  }
+
+  .portal-prose p + p {
+    @apply mt-4;
   }
 }
 
@@ -132,10 +229,23 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8e 50%, #1e3a5f 100%);
+    background: linear-gradient(
+      135deg,
+      var(--brand-navy-dark) 0%,
+      var(--brand-navy-light) 50%,
+      var(--brand-navy-dark) 100%
+    );
   }
 
   .gradient-gold {
-    background: linear-gradient(135deg, #c9a227 0%, #e8c547 100%);
+    background: linear-gradient(135deg, var(--brand-gold) 0%, var(--brand-gold-light) 100%);
+  }
+
+  .gradient-portal {
+    background: linear-gradient(135deg, var(--portal-purple) 0%, var(--portal-purple-dark) 100%);
+  }
+
+  .font-telugu {
+    font-family: var(--font-telugu), 'Noto Sans Telugu', system-ui, sans-serif;
   }
 }

@@ -74,13 +74,13 @@ export function HeroCarousel() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/farmer-login"
-              className="inline-flex items-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-[var(--portal-purple)] shadow-md transition hover:bg-slate-50"
+              className="inline-flex items-center rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-apcrda-portal-purple shadow-md transition hover:bg-slate-50"
             >
               Apply for TDR
             </Link>
             <Link
               href="/verify"
-              className="inline-flex items-center rounded-lg border-2 border-white/80 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center rounded-xl border-2 border-white/80 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
             >
               Verify Certificate
             </Link>

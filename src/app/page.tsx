@@ -40,7 +40,7 @@ export default function HomePage() {
       <LandingQuickActions />
 
       <ContentSection id="about-apcrda" title="About APCRDA">
-        <div className="space-y-4 text-justify">
+        <div className="portal-prose text-justify">
           <p>
             In February 2014, the state of Andhra Pradesh was bifurcated, leading to need for a new
             capital city in successor state of AP. As per the AP Reorganization Act 2014, a new
@@ -67,7 +67,7 @@ export default function HomePage() {
       </ContentSection>
 
       <ContentSection id="about-tdr" title="About TDR" muted>
-        <p className="text-center text-lg text-slate-600">
+        <p className="mx-auto max-w-3xl text-center text-lg leading-relaxed text-slate-600">
           Transferable development rights (TDR) is a method by which developers can purchase the
           development rights of certain parcels within a designated &quot;sending district&quot; and
           transfer the rights to another &quot;receiving district&quot; to increase the density of

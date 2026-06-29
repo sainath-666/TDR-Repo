@@ -20,8 +20,8 @@ export function Card({ children, className, hover = false, padding = 'md', style
     <div
       style={style}
       className={cn(
-        'bg-white rounded-xl border border-slate-200/80 shadow-card',
-        hover && 'transition-shadow duration-200 hover:shadow-card-hover',
+        'rounded-2xl border border-slate-200/70 bg-white shadow-card ring-1 ring-slate-100/80',
+        hover && 'transition-all duration-200 hover:border-slate-200 hover:shadow-card-hover',
         paddingClasses[padding],
         className,
       )}
@@ -49,6 +49,8 @@ export function CardTitle({
   className?: string;
 }) {
   return (
-    <h3 className={cn('text-base font-semibold text-apcrda-primary', className)}>{children}</h3>
+    <h3 className={cn('text-base font-semibold tracking-tight text-apcrda-primary', className)}>
+      {children}
+    </h3>
   );
 }

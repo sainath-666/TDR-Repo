@@ -4,9 +4,11 @@ import { createServerClient } from '@supabase/ssr';
 import { AuthenticationError, NotFoundError } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
 import { DEV_PASSWORD, ensureOfficialAuthUser, officialDevEmail } from '@/lib/supabase/auth-users';
+import { getOfficialDashboardPath } from '@/lib/approval-levels';
+import type { UserRole } from '@/types';
 
 function getRedirectForRole(role: string): string {
-  return role === 'DEO' || role === 'SURVEYOR' ? '/deo/dashboard' : '/official/queue';
+  return getOfficialDashboardPath(role as UserRole);
 }
 
 async function parseEmployeeId(req: NextRequest): Promise<string> {

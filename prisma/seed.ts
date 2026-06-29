@@ -17,15 +17,18 @@ function chainHash(prev: string, payload: object): string {
 }
 
 async function clearSeedData() {
-  await prisma.auditLog.deleteMany();
-  await prisma.approvalStep.deleteMany();
-  await prisma.bondDocument.deleteMany();
-  await prisma.bondHolder.deleteMany();
-  await prisma.bondLandDetail.deleteMany();
-  await prisma.tdrBond.deleteMany();
-  await prisma.farmer.deleteMany();
-  await prisma.official.deleteMany();
-  await prisma.village.deleteMany();
+  // After --force-reset tables exist but are empty; deleteMany is a no-op safety pass.
+  await prisma.$transaction([
+    prisma.auditLog.deleteMany(),
+    prisma.approvalStep.deleteMany(),
+    prisma.bondDocument.deleteMany(),
+    prisma.bondHolder.deleteMany(),
+    prisma.bondLandDetail.deleteMany(),
+    prisma.tdrBond.deleteMany(),
+    prisma.farmer.deleteMany(),
+    prisma.official.deleteMany(),
+    prisma.village.deleteMany(),
+  ]);
 }
 
 async function main() {

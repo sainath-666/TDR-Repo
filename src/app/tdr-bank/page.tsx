@@ -3,10 +3,11 @@ import { PublicPageLayout } from '@/components/layout/PublicPageLayout';
 import { PortalPageShell } from '@/components/layout/PortalPageShell';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { getTdrBankEntries } from '@/lib/portal-stats';
+import { fetchAppApi } from '@/lib/server-api';
+import type { TdrBankEntry } from '@/lib/portal-stats';
 
 export default async function TdrBankPage() {
-  const entries = await getTdrBankEntries();
+  const entries = await fetchAppApi<TdrBankEntry[]>('/api/portal/public?resource=tdr-bank');
 
   return (
     <PublicPageLayout>

@@ -3,38 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LayoutDashboard,
-  FilePlus,
-  ClipboardList,
-  Menu,
-  X,
-  Landmark,
-  Home,
-  type LucideIcon,
-} from 'lucide-react';
+import { Menu, X, Landmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatRole } from '@/lib/role-labels';
 import type { UserRole } from '@/types';
+import { getSidebarNav, type PortalType } from '@/lib/portal-sidebar-nav';
 import { LogoutButton } from './LogoutButton';
 import { PortalLoginStrip } from './PublicHeader';
 
-export type PortalType = 'deo' | 'official' | 'farmer';
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-}
-
-const PORTAL_NAV: Record<PortalType, NavItem[]> = {
-  deo: [
-    { href: '/deo/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/deo/bonds/new', label: 'New Bond Entry', icon: FilePlus },
-  ],
-  official: [{ href: '/official/queue', label: 'Approval Queue', icon: ClipboardList }],
-  farmer: [{ href: '/farmer/dashboard', label: 'My Bonds', icon: LayoutDashboard }],
-};
+export type { PortalType } from '@/lib/portal-sidebar-nav';
 
 const PORTAL_TITLES: Record<PortalType, string> = {
   deo: 'DEO Portal',
@@ -52,7 +29,7 @@ interface PortalShellProps {
 export function PortalShell({ portal, role, districtCode, children }: PortalShellProps) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navItems = PORTAL_NAV[portal];
+  const navSections = getSidebarNav(portal, role);
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -71,30 +48,38 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
         </div>
       </Link>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-          Navigation
-        </p>
-        {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(item.href + '/');
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
-                active
-                  ? 'bg-apcrda-secondary/20 text-apcrda-secondary ring-1 ring-apcrda-secondary/30'
-                  : 'text-slate-400 hover:bg-white/5 hover:text-white',
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
+        {navSections.map((section) => (
+          <div key={section.title}>
+            <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+              {section.title}
+            </p>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const active =
+                  pathname === item.href ||
+                  (item.href !== '/' && pathname.startsWith(item.href + '/'));
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href + item.label}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                      active
+                        ? 'bg-apcrda-secondary/20 text-apcrda-secondary ring-1 ring-apcrda-secondary/30'
+                        : 'text-slate-400 hover:bg-white/5 hover:text-white',
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-white/10 p-4 space-y-3">
@@ -111,17 +96,15 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-100">
+    <div className="flex h-screen flex-col overflow-hidden bg-slate-50">
       <PortalLoginStrip />
-      <div className="h-0.5 gradient-gold shrink-0" />
+      <div className="h-1 shrink-0 gradient-gold" />
 
-      <div className="flex flex-1 min-h-0">
-        {/* Desktop sidebar */}
-        <aside className="hidden md:flex w-64 flex-col bg-apcrda-primary-dark shadow-sidebar shrink-0">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <aside className="hidden md:flex w-64 h-full shrink-0 flex-col bg-apcrda-primary-dark shadow-sidebar">
           {sidebar}
         </aside>
 
-        {/* Mobile overlay */}
         {mobileOpen && (
           <div
             className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -130,7 +113,6 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
           />
         )}
 
-        {/* Mobile sidebar */}
         <aside
           className={cn(
             'fixed inset-y-0 left-0 z-50 w-64 bg-apcrda-primary-dark shadow-sidebar transform transition-transform duration-200 md:hidden',
@@ -140,9 +122,8 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
           {sidebar}
         </aside>
 
-        {/* Main content */}
-        <div className="flex flex-1 flex-col min-w-0">
-          <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex flex-1 flex-col min-h-0 min-w-0 overflow-hidden">
+          <header className="z-30 shrink-0 border-b border-slate-200/80 bg-white shadow-header">
             <div className="flex h-14 items-center gap-4 px-4 md:px-6">
               <button
                 type="button"
@@ -167,7 +148,6 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
                   href="/"
                   className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-apcrda-primary transition-colors"
                 >
-                  <Home className="h-3.5 w-3.5" />
                   Public Portal
                 </Link>
                 <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-slate-200">
@@ -187,7 +167,7 @@ export function PortalShell({ portal, role, districtCode, children }: PortalShel
             </div>
           </header>
 
-          <main className="portal-content max-w-7xl w-full mx-auto">{children}</main>
+          <main className="portal-content w-full flex-1 overflow-y-auto">{children}</main>
         </div>
       </div>
     </div>

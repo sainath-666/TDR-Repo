@@ -14,7 +14,11 @@ export function PortalPageShell({ title, children, className, subtitle }: Portal
         <div className="mb-8 text-center">
           <h1 className="portal-section-title">{title}</h1>
           <div className="portal-section-accent" />
-          {subtitle && <p className="mt-4 text-sm text-slate-600">{subtitle}</p>}
+          {subtitle && (
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600">
+              {subtitle}
+            </p>
+          )}
         </div>
         {children}
       </div>

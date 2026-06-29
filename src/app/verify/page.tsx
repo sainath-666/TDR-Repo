@@ -4,7 +4,8 @@ import { PublicPageLayout } from '@/components/layout/PublicPageLayout';
 import { PortalPageShell } from '@/components/layout/PortalPageShell';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { getEntitlementEntries } from '@/lib/portal-stats';
+import { fetchAppApi } from '@/lib/server-api';
+import type { PublicBondSummary } from '@/lib/portal-stats';
 
 export default async function VerifySearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const query = searchParams.q?.trim();
@@ -12,7 +13,9 @@ export default async function VerifySearchPage({ searchParams }: { searchParams:
     redirect(`/verify/${encodeURIComponent(query)}`);
   }
 
-  const entries = await getEntitlementEntries(100);
+  const entries = await fetchAppApi<PublicBondSummary[]>(
+    '/api/portal/public?resource=entitlements&limit=100',
+  );
 
   return (
     <PublicPageLayout>
@@ -64,7 +67,7 @@ export default async function VerifySearchPage({ searchParams }: { searchParams:
                         {entry.tdrNumber}
                       </Link>
                     </td>
-                    <td>{entry.updatedAt.toLocaleDateString('en-IN')}</td>
+                    <td>{new Date(entry.updatedAt).toLocaleDateString('en-IN')}</td>
                     <td>{entry.areaSqYds?.toFixed(2) ?? '—'} Sq.Yds</td>
                     <td>{entry.holderName ?? '—'}</td>
                     <td className="text-slate-600">

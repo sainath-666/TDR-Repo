@@ -5,9 +5,9 @@ export function PublicFooter() {
   return (
     <footer id="contact" className="gov-footer mt-auto">
       <div className="max-w-[1140px] mx-auto px-6 py-10">
-        <div className="grid gap-8 sm:grid-cols-3 text-sm">
+        <div className="grid gap-8 text-sm sm:grid-cols-3">
           <div>
-            <h3 className="font-bold text-base mb-3">Get In Touch</h3>
+            <h3 className="mb-3 text-base font-bold tracking-tight">Get In Touch</h3>
             <p className="text-white/90 leading-relaxed">
               Your call will be answered 24 hours a day, 7 days a week.
             </p>
