@@ -8,6 +8,11 @@ export const metadata: Metadata = {
   title: 'APCRDA TDR Bond Migration Platform',
   description: 'Offline TDR Bond Validation — Capital City',
   manifest: '/manifest.json',
+  icons: {
+    icon: [{ url: '/images/APGOV-logo.png', type: 'image/png' }],
+    apple: [{ url: '/images/APGOV-logo.png', type: 'image/png' }],
+    shortcut: ['/images/APGOV-logo.png'],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

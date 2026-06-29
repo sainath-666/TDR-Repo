@@ -18,6 +18,20 @@ const config: Config = {
           accent: '#2d6a4f',
           'accent-light': '#40916c',
         },
+        'apcrda-gov': {
+          nav: '#1a6b8a',
+          'nav-dark': '#145a70',
+          light: '#e8f4f8',
+          accent: '#d35400',
+        },
+        'apcrda-portal': {
+          purple: '#7D007D',
+          'purple-dark': '#662D91',
+          maroon: '#7a1f3d',
+          red: '#c0392b',
+          blue: '#1a6fb5',
+          light: '#f5f0f8',
+        },
       },
       boxShadow: {
         card: '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',

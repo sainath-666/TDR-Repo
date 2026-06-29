@@ -34,6 +34,7 @@ next-env.d.ts
 # fabric crypto
 fabric/network/crypto-config/
 fabric/network/channel-artifacts/
+fabric/network/wallet/
 
 # certs
 /certs/

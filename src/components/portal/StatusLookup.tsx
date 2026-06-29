@@ -1,0 +1,114 @@
+'use client';
+
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+
+function generateCaptcha(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+export function StatusLookup() {
+  const router = useRouter();
+  const [certificateNo, setCertificateNo] = useState('');
+  const [captcha, setCaptcha] = useState(generateCaptcha);
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [error, setError] = useState('');
+
+  function refreshCaptcha() {
+    setCaptcha(generateCaptcha());
+    setCaptchaInput('');
+    setError('');
+  }
+
+  function validateAndGo() {
+    if (!certificateNo.trim()) {
+      setError('Please enter TDR Certificate Number.');
+      return;
+    }
+    if (captchaInput.toUpperCase() !== captcha) {
+      setError('Captcha does not match. Please try again.');
+      refreshCaptcha();
+      return;
+    }
+    setError('');
+    router.push(`/verify/${encodeURIComponent(certificateNo.trim())}`);
+  }
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <Card>
+        <div className="space-y-5">
+          <div>
+            <label htmlFor="cert-no" className="mb-1.5 block text-sm font-medium text-slate-700">
+              Enter TDR Certificate No.<span className="text-red-600">*</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="cert-no"
+                type="text"
+                value={certificateNo}
+                onChange={(e) => setCertificateNo(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-[var(--portal-purple)] focus:outline-none focus:ring-1 focus:ring-[var(--portal-purple)]"
+                placeholder="TDR Certificate Number"
+              />
+              <Button
+                type="button"
+                onClick={validateAndGo}
+                className="shrink-0 bg-teal-600 hover:bg-teal-700"
+              >
+                Verify
+              </Button>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded border border-slate-300 bg-slate-50 px-4 py-2 font-mono text-lg font-bold italic tracking-widest text-[var(--portal-blue)]">
+                {captcha}
+              </div>
+              <button
+                type="button"
+                onClick={refreshCaptcha}
+                className="rounded-full p-2 text-slate-600 hover:bg-slate-100"
+                aria-label="Refresh captcha"
+              >
+                <RefreshCw className="h-5 w-5" />
+              </button>
+            </div>
+            <label htmlFor="captcha" className="mb-1.5 block text-sm font-medium text-slate-700">
+              Enter Captcha<span className="text-red-600">*</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="captcha"
+                type="text"
+                value={captchaInput}
+                onChange={(e) => setCaptchaInput(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm uppercase focus:border-[var(--portal-purple)] focus:outline-none focus:ring-1 focus:ring-[var(--portal-purple)]"
+                placeholder="Enter captcha"
+              />
+              <Button
+                type="button"
+                onClick={validateAndGo}
+                className="shrink-0 bg-teal-600 hover:bg-teal-700"
+              >
+                Check Status
+              </Button>
+            </div>
+          </div>
+
+          {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+        </div>
+      </Card>
+
+      <div className="mt-6 min-h-[80px] rounded-lg border border-pink-200 bg-pink-50/30 p-4 text-center text-sm text-slate-500">
+        Status results will appear on the verification page after you submit a valid certificate
+        number.
+      </div>
+    </div>
+  );
+}

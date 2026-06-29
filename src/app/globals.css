@@ -3,23 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --foreground: #0f2744;
-  --background: #f1f5f9;
-  --card: #ffffff;
-  --border: #e2e8f0;
-  --muted: #64748b;
-  --primary: #1e3a5f;
-  --secondary: #c9a227;
-  --accent: #2d6a4f;
-  --sidebar: #0f2744;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-muted: #94a3b8;
+  --foreground: #1a1a1a;
+  --background: #ffffff;
+  --portal-purple: #7d007d;
+  --portal-purple-dark: #662d91;
+  --portal-blue: #2e75b5;
+  --portal-red: #b91c1c;
+  --portal-maroon: #5c1a2e;
 }
 
 @layer base {
   body {
     color: var(--foreground);
     background: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -30,6 +27,69 @@
 }
 
 @layer components {
+  /* ── APCRDA TDR official portal chrome ── */
+  .gov-header-brand {
+    @apply bg-white border-b border-slate-300;
+  }
+
+  .gov-header-title {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    @apply text-black font-bold uppercase tracking-wide leading-snug;
+  }
+
+  .gov-header-subtitle {
+    @apply text-black font-semibold;
+  }
+
+  .gov-header-tdr {
+    color: var(--portal-red);
+    @apply font-semibold;
+  }
+
+  .gov-nav-bar {
+    background-color: var(--portal-purple);
+    @apply shadow-sm;
+  }
+
+  .gov-nav-link {
+    @apply flex items-center gap-1.5 px-2 md:px-3 py-3 text-[10px] md:text-[11px] font-bold text-white uppercase tracking-wide whitespace-nowrap transition-colors;
+  }
+
+  .gov-nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .gov-nav-link-active {
+    background-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .gov-footer {
+    background-color: var(--portal-purple-dark);
+    @apply text-white;
+  }
+
+  .portal-section-title {
+    color: var(--portal-blue);
+    @apply text-2xl font-semibold text-center mb-2 tracking-tight;
+  }
+
+  .portal-section-accent {
+    @apply mx-auto mb-8 h-1 w-14 rounded-full;
+    background-color: var(--portal-purple);
+  }
+
+  .portal-section {
+    @apply bg-white border-t border-slate-100;
+  }
+
+  .portal-section-muted {
+    @apply bg-slate-50 border-t border-slate-100;
+  }
+
+  .portal-content-block {
+    @apply max-w-[960px] mx-auto px-6 sm:px-8 py-12 sm:py-14 text-base text-slate-700 leading-relaxed;
+  }
+
   .portal-content {
     @apply flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-slate-100;
   }

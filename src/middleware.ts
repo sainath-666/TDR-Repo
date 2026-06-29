@@ -8,6 +8,11 @@ const PUBLIC_ROUTES = [
   '/farmer-login',
   '/official-login',
   '/verify',
+  '/tdr-bank',
+  '/instructions',
+  '/calculator',
+  '/status',
+  '/application',
   '/auth/callback',
   '/api/auth',
   '/api/health',
@@ -22,6 +27,7 @@ const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 function isPublicRoute(pathname: string): boolean {
   if (pathname.startsWith('/_next') || pathname === '/favicon.ico') return true;
+  if (pathname.startsWith('/images/')) return true;
   if (isPublicApiRoute(pathname)) return true;
   return PUBLIC_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
@@ -134,5 +140,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|locales).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|manifest.json|locales|images).*)'],
 };

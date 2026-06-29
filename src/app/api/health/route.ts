@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withErrorHandling } from '@/lib/errors';
+import { checkFabricHealth } from '@/lib/fabric/gateway';
 
 export const GET = withErrorHandling(async () => {
   const checks: Record<string, string> = {
     app: 'ok',
     database: 'unknown',
     cerbos: 'unknown',
-    fabric: 'mock',
+    fabric: 'unknown',
   };
 
   try {
@@ -27,9 +28,7 @@ export const GET = withErrorHandling(async () => {
     checks.cerbos = process.env.NODE_ENV === 'development' ? 'offline' : 'error';
   }
 
-  if (process.env.FABRIC_MOCK_MODE === 'true' || !process.env.FABRIC_CERT_PATH) {
-    checks.fabric = 'mock';
-  }
+  checks.fabric = await checkFabricHealth();
 
   const ipfsUrl = process.env.IPFS_API_URL;
   if (ipfsUrl) {
@@ -48,6 +47,9 @@ export const GET = withErrorHandling(async () => {
   const healthy =
     checks.database === 'ok' &&
     (checks.cerbos === 'ok' || (isDev && checks.cerbos === 'offline')) &&
+    (checks.fabric === 'ok' ||
+      checks.fabric === 'mock' ||
+      (isDev && checks.fabric === 'offline')) &&
     (!checks.ipfs || checks.ipfs === 'ok' || (isDev && checks.ipfs === 'offline'));
   return NextResponse.json(
     { success: healthy, data: { status: healthy ? 'healthy' : 'degraded', checks } },

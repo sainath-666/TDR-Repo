@@ -6,6 +6,15 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   output: 'standalone',
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com', pathname: '/**' },
+      { protocol: 'https', hostname: 'upload.wikimedia.org', pathname: '/**' },
+    ],
+  },
+  experimental: {
+    serverComponentsExternalPackages: ['@grpc/grpc-js', '@hyperledger/fabric-gateway'],
+  },
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';
     const scriptSrc = isDev
@@ -30,7 +39,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              `default-src 'self'; ${scriptSrc}; style-src 'self' 'unsafe-inline'; ` +
+              `default-src 'self'; img-src 'self' data: blob: https://images.unsplash.com; ${scriptSrc}; style-src 'self' 'unsafe-inline'; ` +
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none';",
           },
         ],

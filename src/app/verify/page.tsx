@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { BondStatus } from '@prisma/client';
 import { PublicPageLayout } from '@/components/layout/PublicPageLayout';
+import { PortalPageShell } from '@/components/layout/PortalPageShell';
 import { Badge } from '@/components/ui/Badge';
-import { getVerifiableBonds } from '@/lib/portal-stats';
+import { Card } from '@/components/ui/Card';
+import { getEntitlementEntries } from '@/lib/portal-stats';
 
 export default async function VerifySearchPage({ searchParams }: { searchParams: { q?: string } }) {
   const query = searchParams.q?.trim();
@@ -11,72 +12,89 @@ export default async function VerifySearchPage({ searchParams }: { searchParams:
     redirect(`/verify/${encodeURIComponent(query)}`);
   }
 
-  const activeBonds = await getVerifiableBonds(20);
+  const entries = await getEntitlementEntries(100);
 
   return (
     <PublicPageLayout>
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-apcrda-primary">Verify TDR Certificate</h1>
-          <p className="text-sm text-slate-500 mt-2">
-            Enter a TDR number to check certificate validity from the official database
-          </p>
-        </div>
-
-        <form
-          action="/verify"
-          method="get"
-          className="bg-white rounded-2xl border shadow-card p-6 mb-8"
-        >
-          <label htmlFor="tdr" className="block text-sm font-semibold text-slate-700 mb-2">
-            TDR Bond Number
-          </label>
-          <div className="flex gap-3">
-            <input
-              id="tdr"
-              name="q"
-              type="text"
-              required
-              placeholder="Enter TDR number"
-              className="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-apcrda-primary/25"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 rounded-xl bg-apcrda-primary text-white font-semibold text-sm hover:bg-apcrda-primary-light"
-            >
-              Verify
-            </button>
-          </div>
+      <PortalPageShell
+        title="TDR Entitlement"
+        subtitle="TDR Entitlement list is open for public objection. Submit your grievance within 15 days (if any)."
+      >
+        <form action="/verify" method="get" className="mb-6 flex justify-end">
+          <input
+            name="q"
+            type="search"
+            placeholder="Search by Reference / Application No."
+            className="w-full max-w-sm rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-[var(--portal-purple)] focus:outline-none focus:ring-1 focus:ring-[var(--portal-purple)]"
+          />
         </form>
 
-        {activeBonds.length > 0 && (
-          <div className="bg-white rounded-2xl border shadow-card overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h2 className="font-semibold text-apcrda-primary">Active Certificates in Database</h2>
-              <p className="text-xs text-slate-500 mt-0.5">Click to verify</p>
-            </div>
-            <ul className="divide-y divide-slate-100">
-              {activeBonds.map((bond) => (
-                <li key={bond.tdrNumber}>
-                  <Link
-                    href={`/verify/${bond.tdrNumber}`}
-                    className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50 transition-colors"
-                  >
-                    <div>
-                      <p className="font-semibold text-apcrda-primary">{bond.tdrNumber}</p>
-                      <p className="text-xs text-slate-500">
-                        {bond.holderName ?? '—'}
-                        {bond.village ? ` · ${bond.village}` : ''}
-                      </p>
-                    </div>
-                    <Badge status={BondStatus.ACTIVE} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+        <Card padding="none" className="overflow-x-auto">
+          <table className="data-table min-w-[1000px]">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>TDR Reference No</th>
+                <th>TDR Issued Date</th>
+                <th>Total Tdr Extent</th>
+                <th>TDR Holder Name(s)</th>
+                <th>Original Land Details</th>
+                <th>LPS Unit Name</th>
+                <th>Status</th>
+                <th>Report Objection</th>
+              </tr>
+            </thead>
+            <tbody>
+              {entries.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center text-slate-500">
+                    No data available.
+                  </td>
+                </tr>
+              ) : (
+                entries.map((entry, i) => (
+                  <tr key={entry.tdrNumber}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <Link
+                        href={`/verify/${entry.tdrNumber}`}
+                        className="font-semibold hover:underline"
+                        style={{ color: 'var(--portal-blue)' }}
+                      >
+                        {entry.tdrNumber}
+                      </Link>
+                    </td>
+                    <td>{entry.updatedAt.toLocaleDateString('en-IN')}</td>
+                    <td>{entry.areaSqYds?.toFixed(2) ?? '—'} Sq.Yds</td>
+                    <td>{entry.holderName ?? '—'}</td>
+                    <td className="text-slate-600">
+                      {entry.surveyNumber ? `Survey ${entry.surveyNumber}` : '—'}
+                      {entry.village ? ` · ${entry.village}` : ''}
+                    </td>
+                    <td>{entry.village ?? '—'}</td>
+                    <td>
+                      <Badge status={entry.status} />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-[var(--portal-purple)] hover:underline"
+                      >
+                        Objection
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </Card>
+
+        <p className="mt-6 text-center text-xs text-red-600">
+          The data displayed above has been extracted from the proceedings issued and confirmed by
+          the SDC LPS Units.
+        </p>
+      </PortalPageShell>
     </PublicPageLayout>
   );
 }

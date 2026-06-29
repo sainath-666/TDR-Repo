@@ -1,0 +1,15 @@
+# Cryptogen config — generates TLS + MSP material for local dev network
+OrdererOrgs:
+  - Name: Orderer
+    Domain: apcrda
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: APCRDA
+    Domain: apcrda
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 2

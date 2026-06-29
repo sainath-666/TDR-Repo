@@ -2,9 +2,17 @@
   "name": "APCRDA TDR Platform",
   "short_name": "APCRDA TDR",
   "description": "Offline TDR Bond Migration — Capital City",
-  "start_url": "/farmer/dashboard",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#1e3a5f",
-  "orientation": "portrait"
+  "background_color": "#ffffff",
+  "theme_color": "#7d007d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/APGOV-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

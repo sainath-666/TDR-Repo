@@ -1,80 +1,65 @@
 import Link from 'next/link';
-import { Landmark, Mail, MapPin, Phone } from 'lucide-react';
+import { MapPin, Phone, Clock } from 'lucide-react';
 
 export function PublicFooter() {
   return (
-    <footer id="contact" className="bg-apcrda-primary-dark text-white mt-auto">
-      <div className="h-1 gradient-gold" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-12">
-        <div className="grid gap-8 md:grid-cols-4">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10">
-                <Landmark className="h-5 w-5 text-apcrda-secondary" />
-              </div>
-              <div>
-                <p className="font-bold text-lg">APCRDA</p>
-                <p className="text-xs text-slate-400">TDR Bond Migration Platform</p>
-              </div>
-            </div>
-            <p className="text-sm text-slate-400 leading-relaxed max-w-md">
-              Official portal for Transferable Development Rights bond validation under the Capital
-              City land pooling scheme. G.O. 207 MA&amp;UD dt. 08.08.2016.
+    <footer id="contact" className="gov-footer mt-auto">
+      <div className="max-w-[1140px] mx-auto px-6 py-10">
+        <div className="grid gap-8 sm:grid-cols-3 text-sm">
+          <div>
+            <h3 className="font-bold text-base mb-3">Get In Touch</h3>
+            <p className="text-white/90 leading-relaxed">
+              Your call will be answered 24 hours a day, 7 days a week.
             </p>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-apcrda-secondary uppercase tracking-wider mb-4">
-              Quick Links
+            <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Working Hours
             </h3>
-            <ul className="space-y-2 text-sm text-slate-400">
+            <ul className="text-white/90 space-y-1">
+              <li>Mon-Friday: 10:30 am to 5:00 pm</li>
               <li>
-                <Link href="/official-login" className="hover:text-white transition-colors">
-                  Official Login
-                </Link>
+                Second-Saturday: <strong>Closed</strong>
               </li>
               <li>
-                <Link href="/farmer-login" className="hover:text-white transition-colors">
-                  Farmer Login
-                </Link>
-              </li>
-              <li>
-                <Link href="/verify" className="hover:text-white transition-colors">
-                  Verify Certificate
-                </Link>
-              </li>
-              <li>
-                <Link href="/#services" className="hover:text-white transition-colors">
-                  Services
-                </Link>
+                Sunday: <strong>Closed</strong>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-apcrda-secondary uppercase tracking-wider mb-4">
-              Contact
-            </h3>
-            <ul className="space-y-3 text-sm text-slate-400">
-              <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-apcrda-secondary" />
-                Amaravati, Andhra Pradesh
-              </li>
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4 shrink-0 text-apcrda-secondary" />
-                0866-XXX-XXXX
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4 shrink-0 text-apcrda-secondary" />
-                tdr@apcrda.ap.gov.in
-              </li>
-            </ul>
+            <h3 className="font-bold text-base mb-3">Contact Us</h3>
+            <p className="font-semibold mb-2">
+              Andhra Pradesh Capital Region Development Authority
+            </p>
+            <p className="flex items-start gap-2 text-white/90 mb-2 leading-relaxed">
+              <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+              2nd, 3rd, and 5th Floors, APCRDA Project Office, Rayapudi Post, Tulluru Mandal,
+              Amravati, Guntur District, Andhra Pradesh - 522237.
+            </p>
+            <p className="flex items-center gap-2 text-white/90">
+              <Phone className="h-4 w-4 shrink-0" />
+              Phone :{' '}
+              <a href="tel:08662527110" className="hover:underline">
+                0866 – 2527110
+              </a>
+            </p>
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-xs text-slate-500">
+        <div className="mt-8 pt-5 border-t border-white/20 flex flex-col sm:flex-row justify-between gap-2 text-xs text-white/60">
           <p>© {new Date().getFullYear()} APCRDA. All rights reserved.</p>
-          <p>LPS Rule 5(4)(B) · Area unit: Square Yards · 5-level approval chain</p>
+          <p>
+            <Link href="/official-login" className="hover:text-white">
+              Officer Login
+            </Link>
+            {' · '}
+            <Link href="/farmer-login" className="hover:text-white">
+              Citizen Login
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

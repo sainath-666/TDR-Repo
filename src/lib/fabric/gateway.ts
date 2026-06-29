@@ -1,5 +1,11 @@
 import { FabricError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import {
+  disconnectFabric,
+  getContract,
+  isFabricMockMode,
+  probeFabricConnection,
+} from '@/lib/fabric/client';
 
 export interface FabricBondParams {
   tdrNumber: string;
@@ -37,25 +43,32 @@ export interface FabricBondState {
   }>;
 }
 
-const useMock =
-  process.env.FABRIC_MOCK_MODE === 'true' ||
-  process.env.NODE_ENV === 'development' ||
-  !process.env.FABRIC_CERT_PATH;
-
 function mockTxId(): string {
   return `mock-tx-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+async function submitTransaction(fn: string, ...args: string[]): Promise<string> {
+  try {
+    const contract = await getContract();
+    const commit = await contract.submitAsync(fn, { arguments: args });
+    return commit.getTransactionId();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new FabricError(fn, message);
+  }
+}
+
 export async function createBond(params: FabricBondParams): Promise<string> {
-  if (useMock) {
+  if (isFabricMockMode()) {
     logger.info('Mock Fabric: createBond', { tdrNumber: params.tdrNumber });
     return mockTxId();
   }
-  throw new FabricError('createBond', 'Fabric gateway not configured — set FABRIC_CERT_PATH');
+
+  return submitTransaction('CreateBond', JSON.stringify(params));
 }
 
 export async function recordApproval(params: FabricApprovalParams): Promise<string> {
-  if (useMock) {
+  if (isFabricMockMode()) {
     logger.info('Mock Fabric: recordApproval', {
       tdrNumber: params.tdrNumber,
       level: params.level,
@@ -63,7 +76,17 @@ export async function recordApproval(params: FabricApprovalParams): Promise<stri
     });
     return mockTxId();
   }
-  throw new FabricError('recordApproval', 'Fabric gateway not configured');
+
+  return submitTransaction(
+    'RecordApproval',
+    params.tdrNumber,
+    String(params.level),
+    params.decision,
+    params.employeeId,
+    params.signatureHash,
+    params.cerbosCallId,
+    params.remarks,
+  );
 }
 
 export async function mintCertificate(
@@ -71,18 +94,47 @@ export async function mintCertificate(
   certificateIpfsCid: string,
   commissionerSignatureHash: string,
 ): Promise<string> {
-  if (useMock) {
+  if (isFabricMockMode()) {
     logger.info('Mock Fabric: mintCertificate', { tdrNumber, certificateIpfsCid });
     return mockTxId();
   }
-  throw new FabricError('mintCertificate', 'Fabric gateway not configured');
+
+  return submitTransaction(
+    'MintCertificate',
+    tdrNumber,
+    certificateIpfsCid,
+    commissionerSignatureHash,
+  );
 }
 
-export async function getBond(_tdrNumber: string): Promise<FabricBondState | null> {
-  if (useMock) return null;
-  return null;
+export async function getBond(tdrNumber: string): Promise<FabricBondState | null> {
+  if (isFabricMockMode()) return null;
+
+  try {
+    const contract = await getContract();
+    const result = await contract.evaluate('GetBond', { arguments: [tdrNumber] });
+    return JSON.parse(result.toString()) as FabricBondState;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('not found')) return null;
+    throw new FabricError('GetBond', message);
+  }
+}
+
+export async function checkFabricHealth(): Promise<'ok' | 'mock' | 'error' | 'offline'> {
+  if (isFabricMockMode()) return 'mock';
+  const reachable = await probeFabricConnection();
+  if (!reachable) return 'offline';
+  try {
+    await getContract();
+    return 'ok';
+  } catch {
+    return 'error';
+  }
 }
 
 export async function disconnect(): Promise<void> {
-  // No-op in mock mode
+  await disconnectFabric();
 }
+
+export { isFabricMockMode };
