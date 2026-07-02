@@ -32,16 +32,16 @@ interface Props {
 export function BondStatusTracker({ status, compact = false }: Props) {
   if (status === BondStatus.REJECTED) {
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-        <Circle className="h-3.5 w-3.5 fill-red-500 text-red-500" />
-        Application rejected
+      <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-100 px-3.5 py-2.5 text-xs font-semibold text-red-700 shadow-inner">
+        <Circle className="h-3.5 w-3.5 fill-red-500 text-red-500 animate-pulse" />
+        Application review rejected
       </div>
     );
   }
 
   if (status === BondStatus.REVOKED) {
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-600">
+      <div className="flex items-center gap-2 rounded-xl bg-slate-100 border border-slate-200 px-3.5 py-2.5 text-xs font-semibold text-slate-600">
         Certificate revoked
       </div>
     );
@@ -49,9 +49,9 @@ export function BondStatusTracker({ status, compact = false }: Props) {
 
   if (status === BondStatus.DRAFT) {
     return (
-      <div className="flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600">
-        <Circle className="h-3.5 w-3.5" />
-        Draft — not yet submitted
+      <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/60 px-3.5 py-2.5 text-xs font-semibold text-slate-500">
+        <Circle className="h-3.5 w-3.5 text-slate-400" />
+        Draft — awaiting DEO submission
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function BondStatusTracker({ status, compact = false }: Props) {
   const isComplete = status === BondStatus.ACTIVE;
 
   return (
-    <div className="w-full">
+    <div className="w-full py-1">
       <div className="flex items-center">
         {STEPS.map((step, i) => {
           const done = i < currentIndex || (isComplete && i <= currentIndex);
@@ -69,26 +69,26 @@ export function BondStatusTracker({ status, compact = false }: Props) {
 
           return (
             <div key={step.label} className={cn('flex items-center', !isLast && 'flex-1')}>
-              <div className="flex flex-col items-center">
+              <div className="flex flex-col items-center shrink-0">
                 <div
                   className={cn(
-                    'flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all',
+                    'flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all duration-300 shadow-sm',
                     done && 'border-apcrda-accent bg-apcrda-accent text-white',
                     active &&
-                      'border-apcrda-secondary bg-apcrda-secondary/10 text-apcrda-secondary',
+                      'border-apcrda-secondary bg-apcrda-secondary/10 text-apcrda-secondary ring-4 ring-apcrda-secondary/20 animate-pulse-soft',
                     !done && !active && 'border-slate-200 bg-white text-slate-300',
                   )}
                 >
                   {done ? (
                     <Check className="h-3.5 w-3.5" strokeWidth={3} />
                   ) : (
-                    <span className="text-[10px] font-bold">{i + 1}</span>
+                    <span className="text-[10px] font-extrabold">{i + 1}</span>
                   )}
                 </div>
                 <span
                   className={cn(
-                    'mt-1.5 text-center font-medium leading-tight',
-                    compact ? 'text-[9px] max-w-[40px]' : 'text-[10px] max-w-[52px]',
+                    'mt-1.5 text-center font-bold leading-tight tracking-tight whitespace-nowrap',
+                    compact ? 'text-[9px] max-w-[44px] scale-95' : 'text-[10px] max-w-[56px]',
                     active
                       ? 'text-apcrda-secondary'
                       : done
@@ -102,7 +102,7 @@ export function BondStatusTracker({ status, compact = false }: Props) {
               {!isLast && (
                 <div
                   className={cn(
-                    'h-0.5 flex-1 mx-1 rounded-full transition-colors',
+                    'h-0.5 flex-1 mx-2 rounded-full transition-colors duration-300',
                     i < currentIndex ? 'bg-apcrda-accent' : 'bg-slate-200',
                   )}
                 />

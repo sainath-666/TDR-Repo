@@ -71,7 +71,7 @@ export type TdrBondWithRelations = Prisma.TdrBondGetPayload<{
     holder: true;
     landDetails: true;
     documents: true;
-    approvalSteps: true;
+    approvalSteps: { include: { official: true } };
     farmer: true;
     creator: true;
   };

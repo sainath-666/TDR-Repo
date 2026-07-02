@@ -7,7 +7,7 @@ export const bondInclude = {
   holder: true,
   landDetails: true,
   documents: true,
-  approvalSteps: { orderBy: { level: 'asc' as const } },
+  approvalSteps: { orderBy: { level: 'asc' as const }, include: { official: true } },
   farmer: true,
   creator: true,
 };

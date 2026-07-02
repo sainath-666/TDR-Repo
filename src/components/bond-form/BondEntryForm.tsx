@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { RelationType } from '@prisma/client';
 import { createBondSchema, phase2Schema, REQUIRED_DOCUMENT_TYPES } from '@/lib/validations/bond';
 import type { z } from 'zod';
+import { User, Map, UploadCloud, CheckCircle2 } from 'lucide-react';
 import { Phase1HolderForm } from './Phase1HolderForm';
 import { Phase2LandForm } from './Phase2LandForm';
 import { DocumentUploadPhase } from './DocumentUploadPhase';
@@ -97,16 +98,71 @@ export function BondEntryForm({ officialDistrictCode }: { officialDistrictCode?:
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-2">
-        {[1, 2, 3].map((p) => (
-          <div
-            key={p}
-            className={`flex-1 h-2 rounded ${phase >= p ? 'bg-apcrda-primary' : 'bg-slate-200'}`}
+      {/* Visual Stepper */}
+      <div className="bg-white rounded-2xl border border-indigo-100/60 p-6 shadow-sm">
+        <div className="relative flex justify-between items-center w-full max-w-2xl mx-auto px-2 sm:px-8">
+          {/* Connector Line Background */}
+          <div className="absolute top-[22px] left-8 sm:left-14 right-8 sm:right-14 h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
+          
+          {/* Connector Line Active Progress */}
+          <div 
+            className="absolute top-[22px] left-8 sm:left-14 h-0.5 bg-gradient-to-r from-emerald-500 to-emerald-400 -translate-y-1/2 transition-all duration-500 ease-out z-0"
+            style={{
+              width: phase === 1 ? '0%' : phase === 2 ? '50%' : '100%'
+            }}
           />
-        ))}
+
+          {[
+            { step: 1, title: 'Holder Details', icon: User },
+            { step: 2, title: 'Land Details', icon: Map },
+            { step: 3, title: 'Document Upload', icon: UploadCloud },
+          ].map((item) => {
+            const IconComponent = item.icon;
+            const isCompleted = phase > item.step;
+            const isActive = phase === item.step;
+
+            return (
+              <div key={item.step} className="flex flex-col items-center relative z-10">
+                <div
+                  className={`flex h-11 w-11 items-center justify-center rounded-2xl border-2 transition-all duration-300 shadow-sm ${
+                    isCompleted
+                      ? 'bg-emerald-500 border-emerald-600 text-white'
+                      : isActive
+                        ? 'bg-white border-apcrda-primary text-apcrda-primary ring-4 ring-apcrda-primary/10'
+                        : 'bg-white border-slate-200 text-slate-400'
+                  }`}
+                >
+                  {isCompleted ? (
+                    <CheckCircle2 className="h-5 w-5" />
+                  ) : (
+                    <IconComponent className="h-5 w-5" />
+                  )}
+                </div>
+                <p
+                  className={`text-[9px] font-extrabold mt-2 uppercase tracking-wider ${
+                    isActive
+                      ? 'text-apcrda-primary'
+                      : isCompleted
+                        ? 'text-emerald-700'
+                        : 'text-slate-400'
+                  }`}
+                >
+                  Step {item.step}
+                </p>
+                <p
+                  className={`text-xs font-bold mt-0.5 transition-colors ${
+                    isActive ? 'text-slate-800 font-extrabold' : 'text-slate-400'
+                  }`}
+                >
+                  {item.title}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {error && <p className="text-red-600 bg-red-50 p-3 rounded">{error}</p>}
+      {error && <p className="text-red-600 bg-red-50 border border-red-200 p-3 rounded-xl text-sm">{error}</p>}
 
       {phase === 1 && (
         <Phase1HolderForm
