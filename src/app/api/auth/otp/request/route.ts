@@ -1,7 +1,10 @@
 import { NextRequest } from 'next/server';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { prisma } from '@/lib/prisma';
+import { writeAuditLog } from '@/lib/audit';
 import { otpRequestSchema } from '@/lib/validations/approval';
+import { getClientIp } from '@/lib/bond-helpers';
+import { issueFarmerLoginOtp, isFarmerSmsDevBypass } from '@/lib/farmer-otp';
 import { ensureFarmerAuthUser } from '@/lib/supabase/auth-users';
 import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
 
@@ -17,6 +20,25 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   await ensureFarmerAuthUser(farmer);
 
+  if (isFarmerSmsDevBypass()) {
+    await issueFarmerLoginOtp(farmer.id, body.phone);
+
+    // AUDIT: Records farmer OTP request (dev / offline SMS bypass)
+    await writeAuditLog({
+      actorId: farmer.id,
+      actorRole: 'FARMER',
+      action: 'FARMER_OTP_REQUESTED',
+      details: { phone: body.phone.slice(-4), devBypass: true },
+      ipAddress: getClientIp(req.headers),
+    });
+
+    return createAuthJsonResponse({
+      message: 'OTP sent',
+      devMode: true,
+      hint: 'Development: use any 6-digit OTP or check the server console for the code.',
+    });
+  }
+
   const response = createAuthJsonResponse({ message: 'OTP sent' });
   const supabase = createRouteHandlerClient(req, response);
 
@@ -26,6 +48,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
   });
 
   if (error) throw new AuthenticationError(error.message);
+
+  await writeAuditLog({
+    actorId: farmer.id,
+    actorRole: 'FARMER',
+    action: 'FARMER_OTP_REQUESTED',
+    ipAddress: getClientIp(req.headers),
+  });
 
   return response;
 });

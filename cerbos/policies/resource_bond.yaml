@@ -7,17 +7,6 @@ resourcePolicy:
   importDerivedRoles: [apcrda_derived]
   resource: bond
   rules:
-    - actions: [create]
-      roles: [DEO, SURVEYOR]
-      effect: EFFECT_ALLOW
-
-    - actions: [update, submit, upload_document]
-      roles: [DEO, SURVEYOR]
-      condition:
-        match:
-          expr: request.resource.attr.status == "DRAFT"
-      effect: EFFECT_ALLOW
-
     - actions: [view]
       derivedRoles: [same_district_official]
       effect: EFFECT_ALLOW
@@ -28,16 +17,6 @@ resourcePolicy:
 
     - actions: [view]
       derivedRoles: [bond_owner_farmer]
-      effect: EFFECT_ALLOW
-
-    - actions: [upload_document]
-      derivedRoles: [same_district_official]
-      condition:
-        match:
-          expr: >
-            request.resource.attr.status != "ACTIVE"
-            && request.resource.attr.status != "REJECTED"
-            && request.resource.attr.status != "REVOKED"
       effect: EFFECT_ALLOW
 
     - actions: [revoke]

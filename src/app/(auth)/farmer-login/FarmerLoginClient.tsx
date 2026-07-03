@@ -80,6 +80,13 @@ export default function FarmerLoginClient() {
 
           {step === 'phone' ? (
             <div className="space-y-4">
+              {process.env.NODE_ENV === 'development' && (
+                <p className="rounded-lg border border-teal-100 bg-teal-50 px-3 py-2 text-xs text-teal-900">
+                  <strong>Dev login:</strong> use seeded mobile e.g. <strong>9666666666</strong>{' '}
+                  (Padmavathi / TDR-2025-004). After Send OTP, enter any 6-digit code (e.g.{' '}
+                  <strong>123456</strong>) or check the terminal for the printed OTP.
+                </p>
+              )}
               <div>
                 <label className="field-label">Aadhaar-linked Mobile Number</label>
                 <input

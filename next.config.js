@@ -13,7 +13,13 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverComponentsExternalPackages: ['@grpc/grpc-js', '@hyperledger/fabric-gateway'],
+    serverComponentsExternalPackages: ['@grpc/grpc-js', '@hyperledger/fabric-gateway', 'pdfkit'],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('pdfkit');
+    }
+    return config;
   },
   async headers() {
     const isDev = process.env.NODE_ENV === 'development';

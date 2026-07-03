@@ -4,12 +4,13 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
-  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg';
+  padding?: 'none' | 'xxs' | 'xs' | 'sm' | 'md' | 'lg';
   style?: React.CSSProperties;
 }
 
 const paddingClasses = {
   none: '',
+  xxs: 'p-2',
   xs: 'p-3',
   sm: 'p-4',
   md: 'p-5',

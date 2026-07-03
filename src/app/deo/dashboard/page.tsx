@@ -6,6 +6,8 @@ import { formatRole } from '@/lib/role-labels';
 import type { OfficialDashboardData } from '@/lib/queries/official-dashboard';
 import { OfficialDashboardView } from '@/components/dashboard/OfficialDashboardView';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DeoDashboardPage() {
   const user = await getCurrentUser(cookies());
   if (!user) redirect('/official-login');

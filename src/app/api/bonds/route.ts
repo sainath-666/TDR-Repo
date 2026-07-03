@@ -1,97 +1,13 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
-import { BondStatus, ApprovalDecision } from '@prisma/client';
-import { withErrorHandling, AuthenticationError, ValidationError } from '@/lib/errors';
-import { ok, created, paginated } from '@/lib/api-response';
+import { BondStatus } from '@prisma/client';
+import { withErrorHandling, AuthenticationError } from '@/lib/errors';
+import { paginated } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
-import { withCerbos } from '@/lib/cerbos/enforce';
-import { prisma, withTransaction } from '@/lib/prisma';
-import { writeAuditLog } from '@/lib/audit';
-import { createBondSchema } from '@/lib/validations/bond';
-import { hashAadhaar, encryptAadhaar } from '@/lib/security/hmac';
-import { getClientIp, buildDistrictScopeWhere } from '@/lib/bond-helpers';
-import { isOfficialRole, getQueueStatusForRole } from '@/types';
-import { APPROVAL_LEVELS } from '@/lib/bond-state-machine';
-
-export const POST = withErrorHandling(async (req: NextRequest) => {
-  const user = await getCurrentUser(cookies());
-  if (!user) throw new AuthenticationError();
-
-  const data = createBondSchema.parse(await req.json());
-
-  const cerbosCallId = await withCerbos(
-    user,
-    { kind: 'bond', id: 'new', attributes: {} },
-    'create',
-  );
-
-  const aadhaarHash = hashAadhaar(data.aadhaarNumber);
-  const aadhaarEncrypted = encryptAadhaar(data.aadhaarNumber);
-
-  let farmer = await prisma.farmer.findFirst({
-    where: { OR: [{ aadhaarPhone: data.aadhaarPhone }, { aadhaarHash }] },
-  });
-
-  if (!farmer) {
-    farmer = await prisma.farmer.create({
-      data: {
-        id: crypto.randomUUID(),
-        name: data.name,
-        aadhaarHash,
-        aadhaarPhone: data.aadhaarPhone,
-      },
-    });
-  }
-
-  const bond = await withTransaction(async (tx) => {
-    const newBond = await tx.tdrBond.create({
-      data: {
-        tdrNumber: data.tdrNumber,
-        status: BondStatus.DRAFT,
-        farmerId: farmer!.id,
-        createdBy: user.id,
-        holder: {
-          create: {
-            name: data.name,
-            relationType: data.relationType,
-            relationName: data.relationName,
-            aadhaarHash,
-            aadhaarEncrypted,
-            aadhaarPhone: data.aadhaarPhone,
-            email: data.email || null,
-            doorNo: data.doorNo,
-            street: data.street,
-            village: data.village,
-            mandal: data.mandal,
-            district: user.districtCode ?? data.district,
-          },
-        },
-        approvalSteps: {
-          create: APPROVAL_LEVELS.map((step) => ({
-            level: step.level,
-            role: step.role,
-            decision: ApprovalDecision.PENDING,
-          })),
-        },
-      },
-      include: { holder: true, approvalSteps: true },
-    });
-    return newBond;
-  });
-
-  // AUDIT: Records new bond creation by DEO
-  await writeAuditLog({
-    bondId: bond.id,
-    actorId: user.id,
-    actorRole: user.role,
-    action: 'BOND_CREATED',
-    details: { tdrNumber: data.tdrNumber },
-    cerbosCallId,
-    ipAddress: getClientIp(req.headers),
-  });
-
-  return created({ bondId: bond.id, tdrNumber: bond.tdrNumber, status: bond.status });
-});
+import { prisma } from '@/lib/prisma';
+import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
+import { isOfficialRole } from '@/types';
+import { getQueueStatusForRole } from '@/lib/approval-chain';
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
   const user = await getCurrentUser(cookies());

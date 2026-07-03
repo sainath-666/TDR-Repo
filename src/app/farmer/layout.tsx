@@ -8,7 +8,12 @@ export default async function FarmerLayout({ children }: { children: React.React
   if (!user) redirect('/farmer-login');
 
   return (
-    <PortalShell portal="farmer" role="FARMER" districtCode={user.districtCode}>
+    <PortalShell
+      portal="farmer"
+      role="FARMER"
+      userName={user.name}
+      districtCode={user.districtCode}
+    >
       {children}
     </PortalShell>
   );

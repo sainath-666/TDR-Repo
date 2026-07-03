@@ -1,13 +1,12 @@
 import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError, ValidationError } from '@/lib/errors';
-import { ok } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
-import { getBondWithRelations } from '@/lib/bond-helpers';
+import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
 import { writeAuditLog } from '@/lib/audit';
-import { NextRequest } from 'next/server';
-import { getClientIp } from '@/lib/bond-helpers';
+import { readBondCertificatePdf } from '@/lib/certificate/mint';
 
 export const GET = withErrorHandling(
   async (req: NextRequest, { params }: { params: { bondId: string } }) => {
@@ -16,7 +15,7 @@ export const GET = withErrorHandling(
 
     const bond = await getBondWithRelations(params.bondId);
 
-    await withCerbos(
+    const cerbosCallId = await withCerbos(
       user,
       {
         kind: 'certificate',
@@ -26,22 +25,32 @@ export const GET = withErrorHandling(
       'download',
     );
 
-    if (bond.status !== BondStatus.ACTIVE || !bond.certificateIpfsCid) {
-      throw new ValidationError('Certificate not available');
+    if (bond.status !== BondStatus.ACTIVE || !bond.certificateStoragePath) {
+      throw new ValidationError('Certificate not available yet');
     }
 
+    const pdfBuffer = await readBondCertificatePdf(params.bondId, bond.certificateStoragePath);
+
+    // AUDIT: Records farmer or official certificate PDF download
     await writeAuditLog({
       bondId: params.bondId,
       actorId: user.id,
       actorRole: user.role,
       action: 'CERT_DOWNLOADED',
+      cerbosCallId,
       ipAddress: getClientIp(req.headers),
     });
 
-    return ok({
-      downloadUrl: `/api/certificates/${params.bondId}/verify`,
-      certificateIpfsCid: bond.certificateIpfsCid,
-      tdrNumber: bond.tdrNumber,
+    const filename = `${bond.tdrNumber.replace(/[^a-zA-Z0-9-]/g, '_')}-certificate.pdf`;
+
+    return new NextResponse(new Uint8Array(pdfBuffer), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': String(pdfBuffer.length),
+        'Cache-Control': 'private, no-store',
+      },
     });
   },
 );

@@ -8,7 +8,12 @@ export default async function DeoLayout({ children }: { children: React.ReactNod
   if (!user) redirect('/official-login');
 
   return (
-    <PortalShell portal="deo" role={user.role} districtCode={user.districtCode}>
+    <PortalShell
+      portal="deo"
+      role={user.role}
+      userName={user.name}
+      districtCode={user.districtCode}
+    >
       {children}
     </PortalShell>
   );

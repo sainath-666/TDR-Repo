@@ -56,9 +56,9 @@ model TdrBond {
   track               String     @default("OFFLINE")
   status              BondStatus @default(DRAFT)
   farmerId            String     @map("farmer_id") @db.Uuid
-  createdBy           String     @map("created_by") @db.Uuid
   fabricTxId          String?    @map("fabric_tx_id")
   certificateIpfsCid  String?    @map("certificate_ipfs_cid")
+  certificateStoragePath String? @map("certificate_storage_path")
   mintedAt            DateTime?  @map("minted_at")
   rejectionReason     String?    @map("rejection_reason")
   revokedAt           DateTime?  @map("revoked_at")
@@ -67,7 +67,6 @@ model TdrBond {
   updatedAt           DateTime   @updatedAt @map("updated_at")
 
   farmer         Farmer          @relation(fields: [farmerId], references: [id])
-  creator        Official        @relation("BondCreator", fields: [createdBy], references: [id])
   holder         BondHolder?
   landDetails    BondLandDetail?
   documents      BondDocument[]
@@ -167,7 +166,6 @@ model Official {
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
 
-  createdBonds  TdrBond[]      @relation("BondCreator")
   approvalSteps ApprovalStep[]
   documents     BondDocument[]
 

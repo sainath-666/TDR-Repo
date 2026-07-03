@@ -5,6 +5,10 @@ resourcePolicy:
   importDerivedRoles: [apcrda_derived]
   resource: approval
   rules:
+    - actions: [approve, reject]
+      derivedRoles: [intake_reviewer]
+      effect: EFFECT_ALLOW
+
     - actions: [approve, reject, return]
       derivedRoles: [l1_approver]
       effect: EFFECT_ALLOW

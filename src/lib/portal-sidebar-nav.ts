@@ -1,4 +1,4 @@
-import { LayoutDashboard, FilePlus, ClipboardList, BarChart3, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, type LucideIcon } from 'lucide-react';
 import type { UserRole } from '@/types';
 
 export type PortalType = 'deo' | 'official' | 'farmer';
@@ -19,10 +19,7 @@ export function getSidebarNav(portal: PortalType, role: UserRole): SidebarNavSec
     return [
       {
         title: 'Menu',
-        items: [
-          { href: '/deo/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-          { href: '/deo/bonds/new', label: 'New Bond Entry', icon: FilePlus },
-        ],
+        items: [{ href: '/deo/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
       },
     ];
   }
@@ -31,10 +28,7 @@ export function getSidebarNav(portal: PortalType, role: UserRole): SidebarNavSec
     return [
       {
         title: 'Menu',
-        items: [
-          { href: '/farmer/dashboard', label: 'My Bonds', icon: LayoutDashboard },
-          { href: '/status', label: 'Track Status', icon: BarChart3 },
-        ],
+        items: [{ href: '/farmer/dashboard', label: 'My Bonds', icon: LayoutDashboard }],
       },
     ];
   }
@@ -42,10 +36,7 @@ export function getSidebarNav(portal: PortalType, role: UserRole): SidebarNavSec
   return [
     {
       title: 'Menu',
-      items: [
-        { href: '/official/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/official/queue', label: 'Approval Queue', icon: ClipboardList },
-      ],
+      items: [{ href: '/official/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
     },
   ];
 }

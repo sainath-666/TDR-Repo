@@ -8,7 +8,12 @@ export default async function OfficialLayout({ children }: { children: React.Rea
   if (!user) redirect('/official-login');
 
   return (
-    <PortalShell portal="official" role={user.role} districtCode={user.districtCode}>
+    <PortalShell
+      portal="official"
+      role={user.role}
+      userName={user.name}
+      districtCode={user.districtCode}
+    >
       {children}
     </PortalShell>
   );

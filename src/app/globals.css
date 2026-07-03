@@ -12,6 +12,17 @@
   --brand-teal: #0d9488;
   --brand-teal-light: #14b8a6;
 
+  /* DEO dashboard hero — warm stone + forest (no blue) */
+  --deo-hero-from: #1c1917;
+  --deo-hero-mid: #292524;
+  --deo-hero-accent: #166534;
+  --deo-hero-to: #14532d;
+
+  /* Official dashboard hero — plum + bronze */
+  --official-hero-from: #3b0764;
+  --official-hero-mid: #581c87;
+  --official-hero-to: #7c2d12;
+
   /* Public APCRDA portal — rich purple & burgundy */
   --portal-purple: #8b2e8b;
   --portal-purple-dark: #5c1a6e;
@@ -152,6 +163,23 @@
     @apply px-3 py-2 text-xs;
   }
 
+  .data-table-portal thead {
+    background: linear-gradient(180deg, #f5f5f4 0%, #fafaf9 100%);
+    @apply border-b border-stone-200 shadow-sm;
+  }
+
+  .data-table-portal th {
+    @apply px-3 py-2.5 text-[10px];
+  }
+
+  .data-table-portal td {
+    @apply px-3 py-2.5 align-middle;
+  }
+
+  .data-table-portal tbody tr {
+    @apply border-b border-stone-100 transition-colors hover:bg-emerald-50/30;
+  }
+
   /* ── Forms & auth ── */
   .field-label {
     @apply mb-1.5 block text-sm font-semibold text-slate-700;
@@ -269,11 +297,201 @@
     background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
   }
 
+  .gradient-deo-hero {
+    background: linear-gradient(
+      125deg,
+      var(--deo-hero-from) 0%,
+      var(--deo-hero-mid) 38%,
+      var(--deo-hero-accent) 72%,
+      var(--deo-hero-to) 100%
+    );
+  }
+
+  .gradient-official-hero {
+    background: linear-gradient(
+      125deg,
+      var(--official-hero-from) 0%,
+      var(--official-hero-mid) 55%,
+      var(--official-hero-to) 100%
+    );
+  }
+
   .gradient-navy {
     background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-light) 100%);
   }
 
   .font-telugu {
     font-family: var(--font-telugu), 'Noto Sans Telugu', system-ui, sans-serif;
+  }
+
+  /* Official TDR certificate document (A4-style preview) */
+  .tdr-cert-viewer {
+    @apply flex flex-col items-center gap-10 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-slate-100 via-slate-200/90 to-slate-300/70 p-5 shadow-inner md:p-8;
+  }
+
+  .tdr-cert-sheet {
+    @apply relative w-full max-w-[210mm] bg-white shadow-[0_8px_30px_rgba(15,23,42,0.18),0_2px_8px_rgba(15,23,42,0.08)];
+  }
+
+  .tdr-cert-sheet--compact {
+    @apply max-w-full shadow-md;
+  }
+
+  .tdr-cert-frame {
+    @apply relative h-full min-h-0 w-full;
+    border: 3px solid #1b5e20;
+    padding: 5px;
+    background: #fffef8;
+    box-shadow:
+      inset 0 0 0 1px #fff,
+      inset 0 0 0 6px #2e7d32,
+      inset 0 0 0 7px #fff,
+      inset 0 0 0 9px #1b5e20;
+  }
+
+  .tdr-cert-frame--full {
+    min-height: 297mm;
+  }
+
+  .tdr-cert-frame--compact {
+    min-height: 420px;
+  }
+
+  .tdr-cert-inner {
+    @apply relative flex h-full min-h-[inherit] flex-col;
+    border: 1px solid rgba(27, 94, 32, 0.35);
+    background: linear-gradient(180deg, #fffef9 0%, #ffffff 42%, #fffef7 100%);
+    padding: 1.25rem 1.35rem 2rem;
+    font-family: 'Times New Roman', Times, Georgia, serif;
+    color: #0f172a;
+  }
+
+  .tdr-cert-inner--compact {
+    padding: 0.85rem 0.95rem 1.5rem;
+  }
+
+  .tdr-cert-watermark {
+    @apply pointer-events-none absolute inset-0 z-0 flex items-center justify-center;
+  }
+
+  .tdr-cert-watermark-img {
+    @apply object-contain opacity-[0.1];
+  }
+
+  .tdr-cert-header {
+    @apply relative mb-4 border-b border-[#1b5e20]/20 pb-4 text-center;
+  }
+
+  .tdr-cert-header-qr {
+    @apply absolute right-0 top-0 flex flex-col items-center;
+  }
+
+  .tdr-cert-emblem {
+    @apply mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#1b5e20]/50 bg-white p-1 shadow-sm;
+  }
+
+  .tdr-cert-emblem--compact {
+    @apply h-10 w-10;
+  }
+
+  .tdr-cert-org {
+    @apply text-[13px] font-bold uppercase leading-tight tracking-wide text-slate-900;
+  }
+
+  .tdr-cert-org--compact {
+    @apply text-[10px];
+  }
+
+  .tdr-cert-title {
+    @apply mt-2 text-sm font-bold uppercase tracking-[0.12em] text-[#1b5e20];
+  }
+
+  .tdr-cert-title--compact {
+    @apply mt-1 text-[10px] tracking-[0.08em];
+  }
+
+  .tdr-cert-subtitle {
+    @apply mt-1 text-[10px] text-slate-600;
+  }
+
+  .tdr-cert-meta {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-700;
+  }
+
+  .tdr-cert-body {
+    @apply text-[11px] leading-[1.65] text-justify text-slate-800;
+  }
+
+  .tdr-cert-body--compact {
+    @apply text-[9px] leading-[1.55];
+  }
+
+  .tdr-cert-table {
+    @apply mb-4 w-full border-collapse border border-black text-[10px];
+  }
+
+  .tdr-cert-table--compact {
+    @apply text-[8px];
+  }
+
+  .tdr-cert-table th,
+  .tdr-cert-table td {
+    @apply border border-black px-2 py-1.5 align-top;
+  }
+
+  .tdr-cert-table td:first-child {
+    @apply w-9 text-center font-medium;
+  }
+
+  .tdr-cert-table td:nth-child(2) {
+    @apply w-[44%] text-slate-700;
+  }
+
+  .tdr-cert-table td:last-child {
+    @apply font-bold text-slate-900;
+  }
+
+  .tdr-cert-signatures {
+    @apply mt-auto grid grid-cols-2 gap-6 border-t border-[#1b5e20]/15 pt-5;
+  }
+
+  .tdr-cert-signature {
+    @apply text-center;
+  }
+
+  .tdr-cert-sig-check {
+    @apply mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#1b5e20] bg-[#e8f5e9] text-lg font-bold text-[#1b5e20];
+  }
+
+  .tdr-cert-sig-role {
+    @apply text-[10px] font-bold uppercase tracking-wide text-slate-900;
+  }
+
+  .tdr-cert-sig-org {
+    @apply text-[10px] font-semibold text-slate-800;
+  }
+
+  .tdr-cert-sig-stamp {
+    @apply mt-1 text-[9px] italic text-slate-500;
+  }
+
+  .tdr-cert-page-no {
+    @apply pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[11px] text-slate-500;
+  }
+
+  .tdr-cert-annexure-title {
+    @apply mb-3 text-center text-xs font-bold uppercase tracking-widest text-slate-900;
+  }
+
+  .tdr-cert-ledger-meta {
+    @apply mb-4 grid grid-cols-1 gap-1 border border-black/80 bg-white/80 p-3 text-[10px] sm:grid-cols-2;
+  }
+
+  .tdr-cert-ledger-meta dt {
+    @apply inline text-slate-600;
+  }
+
+  .tdr-cert-ledger-meta dd {
+    @apply inline font-bold text-slate-900;
   }
 }

@@ -5,21 +5,25 @@ import { Check, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const STEPS: { label: string; shortLabel: string; statuses: BondStatus[] }[] = [
-  { label: 'Submitted', shortLabel: 'Sub', statuses: [BondStatus.PENDING_L1] },
   {
-    label: 'L1 Tahsildar',
-    shortLabel: 'L1',
+    label: 'DEO / Surveyor',
+    shortLabel: 'DEO',
+    statuses: [BondStatus.DRAFT, BondStatus.PENDING_L1],
+  },
+  {
+    label: 'Dy. Tahsildar',
+    shortLabel: 'Tahsildar',
     statuses: [BondStatus.PENDING_L1, BondStatus.PENDING_L2],
   },
-  { label: 'L2 SDC', shortLabel: 'L2', statuses: [BondStatus.PENDING_L2, BondStatus.PENDING_L3] },
+  { label: 'SDC', shortLabel: 'SDC', statuses: [BondStatus.PENDING_L2, BondStatus.PENDING_L3] },
   {
-    label: 'L3 Director',
-    shortLabel: 'L3',
+    label: 'Director (Lands)',
+    shortLabel: 'Director',
     statuses: [BondStatus.PENDING_L3, BondStatus.PENDING_L4],
   },
   {
-    label: 'Certificate',
-    shortLabel: 'Cert',
+    label: 'Commissioner',
+    shortLabel: 'Commissioner',
     statuses: [BondStatus.PENDING_L4, BondStatus.ACTIVE],
   },
 ];
@@ -51,7 +55,7 @@ export function BondStatusTracker({ status, compact = false }: Props) {
     return (
       <div className="flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-200/60 px-3.5 py-2.5 text-xs font-semibold text-slate-500">
         <Circle className="h-3.5 w-3.5 text-slate-400" />
-        Draft — awaiting DEO submission
+        Awaiting DEO / Surveyor review
       </div>
     );
   }

@@ -51,12 +51,14 @@ function parsePhoneFromAuthUser(phone: string | undefined): string | undefined {
 async function resolveUserFromPrisma(
   userId: string,
   phone: string | undefined,
+  displayName?: string,
 ): Promise<CurrentUser | null> {
   const official = await prisma.official.findUnique({ where: { id: userId } });
   if (official?.isActive) {
     return {
       id: userId,
       role: official.role as UserRole,
+      name: official.name,
       districtCode: official.districtCode,
       employeeId: official.employeeId,
     };
@@ -64,7 +66,7 @@ async function resolveUserFromPrisma(
 
   const farmerById = await prisma.farmer.findUnique({ where: { id: userId } });
   if (farmerById) {
-    return { id: userId, role: 'FARMER', farmerId: farmerById.id };
+    return { id: userId, role: 'FARMER', name: farmerById.name, farmerId: farmerById.id };
   }
 
   const normalizedPhone = parsePhoneFromAuthUser(phone);
@@ -73,8 +75,17 @@ async function resolveUserFromPrisma(
       where: { aadhaarPhone: normalizedPhone },
     });
     if (farmerByPhone) {
-      return { id: userId, role: 'FARMER', farmerId: farmerByPhone.id };
+      return {
+        id: userId,
+        role: 'FARMER',
+        name: farmerByPhone.name,
+        farmerId: farmerByPhone.id,
+      };
     }
+  }
+
+  if (displayName) {
+    return { id: userId, role: 'FARMER', name: displayName };
   }
 
   return null;
@@ -93,18 +104,21 @@ export async function getCurrentUser(
   if (error || !user) return null;
 
   const meta = user.app_metadata as Record<string, string | undefined>;
+  const userMeta = user.user_metadata as Record<string, string | undefined>;
+  const displayName = typeof userMeta.name === 'string' ? userMeta.name : undefined;
   const role = meta.role as UserRole | undefined;
 
   if (role) {
     if (isOfficialRole(role)) {
       const official = await prisma.official.findUnique({
         where: { id: user.id },
-        select: { districtCode: true, employeeId: true, isActive: true },
+        select: { name: true, districtCode: true, employeeId: true, isActive: true },
       });
       if (official?.isActive) {
         return {
           id: user.id,
           role,
+          name: official.name ?? displayName,
           districtCode: meta.district_code ?? official.districtCode,
           employeeId: meta.employee_id ?? official.employeeId,
           farmerId: meta.farmer_id,
@@ -112,9 +126,34 @@ export async function getCurrentUser(
       }
     }
 
+    if (role === 'FARMER') {
+      const farmerId = meta.farmer_id;
+      const phone = parsePhoneFromAuthUser(user.phone);
+      const farmer = farmerId
+        ? await prisma.farmer.findUnique({
+            where: { id: farmerId },
+            select: { name: true },
+          })
+        : phone
+          ? await prisma.farmer.findFirst({
+              where: { aadhaarPhone: phone },
+              select: { name: true },
+            })
+          : null;
+      return {
+        id: user.id,
+        role,
+        name: farmer?.name ?? displayName,
+        districtCode: meta.district_code,
+        employeeId: meta.employee_id,
+        farmerId: meta.farmer_id,
+      };
+    }
+
     return {
       id: user.id,
       role,
+      name: displayName,
       districtCode: meta.district_code,
       employeeId: meta.employee_id,
       farmerId: meta.farmer_id,
@@ -122,5 +161,5 @@ export async function getCurrentUser(
   }
 
   // Fallback: JWT may lack claims before auth hook / sync — resolve from Prisma
-  return resolveUserFromPrisma(user.id, user.phone);
+  return resolveUserFromPrisma(user.id, user.phone, displayName);
 }

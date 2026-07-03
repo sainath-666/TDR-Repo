@@ -22,6 +22,10 @@ export function officialDevEmail(employeeId: string): string {
   return `${employeeId.toLowerCase()}@dev.apcrda.local`;
 }
 
+export function farmerDevEmail(phone: string): string {
+  return `farmer-${phone}@dev.apcrda.local`;
+}
+
 export async function ensureOfficialAuthUser(official: OfficialRecord): Promise<void> {
   const admin = createAdminClient();
   const email = officialDevEmail(official.employeeId);
@@ -64,7 +68,7 @@ export async function ensureFarmerAuthUser(farmer: FarmerRecord): Promise<void> 
     farmer_id: farmer.id,
   };
   const isDev = process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true';
-  const devEmail = `farmer-${farmer.aadhaarPhone}@dev.apcrda.local`;
+  const devEmail = farmerDevEmail(farmer.aadhaarPhone);
 
   const { data: existing } = await admin.auth.admin.getUserById(farmer.id);
 

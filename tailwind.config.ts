@@ -5,6 +5,7 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
     extend: {
@@ -67,6 +68,32 @@ const config: Config = {
     },
   },
   plugins: [],
+  safelist: [
+    'bg-slate-100',
+    'text-slate-700',
+    'ring-slate-200',
+    'bg-amber-50',
+    'text-amber-800',
+    'ring-amber-200',
+    'bg-orange-50',
+    'text-orange-800',
+    'ring-orange-200',
+    'bg-blue-50',
+    'text-blue-800',
+    'ring-blue-200',
+    'bg-purple-50',
+    'text-purple-800',
+    'ring-purple-200',
+    'bg-emerald-50',
+    'text-emerald-800',
+    'ring-emerald-200',
+    'bg-red-50',
+    'text-red-800',
+    'ring-red-200',
+    'bg-gray-100',
+    'text-gray-600',
+    'ring-gray-200',
+  ],
 };
 
 export default config;

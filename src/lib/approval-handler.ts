@@ -1,8 +1,9 @@
 import { cookies } from 'next/headers';
+import { revalidatePath } from 'next/cache';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { ApprovalDecision, BondStatus } from '@prisma/client';
-import { withErrorHandling, AuthenticationError, ValidationError } from '@/lib/errors';
+import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
 import { prisma, withTransaction } from '@/lib/prisma';
@@ -17,6 +18,7 @@ import { getExpectedLevel, validateTransition, mapDecisionToEvent } from '@/lib/
 import * as fabric from '@/lib/fabric/gateway';
 import { isOfficialRole } from '@/types';
 import type { UserRole } from '@/types';
+import { prepareBondCertificate } from '@/lib/certificate/mint';
 
 interface ProcessApprovalParams {
   bondId: string;
@@ -53,6 +55,99 @@ async function verifyApprovalOtp(userId: string, otp: string): Promise<void> {
   await prisma.otpRequest.update({ where: { id: otpRecord.id }, data: { used: true } });
 }
 
+function revalidateDashboardPages(): void {
+  revalidatePath('/deo/dashboard');
+  revalidatePath('/official/dashboard');
+  revalidatePath('/farmer/dashboard');
+}
+
+async function processIntakeReview({
+  bondId,
+  decision,
+  remarks,
+  otp,
+  req,
+  user,
+  bond,
+  districtCode,
+}: {
+  bondId: string;
+  decision: ApprovalDecision;
+  remarks?: string;
+  otp?: string;
+  req: NextRequest;
+  user: { id: string; role: UserRole; employeeId?: string };
+  bond: Awaited<ReturnType<typeof getBondWithRelations>>;
+  districtCode: string;
+}) {
+  if (bond.status !== BondStatus.DRAFT) {
+    throw new ValidationError('Intake review only applies to DRAFT bonds');
+  }
+  if (decision === ApprovalDecision.RETURNED) {
+    throw new ValidationError('Return is not available during intake review');
+  }
+
+  const action = decision === ApprovalDecision.APPROVED ? 'approve' : 'reject';
+  const event = mapDecisionToEvent(decision);
+  const newStatus = validateTransition(bond.status, event, user.role);
+
+  const cerbosCallId = await withCerbos(
+    user,
+    {
+      kind: 'approval',
+      id: bondId,
+      attributes: { status: bond.status, districtCode },
+    },
+    action,
+  );
+
+  if (!otp) throw new AuthenticationError('OTP required');
+  await verifyApprovalOtp(user.id, otp);
+
+  let fabricTxId: string | undefined;
+  if (decision === ApprovalDecision.APPROVED) {
+    if (!bond.landDetails) throw new ValidationError('Land details required before approval');
+    if (!bond.holder) throw new ValidationError('Holder details required before approval');
+
+    fabricTxId = await fabric.createBond({
+      tdrNumber: bond.tdrNumber,
+      surveyNumber: bond.landDetails.surveyNumber,
+      holderAadhaarHash: bond.holder.aadhaarHash,
+      extentSqYds: Number(bond.landDetails.tdrIssuedExtentSqYds),
+      ratio: bond.landDetails.issuedRatio,
+      ipfsDocCid: bond.documents[0]?.ipfsCid ?? '',
+    });
+  }
+
+  await prisma.tdrBond.update({
+    where: { id: bondId },
+    data: {
+      status: newStatus,
+      ...(fabricTxId ? { fabricTxId } : {}),
+      ...(decision === ApprovalDecision.REJECTED && remarks ? { rejectionReason: remarks } : {}),
+    },
+  });
+
+  const auditAction =
+    decision === ApprovalDecision.APPROVED ? 'INTAKE_APPROVED' : 'INTAKE_REJECTED';
+
+  // AUDIT: Records DEO intake review of externally synced bond before pipeline entry
+  await writeAuditLog({
+    bondId,
+    actorId: user.id,
+    actorRole: user.role,
+    action: auditAction,
+    details: { decision, remarks },
+    cerbosCallId,
+    fabricTxId,
+    ipAddress: getClientIp(req.headers),
+  });
+
+  revalidateDashboardPages();
+
+  return { newStatus, cerbosCallId, fabricTxId, level: 0 };
+}
+
 export async function processApproval({
   bondId,
   decision,
@@ -65,8 +160,21 @@ export async function processApproval({
 
   const bond = await getBondWithRelations(bondId);
   const districtCode = getEffectiveBondDistrictCode(bond);
-  const level = getExpectedLevel(bond.status);
 
+  if (bond.status === BondStatus.DRAFT) {
+    return processIntakeReview({
+      bondId,
+      decision,
+      remarks,
+      otp,
+      req,
+      user,
+      bond,
+      districtCode,
+    });
+  }
+
+  const level = getExpectedLevel(bond.status);
   if (!level) throw new ValidationError(`Bond cannot be approved in status ${bond.status}`);
 
   const action =
@@ -109,6 +217,33 @@ export async function processApproval({
     remarks: remarks ?? '',
   });
 
+  let certificateFields: {
+    certificateIpfsCid: string;
+    certificateStoragePath: string;
+    mintedAt: Date;
+  } | null = null;
+  let bondFabricTxId = fabricTxId;
+
+  if (
+    decision === ApprovalDecision.APPROVED &&
+    newStatus === BondStatus.ACTIVE &&
+    bond.status === BondStatus.PENDING_L4
+  ) {
+    const minted = await prepareBondCertificate({
+      bond,
+      actorRole: user.role,
+      employeeId: user.employeeId,
+      verifyOrigin: new URL(req.url).origin,
+      approvalFabricTxId: fabricTxId,
+    });
+    certificateFields = {
+      certificateIpfsCid: minted.certificateIpfsCid,
+      certificateStoragePath: minted.certificateStoragePath,
+      mintedAt: new Date(),
+    };
+    bondFabricTxId = minted.fabricTxId;
+  }
+
   await withTransaction(async (tx) => {
     await tx.approvalStep.update({
       where: { bondId_level: { bondId, level } },
@@ -127,7 +262,9 @@ export async function processApproval({
       where: { id: bondId },
       data: {
         status: newStatus,
+        fabricTxId: bondFabricTxId,
         ...(decision === ApprovalDecision.REJECTED && remarks ? { rejectionReason: remarks } : {}),
+        ...(certificateFields ?? {}),
       },
     });
   });
@@ -147,9 +284,28 @@ export async function processApproval({
     action: auditAction,
     details: { level, decision, remarks },
     cerbosCallId,
-    fabricTxId,
+    fabricTxId: bondFabricTxId,
     ipAddress: getClientIp(req.headers),
   });
 
-  return { newStatus, signatureHash, cerbosCallId, fabricTxId, level };
+  if (certificateFields) {
+    // AUDIT: Records TDR certificate PDF mint after commissioner final approval
+    await writeAuditLog({
+      bondId,
+      actorId: user.id,
+      actorRole: user.role,
+      action: 'CERT_MINTED',
+      details: {
+        certificateIpfsCid: certificateFields.certificateIpfsCid,
+        blockchainPending: true,
+      },
+      cerbosCallId,
+      fabricTxId: bondFabricTxId,
+      ipAddress: getClientIp(req.headers),
+    });
+  }
+
+  revalidateDashboardPages();
+
+  return { newStatus, signatureHash, cerbosCallId, fabricTxId: bondFabricTxId, level };
 }

@@ -9,29 +9,21 @@ export const bondInclude = {
   documents: true,
   approvalSteps: { orderBy: { level: 'asc' as const }, include: { official: true } },
   farmer: true,
-  creator: true,
 };
 
-/** District used for queue filters and Cerbos — prefers creating official's district code. */
+/** District used for queue filters and Cerbos — from holder address. */
 export function getEffectiveBondDistrictCode(bond: {
   holder?: { district: string } | null;
-  creator?: { districtCode: string } | null;
 }): string {
-  const creatorDistrict = bond.creator?.districtCode;
-  if (creatorDistrict && creatorDistrict !== 'ALL') {
-    return creatorDistrict;
-  }
   return bond.holder?.district ?? '';
 }
 
-/** Prisma filter: bonds in an official's district (holder or creator). */
+/** Prisma filter: bonds in an official's district. */
 export function buildDistrictScopeWhere(
   districtCode?: string,
 ): Prisma.TdrBondWhereInput | undefined {
   if (!districtCode || districtCode === 'ALL') return undefined;
-  return {
-    OR: [{ holder: { district: districtCode } }, { creator: { districtCode } }],
-  };
+  return { holder: { district: districtCode } };
 }
 
 export async function getBondWithRelations(id: string): Promise<TdrBondWithRelations> {
@@ -46,7 +38,7 @@ export async function getBondWithRelations(id: string): Promise<TdrBondWithRelat
 export async function getBondDistrictCode(bondId: string): Promise<string> {
   const bond = await prisma.tdrBond.findUnique({
     where: { id: bondId },
-    include: { holder: true, creator: true },
+    include: { holder: true },
   });
   if (!bond) return '';
   return getEffectiveBondDistrictCode(bond);

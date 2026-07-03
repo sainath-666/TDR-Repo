@@ -1,4 +1,4 @@
-import { BondStatus, type Prisma } from '@prisma/client';
+import { BondStatus, type Prisma, type ApprovalStep, type Official } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { isPendingStatus } from '@/lib/bond-status';
 import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
@@ -8,6 +8,8 @@ import {
   LEVEL_FORWARD_STATUSES,
   LEVEL_QUEUE_STATUS,
 } from '@/lib/approval-levels';
+import type { BondReturnRemark } from '@/lib/return-remark';
+import { getLatestReturnRemark } from '@/lib/return-remark';
 import type { CurrentUser } from '@/types';
 
 export interface DashboardBondRow {
@@ -18,6 +20,8 @@ export interface DashboardBondRow {
   holderName: string | null;
   surveyNumber: string | null;
   surrenderedAreaSqYds: number | null;
+  /** Set when bond was returned to DEO for correction. */
+  returnRemark: BondReturnRemark | null;
 }
 
 export interface LevelStatBlock {
@@ -44,6 +48,8 @@ export interface OfficialDashboardData {
   levelStats: LevelStatBlock[];
   bonds: DashboardBondRow[];
   queueCount: number;
+  /** Bond status this role can act on (DRAFT for DEO, PENDING_L* for officials). */
+  reviewQueueStatus: BondStatus | null;
 }
 
 function mapBondRow(bond: {
@@ -53,7 +59,11 @@ function mapBondRow(bond: {
   updatedAt: Date;
   holder: { name: string } | null;
   landDetails: { surveyNumber: string; surrenderedAreaSqYds: { toString(): string } } | null;
+  approvalSteps: (ApprovalStep & { official: Pick<Official, 'name'> | null })[];
 }): DashboardBondRow {
+  const returnRemark =
+    bond.status === BondStatus.DRAFT ? getLatestReturnRemark(bond.approvalSteps) : null;
+
   return {
     id: bond.id,
     tdrNumber: bond.tdrNumber,
@@ -62,12 +72,13 @@ function mapBondRow(bond: {
     holderName: bond.holder?.name ?? null,
     surveyNumber: bond.landDetails?.surveyNumber ?? null,
     surrenderedAreaSqYds: bond.landDetails ? Number(bond.landDetails.surrenderedAreaSqYds) : null,
+    returnRemark,
   };
 }
 
 function buildBondWhere(user: CurrentUser, govLevel: number): Prisma.TdrBondWhereInput {
-  if (govLevel === 1) {
-    return { createdBy: user.id };
+  if (govLevel === 1 && user.districtCode) {
+    return buildDistrictScopeWhere(user.districtCode) ?? {};
   }
   if (user.districtCode) {
     return buildDistrictScopeWhere(user.districtCode) ?? {};
@@ -81,7 +92,7 @@ function computeLevelStats(bonds: { status: BondStatus }[], maxLevel: number): L
   if (maxLevel >= 1) {
     blocks.push({
       level: 1,
-      title: GOV_LEVEL_LABELS[1],
+      title: GOV_LEVEL_LABELS[1] ?? 'DEO / Surveyor',
       drafts: bonds.filter((b) => b.status === BondStatus.DRAFT).length,
       inPipeline: bonds.filter(
         (b) =>
@@ -101,7 +112,7 @@ function computeLevelStats(bonds: { status: BondStatus }[], maxLevel: number): L
 
     blocks.push({
       level,
-      title: GOV_LEVEL_LABELS[level],
+      title: GOV_LEVEL_LABELS[level] ?? `Stage ${level}`,
       inQueue: bonds.filter((b) => b.status === queueStatus).length,
       forwarded: bonds.filter((b) => forwardStatuses.includes(b.status)).length,
     });
@@ -120,7 +131,11 @@ export async function getOfficialDashboardData(user: CurrentUser): Promise<Offic
 
   const bonds = await prisma.tdrBond.findMany({
     where,
-    include: { holder: true, landDetails: true },
+    include: {
+      holder: true,
+      landDetails: true,
+      approvalSteps: { include: { official: true }, orderBy: { level: 'asc' } },
+    },
     orderBy: { updatedAt: 'desc' },
   });
 
@@ -131,7 +146,9 @@ export async function getOfficialDashboardData(user: CurrentUser): Promise<Offic
 
   const scopeLabel =
     govLevel === 1
-      ? 'Your bond entries'
+      ? user.districtCode
+        ? `District: ${user.districtCode} · External records`
+        : 'All districts · External records'
       : user.districtCode
         ? `District: ${user.districtCode}`
         : 'All districts';
@@ -149,5 +166,6 @@ export async function getOfficialDashboardData(user: CurrentUser): Promise<Offic
     levelStats: computeLevelStats(bonds, govLevel),
     bonds: bonds.map(mapBondRow),
     queueCount,
+    reviewQueueStatus: queueStatus ?? (govLevel === 1 ? BondStatus.DRAFT : null),
   };
 }

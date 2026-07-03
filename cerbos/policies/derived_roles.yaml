@@ -25,6 +25,14 @@ derivedRoles:
             request.resource.attr.status == "PENDING_L1"
             && request.principal.attr.districtCode == request.resource.attr.districtCode
 
+    - name: intake_reviewer
+      parentRoles: ['DEO', 'SURVEYOR']
+      condition:
+        match:
+          expr: >
+            request.resource.attr.status == "DRAFT"
+            && request.principal.attr.districtCode == request.resource.attr.districtCode
+
     - name: l2_approver
       parentRoles: ['SDC']
       condition:

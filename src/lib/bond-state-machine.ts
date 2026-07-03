@@ -2,6 +2,7 @@ import { BondStatus, ApprovalDecision, OfficialRole } from '@prisma/client';
 import { BOND_STATUS_TRANSITIONS, STATUS_TO_LEVEL, LEVEL_TO_ROLE } from '@/types';
 import type { UserRole } from '@/types';
 import { ValidationError } from '@/lib/errors';
+import { APPROVAL_CHAIN } from '@/lib/approval-chain';
 
 export function getExpectedLevel(status: BondStatus): number | null {
   return STATUS_TO_LEVEL[status] ?? null;
@@ -43,9 +44,8 @@ export function mapDecisionToEvent(decision: ApprovalDecision): string {
   }
 }
 
-export const APPROVAL_LEVELS = [
-  { level: 1, role: OfficialRole.DY_TAHSILDAR, status: BondStatus.PENDING_L1 },
-  { level: 2, role: OfficialRole.SDC, status: BondStatus.PENDING_L2 },
-  { level: 3, role: OfficialRole.DIRECTOR_LANDS, status: BondStatus.PENDING_L3 },
-  { level: 4, role: OfficialRole.COMMISSIONER, status: BondStatus.PENDING_L4 },
-];
+export const APPROVAL_LEVELS = APPROVAL_CHAIN.slice(1).map((stage, index) => ({
+  level: index + 1,
+  role: stage.officialRole,
+  status: stage.queueStatus,
+}));

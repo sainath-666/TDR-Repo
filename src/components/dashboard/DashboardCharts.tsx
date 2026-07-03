@@ -1,174 +1,131 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import type { EChartsOption } from 'echarts';
 import { BondStatus } from '@prisma/client';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { PieChart } from 'lucide-react';
 import type { OfficialDashboardData } from '@/lib/queries/official-dashboard';
-import { formatBondStatus } from '@/lib/bond-status';
+import { BOND_STATUS_CHART_COLORS, BOND_STATUS_ORDER, formatBondStatus } from '@/lib/bond-status';
 import { Card } from '@/components/ui/Card';
-
-const STATUS_COLORS: Record<string, string> = {
-  [BondStatus.DRAFT]: '#64748b',
-  [BondStatus.PENDING_L1]: '#d97706',
-  [BondStatus.PENDING_L2]: '#ea580c',
-  [BondStatus.PENDING_L3]: '#0284c7',
-  [BondStatus.PENDING_L4]: '#8b2e8b',
-  [BondStatus.ACTIVE]: '#0d9488',
-  [BondStatus.REJECTED]: '#dc2626',
-  [BondStatus.REVOKED]: '#94a3b8',
-};
-
-const PIPELINE_COLORS = ['#1b3a6b', '#d97706', '#ea580c', '#0284c7', '#8b2e8b', '#0d9488'];
+import { EChart } from '@/components/dashboard/EChart';
 
 interface DashboardChartsProps {
   data: OfficialDashboardData;
   compact?: boolean;
 }
 
+function chartTitle(title: string, subtitle: string, icon: ReactNode) {
+  return (
+    <div className="mb-2 flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <h3 className="text-xs font-semibold text-slate-800">{title}</h3>
+        <p className="text-[10px] text-slate-500">{subtitle}</p>
+      </div>
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-apcrda-primary ring-1 ring-indigo-100">
+        {icon}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardCharts({ data, compact = false }: DashboardChartsProps) {
-  const statusData = useMemo(() => {
+  const hasBonds = data.bonds.length > 0;
+  const chartHeight = compact ? 168 : 240;
+
+  const statusBarOption = useMemo<EChartsOption>(() => {
     const counts = new Map<BondStatus, number>();
     for (const bond of data.bonds) {
       counts.set(bond.status, (counts.get(bond.status) ?? 0) + 1);
     }
-    return Array.from(counts.entries()).map(([status, value]) => ({
+
+    const entries = BOND_STATUS_ORDER.map((status) => ({
       status,
-      name: formatBondStatus(status),
-      value,
-      fill: STATUS_COLORS[status] ?? '#94a3b8',
-    }));
-  }, [data.bonds]);
+      label: formatBondStatus(status),
+      value: counts.get(status) ?? 0,
+      color: BOND_STATUS_CHART_COLORS[status],
+    })).filter((e) => e.value > 0);
 
-  const pipelineData = useMemo(() => {
-    return data.levelStats.map((block) => {
-      if (block.level === 1) {
-        return {
-          name: 'L1',
-          fullName: block.title,
-          primary: block.drafts ?? 0,
-          secondary: block.inPipeline ?? 0,
-          primaryLabel: 'Drafts',
-          secondaryLabel: 'In pipeline',
-        };
-      }
-      return {
-        name: `L${block.level}`,
-        fullName: block.title,
-        primary: block.inQueue ?? 0,
-        secondary: block.forwarded ?? 0,
-        primaryLabel: 'In queue',
-        secondaryLabel: 'Forwarded',
-      };
-    });
-  }, [data.levelStats]);
-
-  const hasBonds = data.bonds.length > 0;
-  const chartHeight = compact ? 150 : 220;
-  const innerR = compact ? 32 : 52;
-  const outerR = compact ? 52 : 80;
+    return {
+      animationDuration: 600,
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        backgroundColor: '#fff',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        textStyle: { color: '#334155', fontSize: 11 },
+        formatter: (params: unknown) => {
+          const items = Array.isArray(params) ? params : [params];
+          const first = items[0] as { name?: string; value?: number | string } | undefined;
+          if (!first) return '';
+          return `${first.name ?? ''}: ${first.value ?? 0}`;
+        },
+      },
+      grid: {
+        left: 4,
+        right: 12,
+        top: 4,
+        bottom: 4,
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'value',
+        minInterval: 1,
+        splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+        axisLabel: { fontSize: 10, color: '#94a3b8' },
+      },
+      yAxis: {
+        type: 'category',
+        data: entries.map((e) => e.label),
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: {
+          fontSize: 10,
+          color: '#64748b',
+          width: compact ? 88 : 110,
+          overflow: 'truncate',
+        },
+      },
+      series: [
+        {
+          type: 'bar',
+          barMaxWidth: compact ? 14 : 18,
+          data: entries.map((e) => ({
+            value: e.value,
+            itemStyle: {
+              borderRadius: [0, 4, 4, 0],
+              color: e.color,
+            },
+          })),
+          label: {
+            show: true,
+            position: 'right',
+            fontSize: 10,
+            fontWeight: 600,
+            color: '#475569',
+          },
+        },
+      ],
+    };
+  }, [compact, data.bonds]);
 
   return (
-    <div
-      className={
-        compact
-          ? 'grid h-full grid-cols-1 gap-2 sm:grid-cols-2'
-          : 'grid h-full grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6'
-      }
-    >
-      <Card padding={compact ? 'xs' : 'md'} className="flex min-h-0 flex-col">
-        <h3 className="text-xs font-semibold text-slate-800">Bond status</h3>
-        <p className="mb-1 text-[10px] text-slate-500">By current status</p>
-        {hasBonds ? (
-          <div className="min-h-0 flex-1" style={{ height: chartHeight }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="46%"
-                  innerRadius={innerR}
-                  outerRadius={outerR}
-                  paddingAngle={2}
-                >
-                  {statusData.map((entry) => (
-                    <Cell key={entry.status} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: number, name: string) => [value, name]}
-                  contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11 }}
-                />
-                <Legend
-                  layout="horizontal"
-                  verticalAlign="bottom"
-                  wrapperStyle={{ fontSize: 9, paddingTop: 4 }}
-                  iconSize={8}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-xs text-slate-400">
-            No data
-          </div>
-        )}
-      </Card>
-
-      <Card padding={compact ? 'xs' : 'md'} className="flex min-h-0 flex-col">
-        <h3 className="text-xs font-semibold text-slate-800">Approval pipeline</h3>
-        <p className="mb-1 text-[10px] text-slate-500">L1 → L{data.govLevel}</p>
-        {hasBonds ? (
-          <div className="min-h-0 flex-1" style={{ height: chartHeight }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={pipelineData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={28} />
-                <Tooltip
-                  contentStyle={{ borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11 }}
-                  labelFormatter={(_, payload) =>
-                    payload?.[0]?.payload?.fullName ? String(payload[0].payload.fullName) : ''
-                  }
-                  formatter={(
-                    value: number,
-                    _name: string,
-                    item: {
-                      payload?: { primaryLabel?: string; secondaryLabel?: string };
-                      dataKey?: string;
-                    },
-                  ) => {
-                    const label =
-                      item.dataKey === 'primary'
-                        ? item.payload?.primaryLabel
-                        : item.payload?.secondaryLabel;
-                    return [value, label ?? ''];
-                  }}
-                />
-                <Bar dataKey="primary" fill={PIPELINE_COLORS[1]} radius={[3, 3, 0, 0]} />
-                <Bar dataKey="secondary" fill={PIPELINE_COLORS[3]} radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        ) : (
-          <div className="flex flex-1 items-center justify-center text-xs text-slate-400">
-            No data
-          </div>
-        )}
-      </Card>
-    </div>
+    <Card padding={compact ? 'sm' : 'md'} className="flex h-full min-h-0 flex-col overflow-hidden">
+      {chartTitle(
+        'Bond status',
+        'Distribution by current status',
+        <PieChart className="h-3.5 w-3.5" />,
+      )}
+      {hasBonds ? (
+        <EChart option={statusBarOption} height={chartHeight} />
+      ) : (
+        <div
+          className="flex flex-1 items-center justify-center rounded-xl bg-slate-50 text-xs text-slate-400"
+          style={{ height: chartHeight }}
+        >
+          No bond data yet
+        </div>
+      )}
+    </Card>
   );
 }

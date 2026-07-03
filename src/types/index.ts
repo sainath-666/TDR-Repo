@@ -14,6 +14,7 @@ export type UserRole = OfficialRole | 'FARMER';
 export interface CurrentUser {
   id: string;
   role: UserRole;
+  name?: string;
   districtCode?: string;
   employeeId?: string;
   farmerId?: string;
@@ -73,7 +74,6 @@ export type TdrBondWithRelations = Prisma.TdrBondGetPayload<{
     documents: true;
     approvalSteps: { include: { official: true } };
     farmer: true;
-    creator: true;
   };
 }>;
 
@@ -81,7 +81,10 @@ export const BOND_STATUS_TRANSITIONS: Record<
   string,
   { event: string; to: BondStatus; roles: UserRole[] }[]
 > = {
-  DRAFT: [{ event: 'submit', to: BondStatus.PENDING_L1, roles: ['DEO', 'SURVEYOR'] }],
+  DRAFT: [
+    { event: 'approve', to: BondStatus.PENDING_L1, roles: ['DEO', 'SURVEYOR'] },
+    { event: 'reject', to: BondStatus.REJECTED, roles: ['DEO', 'SURVEYOR'] },
+  ],
   PENDING_L1: [
     { event: 'approve', to: BondStatus.PENDING_L2, roles: ['DY_TAHSILDAR', 'TAHSILDAR'] },
     { event: 'reject', to: BondStatus.REJECTED, roles: ['DY_TAHSILDAR', 'TAHSILDAR'] },
@@ -131,21 +134,4 @@ export const OFFICIAL_ROLES: UserRole[] = [
 
 export function isOfficialRole(role: UserRole): boolean {
   return OFFICIAL_ROLES.includes(role);
-}
-
-export function getQueueStatusForRole(role: UserRole): BondStatus | null {
-  switch (role) {
-    case 'DY_TAHSILDAR':
-    case 'TAHSILDAR':
-      return BondStatus.PENDING_L1;
-    case 'SDC':
-      return BondStatus.PENDING_L2;
-    case 'DIRECTOR_LANDS':
-      return BondStatus.PENDING_L3;
-    case 'COMMISSIONER':
-    case 'ADDL_COMMISSIONER':
-      return BondStatus.PENDING_L4;
-    default:
-      return null;
-  }
 }

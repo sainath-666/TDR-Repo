@@ -3,9 +3,16 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Shield, Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Shield, Eye, EyeOff, Mail, Lock, ChevronRight } from 'lucide-react';
+import {
+  getApprovalLoginAccounts,
+  isApprovalDevLoginsVisible,
+  DEV_LOGIN_PASSWORD_HINT,
+} from '@/lib/approval-logins';
 
 const SSO_ENABLED = process.env.NEXT_PUBLIC_OFFICIAL_SSO_ENABLED === 'true';
+const SHOW_DEV_LOGINS = isApprovalDevLoginsVisible();
+const APPROVAL_LOGINS = getApprovalLoginAccounts();
 
 export default function OfficialLoginClient() {
   const router = useRouter();
@@ -60,7 +67,9 @@ export default function OfficialLoginClient() {
           <Shield className="h-7 w-7 text-apcrda-secondary" />
         </div>
         <h1 className="text-2xl font-bold text-apcrda-primary">Official Login</h1>
-        <p className="text-sm text-slate-500 mt-1">Sign in with your APCRDA email and password</p>
+        <p className="text-sm text-slate-500 mt-1">
+          Five approval roles · DEO through Commissioner
+        </p>
       </div>
 
       <div className="auth-card">
@@ -163,6 +172,46 @@ export default function OfficialLoginClient() {
           )}
         </div>
       </div>
+
+      {SHOW_DEV_LOGINS && (
+        <div className="mb-5 rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Approval logins (dev)
+          </p>
+          <ol className="space-y-2">
+            {APPROVAL_LOGINS.map((account) => (
+              <li key={account.employeeId}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(account.email);
+                    setPassword(DEV_LOGIN_PASSWORD_HINT);
+                    setError('');
+                  }}
+                  className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-apcrda-primary/30 hover:bg-indigo-50/50"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-apcrda-primary text-[11px] font-bold text-white">
+                    {account.level}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-xs font-semibold text-slate-800">
+                      {account.label}
+                    </span>
+                    <span className="block truncate text-[10px] text-slate-500">
+                      {account.email}
+                    </span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                </button>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 text-[10px] text-slate-400">
+            Password: <span className="font-mono">{DEV_LOGIN_PASSWORD_HINT}</span> · Run{' '}
+            <span className="font-mono">npm run auth:sync</span> after seed
+          </p>
+        </div>
+      )}
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Farmer?{' '}

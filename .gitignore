@@ -39,6 +39,7 @@ fabric/network/wallet/
 
 # certs
 /certs/
+/storage/certificates/
 
 # cerbos logs
 cerbos_logs/
