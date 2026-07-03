@@ -1,0 +1,26 @@
+# VM overlay — HTTP on port 80, no SSL required.
+# Used automatically by: npm run deploy
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required}
+        NEXT_PUBLIC_OFFICIAL_SSO_ENABLED: ${NEXT_PUBLIC_OFFICIAL_SSO_ENABLED:-false}
+    environment:
+      FABRIC_MOCK_MODE: ${FABRIC_MOCK_MODE:-true}
+
+  nginx:
+    ports: !reset []
+    ports:
+      - '80:80'
+    volumes: !reset []
+    volumes:
+      - ./deploy/nginx/nginx.vm.conf:/etc/nginx/nginx.conf:ro
+
+  postgres:
+    ports:
+      - '127.0.0.1:5432:5432'

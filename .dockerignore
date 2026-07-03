@@ -1,46 +1,26 @@
-# dependencies
 node_modules
 .pnp
 .pnp.js
 
-# build output
 .next
 out
 build
 coverage
 
-# env & secrets
 .env
-.env.*
-!.env.production.example
+.env.local
+.env.production
 
-# git & IDE
 .git
 .gitignore
-.cursor
-.cursorrules
 .vscode
-*.md
-!README.md
-
-# tests
-__tests__
-**/*.test.ts
-**/*.test.tsx
-jest.config.js
-jest.integration.config.js
-
-# fabric crypto (mounted separately in prod)
-fabric/network/crypto-config
-fabric/network/channel-artifacts
-certs
-
-# cerbos runtime logs
-cerbos_logs
-
-# misc
 .DS_Store
 npm-debug.log*
 *.pem
 .vercel
 *.tsbuildinfo
+
+fabric/network/crypto-config
+fabric/network/channel-artifacts
+certs
+cerbos_logs

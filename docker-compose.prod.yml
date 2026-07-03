@@ -1,10 +1,5 @@
-# Production overlay — use with:
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-#
-# Prerequisites:
-#   1. cp .env.production.example .env.production  (fill all secrets)
-#   2. Place TLS certs in deploy/nginx/ssl/tdr.crt and tdr.key
-#   3. docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Production overlay — use with docker-compose.vm.yml for VM HTTP deploy.
+#   npm run deploy
 
 services:
   postgres:
@@ -37,6 +32,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?NEXT_PUBLIC_SUPABASE_URL is required}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?NEXT_PUBLIC_SUPABASE_ANON_KEY is required}
+        NEXT_PUBLIC_OFFICIAL_SSO_ENABLED: ${NEXT_PUBLIC_OFFICIAL_SSO_ENABLED:-false}
     image: apcrda-tdr:${APP_VERSION:-latest}
     restart: unless-stopped
     env_file: .env.production

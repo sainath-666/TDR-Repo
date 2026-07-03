@@ -9,12 +9,26 @@ function isCerbosMockMode(): boolean {
 }
 
 function isCerbosUnavailableError(err: unknown): boolean {
+  if (isCerbosMockMode()) return false;
+
   const msg = err instanceof Error ? err.message : String(err);
+  const code = typeof err === 'object' && err !== null && 'code' in err ? Number(err.code) : NaN;
+
   return (
+    code === 14 ||
     msg.includes('ECONNREFUSED') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('ETIMEDOUT') ||
     msg.includes('UNAVAILABLE') ||
-    msg.includes('No connection established')
+    msg.includes('No connection established') ||
+    msg.includes('Name resolution failed')
   );
+}
+
+function canSkipCerbosCheck(): boolean {
+  if (process.env.CERBOS_REQUIRE_REAL === 'true') return false;
+  if (isCerbosMockMode()) return true;
+  return process.env.NODE_ENV !== 'production';
 }
 
 function mockCerbosCallId(): string {
@@ -91,15 +105,15 @@ export async function withCerbos(
     if (err instanceof AuthorizationError) throw err;
 
     if (isCerbosUnavailableError(err)) {
-      if (isCerbosMockMode()) {
+      if (canSkipCerbosCheck()) {
         const cerbosCallId = mockCerbosCallId();
-        logger.warn('Cerbos PDP not running — mock mode allows action', { cerbosCallId });
+        logger.warn('Cerbos PDP not running — skipping authorization check', { cerbosCallId });
         return cerbosCallId;
       }
       throw new IntegrationError(
         'Cerbos',
         503,
-        'Authorization service unavailable. Start Cerbos: npm run stack:up',
+        'Authorization service unavailable. For local dev set CERBOS_MOCK_MODE=true, or start Cerbos: npm run stack:up',
       );
     }
     throw err;

@@ -1,4 +1,6 @@
-# Local Cerbos config (Windows/WSL — paths relative to cerbos/ directory)
+# Local Cerbos — run from repo root: npm run cerbos:start
+# Paths are relative to the project root (where you start the server).
+
 server:
   httpListenAddr: ':3592'
   grpcListenAddr: ':3593'
@@ -6,7 +8,7 @@ server:
 storage:
   driver: disk
   disk:
-    directory: ./policies
+    directory: cerbos/policies
     watchForChanges: true
 
 audit:
@@ -15,5 +17,5 @@ audit:
   decisionLogsEnabled: true
   backend: local
   local:
-    storagePath: ./cerbos_logs
+    storagePath: cerbos_logs
     retentionPeriod: 168h
