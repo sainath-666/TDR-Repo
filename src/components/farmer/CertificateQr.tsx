@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { cn } from '@/lib/utils';
@@ -36,11 +37,12 @@ export function CertificateQr({ verifyPath, size = 72, className }: CertificateQ
   }
 
   return (
-    <img
+    <Image
       src={src}
       alt="Certificate verification QR code"
       width={size}
       height={size}
+      unoptimized
       className={cn('block border border-slate-300 bg-white', className)}
     />
   );

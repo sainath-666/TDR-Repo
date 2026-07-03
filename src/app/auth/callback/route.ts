@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   }
 
   const redirectTo = new URL(next, req.url);
-  let response = NextResponse.redirect(redirectTo);
+  const response = NextResponse.redirect(redirectTo);
 
   const cookieStore = cookies();
   const supabase = createServerClient(

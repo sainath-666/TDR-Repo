@@ -13,7 +13,7 @@ export function contentWidth(doc: PDFKit.PDFDocument): number {
   return doc.page.width - PAGE_MARGIN * 2 - INNER_PAD * 2;
 }
 
-export function contentLeft(doc: PDFKit.PDFDocument): number {
+export function contentLeft(): number {
   return PAGE_MARGIN + INNER_PAD;
 }
 
@@ -73,7 +73,7 @@ export function drawCertificateHeader(
   qrBuffer: Buffer,
   logoPath: string | null,
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
   let y = PAGE_MARGIN + INNER_PAD + 4;
 
@@ -110,7 +110,7 @@ export function drawFileMetaRow(
   fileNo: string,
   fileDate: string,
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
 
   doc.font('Helvetica').fontSize(9).fillColor('#000000');
@@ -128,7 +128,7 @@ export function drawNarrativeParagraph(
   y: number,
   parts: { text: string; bold?: boolean }[],
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
 
   doc.x = left;
@@ -153,7 +153,7 @@ export function drawDataTable(
   y: number,
   rows: CertificateTableRow[],
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
   const colSerial = 28;
   const colLabel = 200;
@@ -182,7 +182,7 @@ export function drawDataTable(
 }
 
 export function drawSignatureBlocks(doc: PDFKit.PDFDocument, y: number): void {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
   const blockW = (width - 24) / 2;
 
@@ -231,7 +231,7 @@ export function drawWrappedTerms(
   terms: string[],
   fontSize = 7.5,
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
   let cy = y;
 
@@ -250,7 +250,7 @@ export function drawLedgerSummary(
   y: number,
   fields: { label: string; value: string }[],
 ): number {
-  const left = contentLeft(doc);
+  const left = contentLeft();
   const width = contentWidth(doc);
   const colW = width / 2;
   let cy = y;
@@ -287,8 +287,7 @@ export function drawLedgerTable(
     balance: string;
   },
 ): number {
-  const left = contentLeft(doc);
-  const width = contentWidth(doc);
+  const left = contentLeft();
   const colWidths = [22, 58, 72, 52, 78, 62, 62];
   const headerH = 24;
   const rowH = 22;

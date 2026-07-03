@@ -51,7 +51,6 @@ function renderPageShell(doc: PDFKit.PDFDocument): void {
 export async function generateCertificatePdf(
   data: CertificateData,
   qrBuffer: Buffer,
-  _lang: 'en' | 'te' = 'en',
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: 'A4', margin: 0 });
@@ -103,7 +102,7 @@ export async function generateCertificatePdf(
         .fillColor('#64748b')
         .text(
           'Note: Blockchain ledger anchoring pending (offline TDR migration track).',
-          contentLeft(doc),
+          contentLeft(),
           y,
           { width: contentWidth(doc) },
         );
@@ -117,7 +116,7 @@ export async function generateCertificatePdf(
     doc.addPage();
     renderPageShell(doc);
 
-    const left = contentLeft(doc);
+    const left = contentLeft();
     const width = contentWidth(doc);
     y = PAGE_MARGIN + INNER_PAD + 20;
 

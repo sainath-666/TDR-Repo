@@ -67,14 +67,14 @@ function isDropdownActive(
 function NavDropdown({
   label,
   icon: Icon,
-  children,
+  items,
   mobile,
   onNavigate,
   active,
 }: {
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  children: readonly { href: string; label: string }[];
+  items: readonly { href: string; label: string }[];
   mobile?: boolean;
   onNavigate?: () => void;
   active?: boolean;
@@ -125,7 +125,7 @@ function NavDropdown({
           <Icon className="h-4 w-4" />
           {label}
         </p>
-        {children.map((child) => (
+        {items.map((child) => (
           <Link
             key={child.href}
             href={child.href}
@@ -165,7 +165,7 @@ function NavDropdown({
             className="rounded-sm border border-slate-200 bg-white py-1 shadow-xl"
             role="menu"
           >
-            {children.map((child) => (
+            {items.map((child) => (
               <Link
                 key={child.href}
                 href={child.href}
@@ -183,9 +183,10 @@ function NavDropdown({
   );
 }
 
-export function PublicHeader() {
+export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navItems = showLogins ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.label !== 'SIGN IN');
 
   return (
     <header className="relative z-50 shadow-md">
@@ -228,7 +229,7 @@ export function PublicHeader() {
       <div className="gov-nav-bar overflow-visible">
         <div className="max-w-[1140px] mx-auto flex h-12 items-center overflow-visible px-2">
           <nav className="hidden md:flex flex-1 flex-wrap items-center justify-center overflow-visible">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               if ('children' in item && item.children) {
                 const dropdownActive = isDropdownActive(
                   pathname,
@@ -240,7 +241,7 @@ export function PublicHeader() {
                     key={item.label}
                     label={item.label}
                     icon={item.icon}
-                    children={item.children}
+                    items={item.children}
                     active={dropdownActive}
                   />
                 );
@@ -279,14 +280,14 @@ export function PublicHeader() {
 
         {mobileOpen && (
           <div className="md:hidden border-t border-white/20 pb-2">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               if ('children' in item && item.children) {
                 return (
                   <NavDropdown
                     key={item.label}
                     label={item.label}
                     icon={item.icon}
-                    children={item.children}
+                    items={item.children}
                     mobile
                     onNavigate={() => setMobileOpen(false)}
                   />

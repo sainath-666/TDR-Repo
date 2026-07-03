@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
-import QRCode from 'qrcode';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError, ValidationError } from '@/lib/errors';
 import { created } from '@/lib/api-response';

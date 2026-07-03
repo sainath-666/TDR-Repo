@@ -10,7 +10,7 @@ interface PublicPageLayoutProps {
 export function PublicPageLayout({ children, showLogins = true }: PublicPageLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col bg-white">
-      <PublicHeader />
+      <PublicHeader showLogins={showLogins} />
       <main className="flex-1">{children}</main>
       <PublicFooter />
       <ScrollToTop />

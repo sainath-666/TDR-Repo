@@ -15,6 +15,7 @@ export interface SidebarNavSection {
 }
 
 export function getSidebarNav(portal: PortalType, role: UserRole): SidebarNavSection[] {
+  void role;
   if (portal === 'deo') {
     return [
       {

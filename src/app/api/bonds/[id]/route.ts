@@ -3,13 +3,7 @@ import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
 import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
-import { prisma } from '@/lib/prisma';
-import {
-  getBondWithRelations,
-  getBondDistrictCode,
-  bondInclude,
-  getEffectiveBondDistrictCode,
-} from '@/lib/bond-helpers';
+import { getBondWithRelations, getEffectiveBondDistrictCode } from '@/lib/bond-helpers';
 
 export const GET = withErrorHandling(async (_req, { params }: { params: { id: string } }) => {
   const user = await getCurrentUser(cookies());
