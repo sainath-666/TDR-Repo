@@ -7,7 +7,15 @@ import type { BondReviewDisplay } from '@/lib/bond-review-display';
 import { BondReviewBody } from '@/components/approval/BondReviewSections';
 import { ReturnRemarkBanner } from '@/components/approval/ReturnRemarkBanner';
 import { ApprovalTrailPipeline } from '@/components/approval/ApprovalTrailCompact';
-import { CheckCircle2, XCircle, Undo2, Download, Loader2, Lock, ShieldCheck } from 'lucide-react';
+import {
+  CheckCircle2,
+  XCircle,
+  Undo2,
+  Download,
+  Loader2,
+  ShieldCheck,
+  AlertTriangle,
+} from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import type { BondDocument } from '@prisma/client';
 import { BondStatus } from '@prisma/client';
@@ -55,8 +63,7 @@ export function BondReviewPanel({
   canAct = true,
 }: Props) {
   const router = useRouter();
-  const [otp, setOtp] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [action, setAction] = useState<'approve' | 'reject' | 'return' | null>(null);
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(false);
@@ -66,15 +73,14 @@ export function BondReviewPanel({
   const returnRemark =
     bond.status === BondStatus.DRAFT ? getLatestReturnRemark(bond.approvalSteps) : null;
 
-  async function requestOtp() {
-    try {
-      await fetch('/api/auth/approval-otp/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purpose: 'APPROVAL' }),
-      });
-    } catch (e) {
-      console.error('Failed to request OTP:', e);
+  function confirmMessage(type: 'approve' | 'reject' | 'return'): string {
+    switch (type) {
+      case 'approve':
+        return 'Are you sure you want to approve this application? This action will be recorded in the approval chain.';
+      case 'reject':
+        return 'Are you sure you want to reject this application? This action cannot be undone.';
+      case 'return':
+        return 'The bond will revert to draft status for DEO correction. Continue?';
     }
   }
 
@@ -92,7 +98,7 @@ export function BondReviewPanel({
       const body =
         type === 'return'
           ? { remarks: remarks.trim() }
-          : { otp, remarks: type === 'reject' ? remarks.trim() : undefined };
+          : { remarks: type === 'reject' ? remarks.trim() : undefined };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -114,7 +120,7 @@ export function BondReviewPanel({
       setError(e instanceof Error ? e.message : 'Action failed');
     } finally {
       setLoading(false);
-      setShowOtpModal(false);
+      setShowConfirmModal(false);
     }
   }
 
@@ -159,8 +165,7 @@ export function BondReviewPanel({
                   type="button"
                   onClick={() => {
                     setAction('approve');
-                    setShowOtpModal(true);
-                    void requestOtp();
+                    setShowConfirmModal(true);
                   }}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-white shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 transition-all"
                 >
@@ -171,8 +176,8 @@ export function BondReviewPanel({
                   type="button"
                   onClick={() => {
                     setAction('reject');
-                    setShowOtpModal(true);
-                    void requestOtp();
+                    setRemarks('');
+                    setShowConfirmModal(true);
                   }}
                   className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-white shadow-sm bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 transition-all"
                 >
@@ -185,7 +190,7 @@ export function BondReviewPanel({
                     onClick={() => {
                       setAction('return');
                       setRemarks('');
-                      setShowOtpModal(true);
+                      setShowConfirmModal(true);
                     }}
                     disabled={loading}
                     className="w-full inline-flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-bold text-white shadow-sm bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 transition-all disabled:opacity-50"
@@ -204,12 +209,12 @@ export function BondReviewPanel({
         </div>
       </div>
 
-      {showOtpModal && (
+      {showConfirmModal && action && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl border border-slate-100">
             <div className="text-center mb-4">
               <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 mb-2">
-                <Lock className="h-5 w-5 text-apcrda-primary" />
+                <AlertTriangle className="h-5 w-5 text-apcrda-primary" />
               </div>
               <h3 className="font-bold text-slate-900">
                 {action === 'approve'
@@ -218,11 +223,7 @@ export function BondReviewPanel({
                     ? 'Confirm Rejection'
                     : 'Return to DEO'}
               </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                {action === 'return'
-                  ? 'Bond will revert to draft status for DEO correction.'
-                  : 'Enter OTP sent to your registered device.'}
-              </p>
+              <p className="text-xs text-slate-500 mt-1">{confirmMessage(action)}</p>
             </div>
 
             {(action === 'reject' || action === 'return') && (
@@ -235,27 +236,13 @@ export function BondReviewPanel({
               />
             )}
 
-            {action !== 'return' && (
-              <input
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                maxLength={6}
-                placeholder="· · · · · ·"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center text-2xl font-bold tracking-[0.4em] focus:outline-none focus:border-apcrda-primary focus:ring-2 focus:ring-apcrda-primary/20 mb-3"
-              />
-            )}
-
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => action && handleAction(action)}
+                onClick={() => handleAction(action)}
                 disabled={
                   loading ||
-                  (action === 'return'
-                    ? remarks.trim().length < 10
-                    : action === 'reject'
-                      ? remarks.trim().length < 10 || otp.length !== 6
-                      : otp.length !== 6)
+                  ((action === 'reject' || action === 'return') && remarks.trim().length < 10)
                 }
                 className="flex-1 rounded-xl bg-apcrda-primary text-white text-sm font-bold py-2.5 disabled:opacity-50 shadow-sm"
               >
@@ -264,7 +251,7 @@ export function BondReviewPanel({
               <button
                 type="button"
                 onClick={() => {
-                  setShowOtpModal(false);
+                  setShowConfirmModal(false);
                   setError('');
                 }}
                 disabled={loading}

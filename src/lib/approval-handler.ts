@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { NextRequest } from 'next/server';
-import bcrypt from 'bcryptjs';
 import { ApprovalDecision, BondStatus } from '@prisma/client';
 import { AuthenticationError, ValidationError } from '@/lib/errors';
 import { getCurrentUser } from '@/lib/supabase/client';
@@ -24,35 +23,7 @@ interface ProcessApprovalParams {
   bondId: string;
   decision: ApprovalDecision;
   remarks?: string;
-  otp?: string;
   req: NextRequest;
-}
-
-function isApprovalOtpBypassEnabled(): boolean {
-  return process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true';
-}
-
-async function verifyApprovalOtp(userId: string, otp: string): Promise<void> {
-  if (isApprovalOtpBypassEnabled()) {
-    if (!/^\d{6}$/.test(otp)) {
-      throw new AuthenticationError('Enter any 6-digit OTP in development');
-    }
-    return;
-  }
-
-  const otpRecord = await prisma.otpRequest.findFirst({
-    where: {
-      userId,
-      purpose: 'APPROVAL',
-      used: false,
-      expiresAt: { gt: new Date() },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
-  if (!otpRecord) throw new AuthenticationError('OTP expired or not found');
-  const valid = await bcrypt.compare(otp, otpRecord.otpHash);
-  if (!valid) throw new AuthenticationError('Invalid OTP');
-  await prisma.otpRequest.update({ where: { id: otpRecord.id }, data: { used: true } });
 }
 
 function revalidateDashboardPages(): void {
@@ -65,7 +36,6 @@ async function processIntakeReview({
   bondId,
   decision,
   remarks,
-  otp,
   req,
   user,
   bond,
@@ -74,7 +44,6 @@ async function processIntakeReview({
   bondId: string;
   decision: ApprovalDecision;
   remarks?: string;
-  otp?: string;
   req: NextRequest;
   user: { id: string; role: UserRole; employeeId?: string };
   bond: Awaited<ReturnType<typeof getBondWithRelations>>;
@@ -100,9 +69,6 @@ async function processIntakeReview({
     },
     action,
   );
-
-  if (!otp) throw new AuthenticationError('OTP required');
-  await verifyApprovalOtp(user.id, otp);
 
   let fabricTxId: string | undefined;
   if (decision === ApprovalDecision.APPROVED) {
@@ -148,13 +114,7 @@ async function processIntakeReview({
   return { newStatus, cerbosCallId, fabricTxId, level: 0 };
 }
 
-export async function processApproval({
-  bondId,
-  decision,
-  remarks,
-  otp,
-  req,
-}: ProcessApprovalParams) {
+export async function processApproval({ bondId, decision, remarks, req }: ProcessApprovalParams) {
   const user = await getCurrentUser(cookies());
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
@@ -166,7 +126,6 @@ export async function processApproval({
       bondId,
       decision,
       remarks,
-      otp,
       req,
       user,
       bond,
@@ -196,11 +155,6 @@ export async function processApproval({
     },
     action,
   );
-
-  if (decision !== ApprovalDecision.RETURNED) {
-    if (!otp) throw new AuthenticationError('OTP required');
-    await verifyApprovalOtp(user.id, otp);
-  }
 
   const timestamp = Date.now();
   const signatureHash = user.employeeId

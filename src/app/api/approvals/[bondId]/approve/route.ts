@@ -11,7 +11,6 @@ export const POST = withErrorHandling(
     const result = await processApproval({
       bondId: params.bondId,
       decision: ApprovalDecision.APPROVED,
-      otp: body.otp,
       remarks: body.remarks,
       req,
     });

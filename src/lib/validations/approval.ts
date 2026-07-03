@@ -1,12 +1,10 @@
 import { z } from 'zod';
 
 export const approveSchema = z.object({
-  otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits'),
   remarks: z.string().optional(),
 });
 
 export const rejectSchema = z.object({
-  otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits'),
   remarks: z.string().min(10, 'Rejection reason must be at least 10 characters'),
 });
 
