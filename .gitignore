@@ -14,7 +14,7 @@
 # environment (secrets — never commit)
 .env
 .env.local
-.env.production
+# .env.production
 
 # misc
 .DS_Store
