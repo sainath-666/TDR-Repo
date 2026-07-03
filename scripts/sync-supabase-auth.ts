@@ -5,6 +5,7 @@
  * Usage: npm run auth:sync
  */
 import { PrismaClient } from '@prisma/client';
+import { getDevPassword, officialDevEmail } from '../src/lib/dev-auth';
 import { ensureOfficialAuthUser, ensureFarmerAuthUser } from '../src/lib/supabase/auth-users';
 
 const prisma = new PrismaClient();
@@ -36,9 +37,9 @@ async function main() {
 
   console.log('\nOfficial login emails (after auth:sync):');
   for (const o of officials) {
-    console.log(`  ${o.employeeId} → ${o.employeeId.toLowerCase()}@dev.apcrda.local`);
+    console.log(`  ${o.employeeId} → ${officialDevEmail(o.employeeId)}`);
   }
-  console.log(`  Password (dev): ${process.env.AUTH_DEV_PASSWORD ?? 'DevPassword123!'}`);
+  console.log(`  Password (dev): ${getDevPassword()}`);
 }
 
 main()

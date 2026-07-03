@@ -1,6 +1,7 @@
+import { getDevPassword, officialDevEmail, farmerDevEmail } from '@/lib/dev-auth';
 import { createAdminClient } from './server';
 
-const DEV_PASSWORD = 'DevPassword123!';
+const DEV_PASSWORD = getDevPassword();
 
 export { DEV_PASSWORD };
 
@@ -18,13 +19,7 @@ interface FarmerRecord {
   aadhaarPhone: string;
 }
 
-export function officialDevEmail(employeeId: string): string {
-  return `${employeeId.toLowerCase()}@dev.apcrda.local`;
-}
-
-export function farmerDevEmail(phone: string): string {
-  return `farmer-${phone}@dev.apcrda.local`;
-}
+export { officialDevEmail, farmerDevEmail } from '@/lib/dev-auth';
 
 export async function ensureOfficialAuthUser(official: OfficialRecord): Promise<void> {
   const admin = createAdminClient();

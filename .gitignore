@@ -12,8 +12,8 @@
 /build
 
 # environment (secrets — never commit)
-.env
-.env.local
+# .env
+# .env.local
 # .env.production
 
 # misc
