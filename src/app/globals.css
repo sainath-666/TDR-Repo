@@ -375,7 +375,7 @@
   }
 
   .tdr-cert-watermark-img {
-    @apply object-contain opacity-[0.1];
+    @apply object-contain opacity-[0.18];
   }
 
   .tdr-cert-header {

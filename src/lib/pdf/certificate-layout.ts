@@ -42,7 +42,7 @@ export function drawWatermark(doc: PDFDocument): void {
   if (fs.existsSync(APGOV_WATERMARK_PATH)) {
     const size = 240;
     doc.save();
-    doc.opacity(0.1);
+    doc.opacity(0.18);
     doc.image(APGOV_WATERMARK_PATH, cx - size / 2, cy - size / 2, {
       fit: [size, size],
       align: 'center',
