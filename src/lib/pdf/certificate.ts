@@ -43,7 +43,7 @@ function logoPath(): string | null {
   return fs.existsSync(p) ? p : null;
 }
 
-function renderPageShell(doc: PDFDocument): void {
+function renderPageShell(doc: PDFKit.PDFDocument): void {
   drawCertificateBorder(doc);
   drawWatermark(doc);
 }

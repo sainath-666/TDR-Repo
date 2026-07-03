@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import type { CertificateTableRow } from '@/lib/certificate/content';
-import type PDFDocument from 'pdfkit';
 
 export const CERT_GREEN = '#1B5E20';
 export const CERT_GREEN_LIGHT = '#2E7D32';
@@ -10,15 +9,15 @@ export const INNER_PAD = 14;
 
 const APGOV_WATERMARK_PATH = path.join(process.cwd(), 'public', 'images', 'APGOV.png');
 
-export function contentWidth(doc: PDFDocument): number {
+export function contentWidth(doc: PDFKit.PDFDocument): number {
   return doc.page.width - PAGE_MARGIN * 2 - INNER_PAD * 2;
 }
 
-export function contentLeft(doc: PDFDocument): number {
+export function contentLeft(doc: PDFKit.PDFDocument): number {
   return PAGE_MARGIN + INNER_PAD;
 }
 
-export function drawCertificateBorder(doc: PDFDocument): void {
+export function drawCertificateBorder(doc: PDFKit.PDFDocument): void {
   const { width, height } = doc.page;
   const outer = PAGE_MARGIN;
   const w = width - outer * 2;
@@ -35,7 +34,7 @@ export function drawCertificateBorder(doc: PDFDocument): void {
   doc.restore();
 }
 
-export function drawWatermark(doc: PDFDocument): void {
+export function drawWatermark(doc: PDFKit.PDFDocument): void {
   const cx = doc.page.width / 2;
   const cy = doc.page.height / 2;
 
@@ -59,7 +58,7 @@ export function drawWatermark(doc: PDFDocument): void {
   doc.restore();
 }
 
-export function drawPageNumber(doc: PDFDocument, page: number): void {
+export function drawPageNumber(doc: PDFKit.PDFDocument, page: number): void {
   doc.font('Helvetica').fontSize(9).fillColor('#000000');
   doc.text(String(page), 0, doc.page.height - PAGE_MARGIN + 6, {
     width: doc.page.width,
@@ -68,7 +67,7 @@ export function drawPageNumber(doc: PDFDocument, page: number): void {
 }
 
 export function drawCertificateHeader(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   title: string,
   subtitle: string,
   qrBuffer: Buffer,
@@ -106,7 +105,7 @@ export function drawCertificateHeader(
 }
 
 export function drawFileMetaRow(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   y: number,
   fileNo: string,
   fileDate: string,
@@ -125,7 +124,7 @@ export function drawFileMetaRow(
 }
 
 export function drawNarrativeParagraph(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   y: number,
   parts: { text: string; bold?: boolean }[],
 ): number {
@@ -149,7 +148,11 @@ export function drawNarrativeParagraph(
   return doc.y + 8;
 }
 
-export function drawDataTable(doc: PDFDocument, y: number, rows: CertificateTableRow[]): number {
+export function drawDataTable(
+  doc: PDFKit.PDFDocument,
+  y: number,
+  rows: CertificateTableRow[],
+): number {
   const left = contentLeft(doc);
   const width = contentWidth(doc);
   const colSerial = 28;
@@ -178,7 +181,7 @@ export function drawDataTable(doc: PDFDocument, y: number, rows: CertificateTabl
   return y + rows.length * rowHeight + 10;
 }
 
-export function drawSignatureBlocks(doc: PDFDocument, y: number): void {
+export function drawSignatureBlocks(doc: PDFKit.PDFDocument, y: number): void {
   const left = contentLeft(doc);
   const width = contentWidth(doc);
   const blockW = (width - 24) / 2;
@@ -223,7 +226,7 @@ export function drawSignatureBlocks(doc: PDFDocument, y: number): void {
 }
 
 export function drawWrappedTerms(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   y: number,
   terms: string[],
   fontSize = 7.5,
@@ -243,7 +246,7 @@ export function drawWrappedTerms(
 }
 
 export function drawLedgerSummary(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   y: number,
   fields: { label: string; value: string }[],
 ): number {
@@ -271,7 +274,7 @@ export function drawLedgerSummary(
 }
 
 export function drawLedgerTable(
-  doc: PDFDocument,
+  doc: PDFKit.PDFDocument,
   y: number,
   columns: readonly string[],
   row: {
