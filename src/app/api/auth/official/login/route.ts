@@ -69,8 +69,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     throw new AuthenticationError('This account is not authorized for the official portal');
   }
 
-  // AUDIT: Records official email/password login
-  await writeAuditLog({
+  // AUDIT: Records official email/password login — non-blocking for login speed
+  void writeAuditLog({
     actorId: data.user.id,
     actorRole: role,
     action: 'OFFICIAL_LOGIN',

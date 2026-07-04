@@ -5,7 +5,6 @@ import { writeAuditLog } from '@/lib/audit';
 import { otpRequestSchema } from '@/lib/validations/approval';
 import { getClientIp } from '@/lib/bond-helpers';
 import { issueFarmerLoginOtp, isFarmerSmsDevBypass } from '@/lib/farmer-otp';
-import { ensureFarmerAuthUser } from '@/lib/supabase/auth-users';
 import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
@@ -13,18 +12,16 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const farmer = await prisma.farmer.findFirst({
     where: { aadhaarPhone: body.phone },
+    select: { id: true },
   });
   if (!farmer) {
     throw new AuthenticationError('This mobile number is not registered with APCRDA');
   }
 
-  await ensureFarmerAuthUser(farmer);
-
   if (isFarmerSmsDevBypass()) {
-    await issueFarmerLoginOtp(farmer.id, body.phone);
-
-    // AUDIT: Records farmer OTP request (dev / offline SMS bypass)
-    await writeAuditLog({
+    // Demo: no Supabase admin, no bcrypt — just confirm the phone is registered
+    // AUDIT: Records farmer OTP request (demo bypass) — non-blocking for login speed
+    void writeAuditLog({
       actorId: farmer.id,
       actorRole: 'FARMER',
       action: 'FARMER_OTP_REQUESTED',
@@ -35,9 +32,11 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return createAuthJsonResponse({
       message: 'OTP sent',
       devMode: true,
-      hint: 'Demo: use any 6-digit OTP (e.g. 123456) or check the server console for the code.',
+      hint: 'Demo: use any 6-digit OTP (e.g. 123456).',
     });
   }
+
+  await issueFarmerLoginOtp(farmer.id, body.phone);
 
   const response = createAuthJsonResponse({ message: 'OTP sent' });
   const supabase = createRouteHandlerClient(req, response);
@@ -49,7 +48,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   if (error) throw new AuthenticationError(error.message);
 
-  await writeAuditLog({
+  void writeAuditLog({
     actorId: farmer.id,
     actorRole: 'FARMER',
     action: 'FARMER_OTP_REQUESTED',

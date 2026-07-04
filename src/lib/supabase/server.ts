@@ -110,6 +110,18 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   if (role) {
     if (isOfficialRole(role)) {
+      // Prefer JWT claims (no DB) when complete — avoids a Prisma round-trip on every page
+      if (displayName && meta.district_code && meta.employee_id) {
+        return {
+          id: user.id,
+          role,
+          name: displayName,
+          districtCode: meta.district_code,
+          employeeId: meta.employee_id,
+          farmerId: meta.farmer_id,
+        };
+      }
+
       const official = await prisma.official.findUnique({
         where: { id: user.id },
         select: { name: true, districtCode: true, employeeId: true, isActive: true },
@@ -127,26 +139,32 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     }
 
     if (role === 'FARMER') {
-      const farmerId = meta.farmer_id;
+      // Name is in user_metadata from provision — skip farmer table lookup
+      if (displayName || meta.farmer_id) {
+        return {
+          id: user.id,
+          role,
+          name: displayName ?? 'Citizen',
+          districtCode: meta.district_code,
+          employeeId: meta.employee_id,
+          farmerId: meta.farmer_id,
+        };
+      }
+
       const phone = parsePhoneFromAuthUser(user.phone);
-      const farmer = farmerId
-        ? await prisma.farmer.findUnique({
-            where: { id: farmerId },
-            select: { name: true },
+      const farmer = phone
+        ? await prisma.farmer.findFirst({
+            where: { aadhaarPhone: phone },
+            select: { id: true, name: true },
           })
-        : phone
-          ? await prisma.farmer.findFirst({
-              where: { aadhaarPhone: phone },
-              select: { name: true },
-            })
-          : null;
+        : null;
       return {
         id: user.id,
         role,
         name: farmer?.name ?? displayName,
         districtCode: meta.district_code,
         employeeId: meta.employee_id,
-        farmerId: meta.farmer_id,
+        farmerId: farmer?.id ?? meta.farmer_id,
       };
     }
 

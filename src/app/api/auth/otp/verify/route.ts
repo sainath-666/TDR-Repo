@@ -22,40 +22,50 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const farmer = await prisma.farmer.findFirst({
     where: { aadhaarPhone: body.phone },
+    select: { id: true, name: true, aadhaarPhone: true },
   });
   if (!farmer) throw new AuthenticationError('Phone number not registered');
 
-  await ensureFarmerAuthUser(farmer);
-
   const response = createAuthJsonResponse({ userId: '', role: 'FARMER' as const });
   const supabase = createRouteHandlerClient(req, response);
+  const ipAddress = getClientIp(req.headers);
 
   if (isFarmerSmsDevBypass()) {
     const valid = await verifyFarmerLoginOtp(farmer.id, body.otp);
     if (!valid) throw new AuthenticationError('Invalid OTP');
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // Happy path: sign in only (no admin API). Provision only if credentials missing.
+    let { data, error } = await supabase.auth.signInWithPassword({
       email: farmerDevEmail(farmer.aadhaarPhone),
       password: DEV_PASSWORD,
     });
 
     if (error || !data.user) {
+      await ensureFarmerAuthUser(farmer);
+      const retry = await supabase.auth.signInWithPassword({
+        email: farmerDevEmail(farmer.aadhaarPhone),
+        password: DEV_PASSWORD,
+      });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error || !data.user) {
       throw new AuthenticationError(error?.message ?? 'Login failed');
     }
 
-    if (data.user.id !== farmer.id) {
+    const meta = data.user.app_metadata as Record<string, unknown>;
+    if (data.user.id !== farmer.id || meta.farmer_id !== farmer.id) {
       await syncFarmerAppMetadata(data.user.id, farmer.id);
     }
 
-    await supabase.auth.refreshSession();
-
-    // AUDIT: Records farmer OTP login (dev password session)
-    await writeAuditLog({
+    // AUDIT: Records farmer OTP login (demo) — non-blocking
+    void writeAuditLog({
       actorId: data.user.id,
       actorRole: 'FARMER',
       action: 'FARMER_LOGIN',
       details: { devBypass: true },
-      ipAddress: getClientIp(req.headers),
+      ipAddress,
     });
 
     response.cookies.set('last_active', String(Date.now()), {
@@ -71,6 +81,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     });
   }
 
+  await ensureFarmerAuthUser(farmer);
+
   const { data, error } = await supabase.auth.verifyOtp({
     phone: `+91${body.phone}`,
     token: body.otp,
@@ -81,18 +93,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   if (data.user.id !== farmer.id) {
     await syncFarmerAppMetadata(data.user.id, farmer.id);
-  } else {
-    await ensureFarmerAuthUser(farmer);
   }
 
-  await supabase.auth.refreshSession();
-
-  // AUDIT: Records farmer OTP login
-  await writeAuditLog({
+  void writeAuditLog({
     actorId: data.user.id,
     actorRole: 'FARMER',
     action: 'FARMER_LOGIN',
-    ipAddress: getClientIp(req.headers),
+    ipAddress,
   });
 
   response.cookies.set('last_active', String(Date.now()), {

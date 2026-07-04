@@ -13,6 +13,11 @@ export function isFarmerSmsDevBypass(): boolean {
 }
 
 export async function issueFarmerLoginOtp(farmerId: string, phone: string): Promise<void> {
+  // Demo mode: any 6-digit OTP is accepted — skip bcrypt + DB write
+  if (isFarmerSmsDevBypass()) {
+    return;
+  }
+
   const otp = String(randomInt(100000, 999999));
   const otpHash = await bcrypt.hash(otp, 10);
 
@@ -25,13 +30,16 @@ export async function issueFarmerLoginOtp(farmerId: string, phone: string): Prom
     },
   });
 
-  if (isFarmerSmsDevBypass()) {
-    console.warn(`[DEV] Farmer login OTP for +91${phone}: ${otp} (any 6 digits also accepted)`);
-  }
+  console.warn(`[DEV] Farmer login OTP for +91${phone}: ${otp}`);
 }
 
 export async function verifyFarmerLoginOtp(farmerId: string, otp: string): Promise<boolean> {
   if (!/^\d{6}$/.test(otp)) return false;
+
+  // Demo mode: accept any 6 digits without bcrypt/DB
+  if (isFarmerSmsDevBypass()) {
+    return true;
+  }
 
   const record = await prisma.otpRequest.findFirst({
     where: {
@@ -43,14 +51,11 @@ export async function verifyFarmerLoginOtp(farmerId: string, otp: string): Promi
     orderBy: { createdAt: 'desc' },
   });
 
-  if (record) {
-    const valid = await bcrypt.compare(otp, record.otpHash);
-    if (valid) {
-      await prisma.otpRequest.update({ where: { id: record.id }, data: { used: true } });
-      return true;
-    }
-  }
+  if (!record) return false;
 
-  // Development fallback when Supabase SMS provider is not configured
-  return isFarmerSmsDevBypass();
+  const valid = await bcrypt.compare(otp, record.otpHash);
+  if (!valid) return false;
+
+  await prisma.otpRequest.update({ where: { id: record.id }, data: { used: true } });
+  return true;
 }
