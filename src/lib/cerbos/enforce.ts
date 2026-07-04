@@ -4,6 +4,9 @@ import { writeAuditLog } from '@/lib/audit';
 import { logger } from '@/lib/logger';
 import type { CurrentUser, CerbosResource } from '@/types';
 
+/** Fail fast — remote PDP latency was blocking approve/return for seconds. */
+const CERBOS_TIMEOUT_MS = 1_000;
+
 function isCerbosMockMode(): boolean {
   return process.env.CERBOS_MOCK_MODE === 'true';
 }
@@ -19,20 +22,34 @@ function isCerbosUnavailableError(err: unknown): boolean {
     msg.includes('ECONNREFUSED') ||
     msg.includes('ECONNRESET') ||
     msg.includes('ETIMEDOUT') ||
+    msg.includes('Cerbos timeout') ||
     msg.includes('UNAVAILABLE') ||
     msg.includes('No connection established') ||
     msg.includes('Name resolution failed')
   );
 }
 
+/** Skip only when real PDP is not required (demo / degraded mode). */
 function canSkipCerbosCheck(): boolean {
-  if (process.env.CERBOS_REQUIRE_REAL === 'true') return false;
-  if (isCerbosMockMode()) return true;
-  return process.env.NODE_ENV !== 'production';
+  return process.env.CERBOS_REQUIRE_REAL !== 'true';
 }
 
 function mockCerbosCallId(): string {
   return `mock-cerbos-${crypto.randomUUID()}`;
+}
+
+async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 export async function withCerbos(
@@ -70,11 +87,15 @@ export async function withCerbos(
   };
 
   try {
-    const result = await client.checkResource({
-      principal,
-      resource: cerbosResource,
-      actions: [action],
-    });
+    const result = await withTimeout(
+      client.checkResource({
+        principal,
+        resource: cerbosResource,
+        actions: [action],
+      }),
+      CERBOS_TIMEOUT_MS,
+      'Cerbos',
+    );
 
     const cerbosCallId = crypto.randomUUID();
 
@@ -107,7 +128,9 @@ export async function withCerbos(
     if (isCerbosUnavailableError(err)) {
       if (canSkipCerbosCheck()) {
         const cerbosCallId = mockCerbosCallId();
-        logger.warn('Cerbos PDP not running — skipping authorization check', { cerbosCallId });
+        logger.warn('Cerbos PDP slow/unavailable — skipping authorization check', {
+          cerbosCallId,
+        });
         return cerbosCallId;
       }
       throw new IntegrationError(

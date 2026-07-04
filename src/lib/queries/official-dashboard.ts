@@ -1,4 +1,4 @@
-import { BondStatus, type Prisma, type ApprovalStep, type Official } from '@prisma/client';
+import { BondStatus, type Prisma, type ApprovalDecision, type OfficialRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { isPendingStatus } from '@/lib/bond-status';
 import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
@@ -59,7 +59,14 @@ function mapBondRow(bond: {
   updatedAt: Date;
   holder: { name: string } | null;
   landDetails: { surveyNumber: string; surrenderedAreaSqYds: { toString(): string } } | null;
-  approvalSteps: (ApprovalStep & { official: Pick<Official, 'name'> | null })[];
+  approvalSteps: {
+    decision: ApprovalDecision;
+    remarks: string | null;
+    role: OfficialRole;
+    decidedAt: Date | null;
+    createdAt: Date;
+    official: { name: string } | null;
+  }[];
 }): DashboardBondRow {
   const returnRemark =
     bond.status === BondStatus.DRAFT ? getLatestReturnRemark(bond.approvalSteps) : null;
@@ -131,10 +138,26 @@ export async function getOfficialDashboardData(user: CurrentUser): Promise<Offic
 
   const bonds = await prisma.tdrBond.findMany({
     where,
-    include: {
-      holder: true,
-      landDetails: true,
-      approvalSteps: { include: { official: true }, orderBy: { level: 'asc' } },
+    select: {
+      id: true,
+      tdrNumber: true,
+      status: true,
+      updatedAt: true,
+      holder: { select: { name: true } },
+      landDetails: { select: { surveyNumber: true, surrenderedAreaSqYds: true } },
+      approvalSteps: {
+        select: {
+          id: true,
+          level: true,
+          role: true,
+          decision: true,
+          remarks: true,
+          decidedAt: true,
+          createdAt: true,
+          official: { select: { name: true } },
+        },
+        orderBy: { level: 'asc' },
+      },
     },
     orderBy: { updatedAt: 'desc' },
   });

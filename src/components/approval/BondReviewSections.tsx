@@ -2,8 +2,9 @@
 
 import { CheckCircle2, Circle, ExternalLink, FileText, Compass, User } from 'lucide-react';
 import type { TdrBondWithRelations } from '@/types';
-import type { BondDocument } from '@prisma/client';
 import { Card } from '@/components/ui/Card';
+
+type ReviewDocument = TdrBondWithRelations['documents'][number];
 import type { BondReviewDisplay } from '@/lib/bond-review-display';
 import {
   DOCUMENT_REVIEW_SPECS,
@@ -93,7 +94,7 @@ function DocumentsSection({
   onViewDocument,
 }: {
   bond: TdrBondWithRelations;
-  onViewDocument: (doc: BondDocument) => void;
+  onViewDocument: (doc: ReviewDocument) => void;
 }) {
   const uploadedByType = new Map(bond.documents.map((d) => [d.docType, d]));
   const attachedCount = DOCUMENT_REVIEW_SPECS.filter((s) => uploadedByType.has(s.type)).length;
@@ -169,7 +170,7 @@ export function BondReviewBody({
 }: {
   bond: TdrBondWithRelations;
   display: BondReviewDisplay;
-  onViewDocument: (doc: BondDocument) => void;
+  onViewDocument: (doc: ReviewDocument) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -195,7 +196,7 @@ export function DocumentsReviewSection({
   onViewDocument,
 }: {
   bond: TdrBondWithRelations;
-  onViewDocument: (doc: BondDocument) => void;
+  onViewDocument: (doc: ReviewDocument) => void;
 }) {
   return <DocumentsSection bond={bond} onViewDocument={onViewDocument} />;
 }

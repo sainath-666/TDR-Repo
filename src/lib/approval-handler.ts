@@ -229,7 +229,10 @@ export async function processApproval({ bondId, decision, remarks, req }: Proces
         ? `L${level}_REJECTED`
         : `L${level}_RETURNED`;
 
+  const ipAddress = getClientIp(req.headers);
+
   // AUDIT: Records approval chain decision with Cerbos and Fabric join keys
+  // Chain hash requires sequential writes — keep order, but do not block on cache revalidation.
   await writeAuditLog({
     bondId,
     actorId: user.id,
@@ -238,7 +241,7 @@ export async function processApproval({ bondId, decision, remarks, req }: Proces
     details: { level, decision, remarks },
     cerbosCallId,
     fabricTxId: bondFabricTxId,
-    ipAddress: getClientIp(req.headers),
+    ipAddress,
   });
 
   if (certificateFields) {
@@ -254,7 +257,7 @@ export async function processApproval({ bondId, decision, remarks, req }: Proces
       },
       cerbosCallId,
       fabricTxId: bondFabricTxId,
-      ipAddress: getClientIp(req.headers),
+      ipAddress,
     });
   }
 

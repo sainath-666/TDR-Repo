@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { TdrBondWithRelations, UserRole } from '@/types';
 import type { BondReviewDisplay } from '@/lib/bond-review-display';
 import { BondReviewBody } from '@/components/approval/BondReviewSections';
@@ -17,12 +16,13 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
-import type { BondDocument } from '@prisma/client';
 import { BondStatus } from '@prisma/client';
 import { DOCUMENT_REVIEW_SPECS } from '@/lib/bond-review-fields';
 import { getLatestReturnRemark } from '@/lib/return-remark';
 
-function documentLabel(docType: BondDocument['docType']): string {
+type ReviewDocument = TdrBondWithRelations['documents'][number];
+
+function documentLabel(docType: ReviewDocument['docType']): string {
   return DOCUMENT_REVIEW_SPECS.find((s) => s.type === docType)?.label ?? docType;
 }
 
@@ -62,13 +62,12 @@ export function BondReviewPanel({
   returnPath = '/official/dashboard',
   canAct = true,
 }: Props) {
-  const router = useRouter();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [action, setAction] = useState<'approve' | 'reject' | 'return' | null>(null);
   const [remarks, setRemarks] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [docDetail, setDocDetail] = useState<BondDocument | null>(null);
+  const [docDetail, setDocDetail] = useState<ReviewDocument | null>(null);
 
   const returnRemark =
     bond.status === BondStatus.DRAFT ? getLatestReturnRemark(bond.approvalSteps) : null;
@@ -114,11 +113,10 @@ export function BondReviewPanel({
         const fieldMsg = data.fields ? Object.values(data.fields).join(' ') : '';
         throw new Error(fieldMsg || data.error || 'Action failed');
       }
-      router.push(returnPath);
-      router.refresh();
+      // Hard navigation is faster than router.push + refresh (avoids double RSC load)
+      window.location.assign(returnPath);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Action failed');
-    } finally {
       setLoading(false);
       setShowConfirmModal(false);
     }

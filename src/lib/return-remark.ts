@@ -1,4 +1,4 @@
-import { ApprovalDecision, type ApprovalStep, type OfficialRole } from '@prisma/client';
+import { ApprovalDecision, type OfficialRole } from '@prisma/client';
 import { formatRole } from '@/lib/role-labels';
 
 export interface BondReturnRemark {
@@ -9,7 +9,12 @@ export interface BondReturnRemark {
   returnedAt: string;
 }
 
-interface StepWithOfficial extends ApprovalStep {
+interface StepWithOfficial {
+  decision: ApprovalDecision;
+  remarks: string | null;
+  role: OfficialRole;
+  decidedAt: Date | null;
+  createdAt: Date;
   official?: { name: string } | null;
 }
 

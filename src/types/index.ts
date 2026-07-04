@@ -71,9 +71,17 @@ export type TdrBondWithRelations = Prisma.TdrBondGetPayload<{
   include: {
     holder: true;
     landDetails: true;
-    documents: true;
-    approvalSteps: { include: { official: true } };
-    farmer: true;
+    documents: {
+      select: {
+        id: true;
+        docType: true;
+        fileName: true;
+        fileSizeKb: true;
+        uploadedAt: true;
+        ipfsCid: true;
+      };
+    };
+    approvalSteps: { include: { official: { select: { id: true; name: true } } } };
   };
 }>;
 

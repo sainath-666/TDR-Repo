@@ -231,6 +231,7 @@ export function BondRecordsTable({ bonds, isDeo, reviewQueueStatus }: BondRecord
               {canReview(bond.status) ? (
                 <Link
                   href={reviewPath(bond.id, isDeo)}
+                  prefetch
                   title="Review this bond"
                   className="inline-flex items-center gap-0.5 whitespace-nowrap rounded-lg bg-emerald-600/10 px-2 py-1 text-[11px] font-semibold text-emerald-800 ring-1 ring-emerald-600/20 transition-colors hover:bg-emerald-600/15"
                 >
@@ -241,6 +242,7 @@ export function BondRecordsTable({ bonds, isDeo, reviewQueueStatus }: BondRecord
                 <div className="flex flex-col items-end gap-0.5">
                   <Link
                     href={reviewPath(bond.id, isDeo)}
+                    prefetch
                     title="View bond details"
                     className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-800 ring-1 ring-indigo-200 transition-colors hover:bg-indigo-100"
                   >

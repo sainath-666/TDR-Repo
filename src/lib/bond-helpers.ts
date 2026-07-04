@@ -6,9 +6,20 @@ import type { TdrBondWithRelations } from '@/types';
 export const bondInclude = {
   holder: true,
   landDetails: true,
-  documents: true,
-  approvalSteps: { orderBy: { level: 'asc' as const }, include: { official: true } },
-  farmer: true,
+  documents: {
+    select: {
+      id: true,
+      docType: true,
+      fileName: true,
+      fileSizeKb: true,
+      uploadedAt: true,
+      ipfsCid: true,
+    },
+  },
+  approvalSteps: {
+    orderBy: { level: 'asc' as const },
+    include: { official: { select: { id: true, name: true } } },
+  },
 };
 
 /** District used for queue filters and Cerbos — from holder address. */
@@ -32,7 +43,7 @@ export async function getBondWithRelations(id: string): Promise<TdrBondWithRelat
     include: bondInclude,
   });
   if (!bond) throw new NotFoundError('bond', id);
-  return bond as TdrBondWithRelations;
+  return bond;
 }
 
 export async function getBondDistrictCode(bondId: string): Promise<string> {
