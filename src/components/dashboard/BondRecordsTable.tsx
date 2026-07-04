@@ -32,6 +32,17 @@ function reviewPath(bondId: string, isDeo: boolean): string {
   return isDeo ? `/deo/bonds/${bondId}/review` : `/official/bonds/${bondId}/review`;
 }
 
+/** Bonds at this role's approval queue status (Review action). */
+function isAwaitingReview(
+  status: BondStatus,
+  isDeo: boolean,
+  reviewQueueStatus?: BondStatus | null,
+): boolean {
+  if (isDeo) return status === BondStatus.DRAFT;
+  if (reviewQueueStatus) return status === reviewQueueStatus;
+  return false;
+}
+
 function compareValues(a: DashboardBondRow, b: DashboardBondRow, key: SortKey): number {
   switch (key) {
     case 'tdrNumber':
@@ -103,16 +114,19 @@ export function BondRecordsTable({ bonds, isDeo, reviewQueueStatus }: BondRecord
   const sortedBonds = useMemo(() => {
     const copy = [...bonds];
     copy.sort((a, b) => {
+      // Bonds awaiting this person's review always float to the top
+      const aReview = isAwaitingReview(a.status, isDeo, reviewQueueStatus) ? 0 : 1;
+      const bReview = isAwaitingReview(b.status, isDeo, reviewQueueStatus) ? 0 : 1;
+      if (aReview !== bReview) return aReview - bReview;
+
       const cmp = compareValues(a, b, sortKey);
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return copy;
-  }, [bonds, sortKey, sortDir]);
+  }, [bonds, sortKey, sortDir, isDeo, reviewQueueStatus]);
 
   function canReview(status: BondStatus): boolean {
-    if (isDeo) return status === BondStatus.DRAFT;
-    if (reviewQueueStatus) return status === reviewQueueStatus;
-    return false;
+    return isAwaitingReview(status, isDeo, reviewQueueStatus);
   }
 
   return (
