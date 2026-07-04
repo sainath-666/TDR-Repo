@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Shield, Eye, EyeOff, Mail, Lock, ChevronRight } from 'lucide-react';
 import {
   getApprovalLoginAccounts,
@@ -15,7 +15,6 @@ const SHOW_DEV_LOGINS = isApprovalDevLoginsVisible();
 const APPROVAL_LOGINS = getApprovalLoginAccounts();
 
 export default function OfficialLoginClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,24 +37,29 @@ export default function OfficialLoginClient() {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
+        credentials: 'same-origin',
         body: JSON.stringify({ email, password }),
       });
 
-      const data = (await res.json()) as {
+      let data: {
         success: boolean;
         data?: { redirectTo: string };
         error?: string;
       };
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error ?? 'Login failed');
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        throw new Error('Login service returned an invalid response. Please try again.');
       }
 
-      router.push(data.data?.redirectTo ?? '/official/dashboard');
-      router.refresh();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error ?? 'Invalid email or password');
+      }
+
+      // Full navigation so middleware sees session cookies on the next request.
+      window.location.assign(data.data?.redirectTo ?? '/official/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
       setLoading(false);
     }
   }

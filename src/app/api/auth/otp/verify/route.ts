@@ -11,7 +11,11 @@ import {
   farmerDevEmail,
   syncFarmerAppMetadata,
 } from '@/lib/supabase/auth-users';
-import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
+import {
+  createAuthJsonResponse,
+  createRouteHandlerClient,
+  toAuthJsonResponse,
+} from '@/lib/supabase/route-handler';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
   const body = otpVerifySchema.parse(await req.json());
@@ -56,15 +60,15 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
     response.cookies.set('last_active', String(Date.now()), {
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       path: '/',
       maxAge: 1800,
     });
 
-    return NextResponse.json(
-      { success: true, data: { userId: data.user.id, role: 'FARMER' as const } },
-      { status: 200, headers: response.headers },
-    );
+    return toAuthJsonResponse(response, {
+      userId: data.user.id,
+      role: 'FARMER' as const,
+    });
   }
 
   const { data, error } = await supabase.auth.verifyOtp({
@@ -93,13 +97,13 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   response.cookies.set('last_active', String(Date.now()), {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     maxAge: 1800,
   });
 
-  return NextResponse.json(
-    { success: true, data: { userId: data.user.id, role: 'FARMER' as const } },
-    { status: 200, headers: response.headers },
-  );
+  return toAuthJsonResponse(response, {
+    userId: data.user.id,
+    role: 'FARMER' as const,
+  });
 });

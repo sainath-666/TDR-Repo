@@ -116,7 +116,7 @@ export async function middleware(request: NextRequest) {
 
   response.cookies.set('last_active', String(Date.now()), {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     maxAge: 1800,
   });

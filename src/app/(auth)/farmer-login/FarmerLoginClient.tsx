@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Wheat } from 'lucide-react';
 
 export default function FarmerLoginClient() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
@@ -42,16 +41,20 @@ export default function FarmerLoginClient() {
     try {
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ phone, otp }),
       });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-      router.push('/farmer/dashboard');
-      router.refresh();
+      let data: { success: boolean; error?: string };
+      try {
+        data = (await res.json()) as typeof data;
+      } catch {
+        throw new Error('Login service returned an invalid response. Please try again.');
+      }
+      if (!res.ok || !data.success) throw new Error(data.error ?? 'Invalid OTP');
+      window.location.assign('/farmer/dashboard');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Invalid OTP');
-    } finally {
       setLoading(false);
     }
   }

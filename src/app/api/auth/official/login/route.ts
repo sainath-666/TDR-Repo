@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { officialLoginSchema } from '@/lib/validations/auth';
-import { createAuthJsonResponse, createRouteHandlerClient } from '@/lib/supabase/route-handler';
+import {
+  copyAuthCookies,
+  createAuthJsonResponse,
+  createRouteHandlerClient,
+  toAuthJsonResponse,
+} from '@/lib/supabase/route-handler';
 import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
@@ -77,28 +82,16 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   response.cookies.set('last_active', String(Date.now()), {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     path: '/',
     maxAge: 1800,
   });
 
   if (wantsJson) {
-    return NextResponse.json(
-      { success: true, data: { redirectTo, role } },
-      { status: 200, headers: response.headers },
-    );
+    return toAuthJsonResponse(response, { redirectTo, role });
   }
 
   const redirectResponse = NextResponse.redirect(new URL(redirectTo, req.url));
-  response.cookies.getAll().forEach((cookie) => {
-    redirectResponse.cookies.set(cookie);
-  });
-  redirectResponse.cookies.set('last_active', String(Date.now()), {
-    httpOnly: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: 1800,
-  });
-
+  copyAuthCookies(response, redirectResponse);
   return redirectResponse;
 });

@@ -36,3 +36,28 @@ export function createRouteHandlerClient(request: NextRequest, response: NextRes
 export function createAuthJsonResponse<T>(data: T, status = 200): NextResponse {
   return NextResponse.json({ success: true, data }, { status });
 }
+
+/**
+ * Final JSON response that preserves session cookies set on `cookieSource`.
+ * Never copy via `headers: cookieSource.headers` — the Headers API merges
+ * multiple Set-Cookie values into one comma-joined header, which browsers reject.
+ */
+export function toAuthJsonResponse<T>(
+  cookieSource: NextResponse,
+  data: T,
+  status = 200,
+): NextResponse {
+  const response = NextResponse.json({ success: true, data }, { status });
+  cookieSource.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+  return response;
+}
+
+/** Copy session cookies onto a redirect (or any) response. */
+export function copyAuthCookies(from: NextResponse, to: NextResponse): NextResponse {
+  from.cookies.getAll().forEach((cookie) => {
+    to.cookies.set(cookie);
+  });
+  return to;
+}
