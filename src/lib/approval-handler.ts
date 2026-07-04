@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { NextRequest } from 'next/server';
 import { ApprovalDecision, BondStatus } from '@prisma/client';
@@ -115,7 +114,7 @@ async function processIntakeReview({
 }
 
 export async function processApproval({ bondId, decision, remarks, req }: ProcessApprovalParams) {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
   const bond = await getBondWithRelations(bondId);

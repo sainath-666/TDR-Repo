@@ -14,7 +14,7 @@ export type { PortalType } from '@/lib/portal-sidebar-nav';
 const PORTAL_TITLES: Record<PortalType, string> = {
   deo: 'DEO Portal',
   official: 'Official Portal',
-  farmer: 'My Bonds',
+  farmer: 'Citizen Portal',
 };
 
 interface PortalShellProps {

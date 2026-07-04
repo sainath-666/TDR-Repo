@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { randomInt } from 'crypto';
@@ -12,7 +11,7 @@ import { getClientIp } from '@/lib/bond-helpers';
 import { isOfficialRole } from '@/types';
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
   const body = approvalOtpRequestSchema.parse(await req.json());

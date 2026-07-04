@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { getCurrentUser } from '@/lib/supabase/client';
@@ -10,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 
 export default async function DeoBondReviewPage({ params }: { params: { id: string } }) {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user) redirect('/official-login');
 
   try {

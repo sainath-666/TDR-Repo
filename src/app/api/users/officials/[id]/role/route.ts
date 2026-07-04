@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { OfficialRole } from '@prisma/client';
@@ -11,7 +10,7 @@ import { getClientIp } from '@/lib/bond-helpers';
 
 export const PUT = withErrorHandling(
   async (req: NextRequest, { params }: { params: { id: string } }) => {
-    const user = await getCurrentUser(cookies());
+    const user = await getCurrentUser();
     if (!user || user.role !== 'COMMISSIONER') throw new AuthenticationError();
 
     const body = z.object({ role: z.nativeEnum(OfficialRole) }).parse(await req.json());

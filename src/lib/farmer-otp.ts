@@ -4,9 +4,12 @@ import { prisma } from '@/lib/prisma';
 
 export const FARMER_OTP_PURPOSE = 'FARMER_LOGIN';
 
-/** True when Supabase SMS is not required (local dev / AUTH_DEV_MODE). */
+/**
+ * True when Supabase SMS is not required — demo OTP (any 6 digits) is accepted.
+ * Always on so citizen demo login works in production the same as official demo logins.
+ */
 export function isFarmerSmsDevBypass(): boolean {
-  return process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true';
+  return true;
 }
 
 export async function issueFarmerLoginOtp(farmerId: string, phone: string): Promise<void> {

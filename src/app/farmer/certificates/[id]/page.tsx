@@ -1,4 +1,4 @@
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { BondStatus } from '@prisma/client';
 import { getCurrentUser } from '@/lib/supabase/client';
@@ -16,7 +16,7 @@ function requestOrigin(): string {
 }
 
 export default async function CertificateDownloadPage({ params }: { params: { id: string } }) {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user) redirect('/farmer-login');
 
   const farmerId = user.farmerId ?? user.id;

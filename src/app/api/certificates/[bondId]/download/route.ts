@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError, ValidationError } from '@/lib/errors';
@@ -10,7 +9,7 @@ import { readBondCertificatePdf } from '@/lib/certificate/mint';
 
 export const GET = withErrorHandling(
   async (req: NextRequest, { params }: { params: { bondId: string } }) => {
-    const user = await getCurrentUser(cookies());
+    const user = await getCurrentUser();
     if (!user) throw new AuthenticationError();
 
     const bond = await getBondWithRelations(params.bondId);

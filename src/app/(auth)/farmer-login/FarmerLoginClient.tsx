@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Wheat } from 'lucide-react';
+import { ChevronRight, Wheat } from 'lucide-react';
+import {
+  DEMO_FARMER_LABEL,
+  DEMO_FARMER_OTP_HINT,
+  DEMO_FARMER_PHONE,
+  isFarmerDemoLoginVisible,
+} from '@/lib/dev-auth';
+
+const SHOW_DEMO_LOGIN = isFarmerDemoLoginVisible();
 
 export default function FarmerLoginClient() {
   const searchParams = useSearchParams();
@@ -15,6 +23,12 @@ export default function FarmerLoginClient() {
 
   const reason = searchParams.get('reason');
   const urlError = searchParams.get('error');
+
+  function applyDemoCredentials() {
+    setPhone(DEMO_FARMER_PHONE);
+    setOtp(DEMO_FARMER_OTP_HINT);
+    setError('');
+  }
 
   async function requestOtp() {
     setLoading(true);
@@ -28,6 +42,9 @@ export default function FarmerLoginClient() {
       const data = await res.json();
       if (!data.success) throw new Error(data.error);
       setStep('otp');
+      if (phone === DEMO_FARMER_PHONE) {
+        setOtp(DEMO_FARMER_OTP_HINT);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to send OTP');
     } finally {
@@ -65,7 +82,7 @@ export default function FarmerLoginClient() {
         <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-teal text-white mb-4 shadow-lg shadow-teal-900/25">
           <Wheat className="h-7 w-7" />
         </div>
-        <h1 className="text-2xl font-bold text-apcrda-primary">Farmer Login</h1>
+        <h1 className="text-2xl font-bold text-apcrda-primary">Citizen Login</h1>
         <p className="text-sm text-slate-500 mt-1">Track TDR bonds &amp; download certificates</p>
       </div>
 
@@ -83,13 +100,6 @@ export default function FarmerLoginClient() {
 
           {step === 'phone' ? (
             <div className="space-y-4">
-              {process.env.NODE_ENV === 'development' && (
-                <p className="rounded-lg border border-teal-100 bg-teal-50 px-3 py-2 text-xs text-teal-900">
-                  <strong>Dev login:</strong> use seeded mobile e.g. <strong>9666666666</strong>{' '}
-                  (Padmavathi / TDR-2025-004). After Send OTP, enter any 6-digit code (e.g.{' '}
-                  <strong>123456</strong>) or check the terminal for the printed OTP.
-                </p>
-              )}
               <div>
                 <label className="field-label">Aadhaar-linked Mobile Number</label>
                 <input
@@ -139,6 +149,39 @@ export default function FarmerLoginClient() {
           )}
         </div>
       </div>
+
+      {SHOW_DEMO_LOGIN && (
+        <div className="mt-5 mb-5 rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Demo login
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              applyDemoCredentials();
+              setStep('phone');
+            }}
+            className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-teal-500/30 hover:bg-teal-50/50"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-700 text-[11px] font-bold text-white">
+              C
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-semibold text-slate-800">
+                {DEMO_FARMER_LABEL}
+              </span>
+              <span className="block truncate text-[10px] text-slate-500">
+                Mobile: {DEMO_FARMER_PHONE} · OTP: {DEMO_FARMER_OTP_HINT}
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+          </button>
+          <p className="mt-3 text-[10px] text-slate-400">
+            Tap to fill mobile. After Send OTP, use{' '}
+            <span className="font-mono">{DEMO_FARMER_OTP_HINT}</span> (or any 6-digit code).
+          </p>
+        </div>
+      )}
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Official?{' '}

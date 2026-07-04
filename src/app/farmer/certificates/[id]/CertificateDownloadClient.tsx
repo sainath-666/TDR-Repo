@@ -47,43 +47,48 @@ export function CertificateDownloadClient({
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl space-y-5 px-3 py-4 md:px-6 md:py-6">
-      <Link
-        href="/farmer/dashboard"
-        className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-apcrda-primary hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to My Bonds
-      </Link>
-
-      <div className="font-sans">
-        <p className="mb-4 text-center text-xs font-medium uppercase tracking-widest text-slate-500">
-          Official TDR Certificate · 3 Pages
-        </p>
-        <TdrCertificatePreview data={preview} />
+    <div className="mx-auto w-full max-w-4xl space-y-4 px-3 py-4 md:px-6 md:py-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2.5 shadow-sm">
+        <Link
+          href="/farmer/dashboard"
+          className="inline-flex items-center gap-1.5 font-sans text-sm font-medium text-apcrda-primary hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Dashboard
+        </Link>
+        <div className="min-w-0 text-center sm:text-left">
+          <p className="truncate text-sm font-bold text-apcrda-primary">{tdrNumber}</p>
+          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
+            Official TDR Certificate
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="accent"
+          size="sm"
+          disabled={loading}
+          onClick={() => void downloadPdf()}
+          className="ml-auto sm:ml-0"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Preparing…
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Download PDF
+            </>
+          )}
+        </Button>
       </div>
 
       {error && <p className="alert-banner-error">{error}</p>}
 
-      <Button
-        type="button"
-        variant="accent"
-        className="w-full"
-        disabled={loading}
-        onClick={() => void downloadPdf()}
-      >
-        {loading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Preparing PDF…
-          </>
-        ) : (
-          <>
-            <Download className="h-4 w-4" />
-            Download Certificate (PDF)
-          </>
-        )}
-      </Button>
+      <div className="font-sans">
+        <TdrCertificatePreview data={preview} />
+      </div>
 
       <p className="text-center text-[11px] text-slate-500">
         Verify authenticity at{' '}

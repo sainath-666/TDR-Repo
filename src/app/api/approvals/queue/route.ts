@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
@@ -8,7 +7,7 @@ import { buildDistrictScopeWhere } from '@/lib/bond-helpers';
 import { isOfficialRole } from '@/types';
 
 export const GET = withErrorHandling(async () => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
   const statusMap: Partial<Record<string, BondStatus>> = {

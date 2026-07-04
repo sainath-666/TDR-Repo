@@ -1,5 +1,3 @@
-'use client';
-
 import { BondStatus } from '@prisma/client';
 import { Check, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';

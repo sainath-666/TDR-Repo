@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
@@ -7,7 +6,7 @@ import { prisma } from '@/lib/prisma';
 import { isPendingStatus } from '@/lib/bond-status';
 
 export const GET = withErrorHandling(async () => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user) throw new AuthenticationError();
   if (user.role !== 'FARMER') throw new AuthenticationError('Farmer access required');
 

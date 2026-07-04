@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { BondStatus } from '@prisma/client';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
@@ -10,7 +9,7 @@ import { isOfficialRole } from '@/types';
 import { getQueueStatusForRole } from '@/lib/approval-chain';
 
 export const GET = withErrorHandling(async (req: NextRequest) => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
 
   const { searchParams } = new URL(req.url);

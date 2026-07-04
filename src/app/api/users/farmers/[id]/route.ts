@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
@@ -9,7 +8,7 @@ import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
 
 export const GET = withErrorHandling(async (_req, { params }: { params: { id: string } }) => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (
     !user ||
     !['SDC', 'DIRECTOR_LANDS', 'COMMISSIONER', 'ADDL_COMMISSIONER'].includes(user.role)
@@ -27,7 +26,7 @@ export const GET = withErrorHandling(async (_req, { params }: { params: { id: st
 
 export const PUT = withErrorHandling(
   async (req: NextRequest, { params }: { params: { id: string } }) => {
-    const user = await getCurrentUser(cookies());
+    const user = await getCurrentUser();
     if (!user || user.role !== 'SDC') throw new AuthenticationError();
 
     const body = z.object({ aadhaarPhone: z.string().regex(/^\d{10}$/) }).parse(await req.json());

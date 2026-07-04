@@ -9,7 +9,7 @@ import { OfficialDashboardView } from '@/components/dashboard/OfficialDashboardV
 export const dynamic = 'force-dynamic';
 
 export default async function DeoDashboardPage() {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user) redirect('/official-login');
 
   const cookieHeader = cookies()

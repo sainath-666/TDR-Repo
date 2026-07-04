@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { OfficialRole } from '@prisma/client';
@@ -19,7 +18,7 @@ const createOfficialSchema = z.object({
 });
 
 export const GET = withErrorHandling(async () => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || (user.role !== 'COMMISSIONER' && user.role !== 'ADDL_COMMISSIONER')) {
     throw new AuthenticationError();
   }
@@ -29,7 +28,7 @@ export const GET = withErrorHandling(async () => {
 });
 
 export const POST = withErrorHandling(async (req: NextRequest) => {
-  const user = await getCurrentUser(cookies());
+  const user = await getCurrentUser();
   if (!user || user.role !== 'COMMISSIONER') throw new AuthenticationError();
 
   const data = createOfficialSchema.parse(await req.json());

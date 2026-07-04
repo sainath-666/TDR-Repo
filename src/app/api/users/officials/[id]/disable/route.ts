@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import { withErrorHandling, AuthenticationError } from '@/lib/errors';
 import { ok } from '@/lib/api-response';
@@ -9,7 +8,7 @@ import { getClientIp } from '@/lib/bond-helpers';
 
 export const PUT = withErrorHandling(
   async (req: NextRequest, { params }: { params: { id: string } }) => {
-    const user = await getCurrentUser(cookies());
+    const user = await getCurrentUser();
     if (!user || user.role !== 'COMMISSIONER') throw new AuthenticationError();
 
     const official = await prisma.official.update({

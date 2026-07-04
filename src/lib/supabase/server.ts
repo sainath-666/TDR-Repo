@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
@@ -91,10 +92,9 @@ async function resolveUserFromPrisma(
   return null;
 }
 
-export async function getCurrentUser(
-  cookieStore?: ReadonlyRequestCookies,
-): Promise<CurrentUser | null> {
-  const store = cookieStore ?? cookies();
+/** Request-scoped: layout + page share one auth lookup. */
+export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+  const store = cookies();
   const supabase = createServerClient(store);
   const {
     data: { user },
@@ -162,4 +162,4 @@ export async function getCurrentUser(
 
   // Fallback: JWT may lack claims before auth hook / sync — resolve from Prisma
   return resolveUserFromPrisma(user.id, user.phone, displayName);
-}
+});

@@ -35,7 +35,7 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
     return createAuthJsonResponse({
       message: 'OTP sent',
       devMode: true,
-      hint: 'Development: use any 6-digit OTP or check the server console for the code.',
+      hint: 'Demo: use any 6-digit OTP (e.g. 123456) or check the server console for the code.',
     });
   }
 

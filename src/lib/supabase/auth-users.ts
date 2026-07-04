@@ -47,9 +47,7 @@ export async function ensureOfficialAuthUser(official: OfficialRecord): Promise<
       email,
       app_metadata: appMetadata,
       user_metadata: { name: official.name },
-      ...(process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true'
-        ? { password: DEV_PASSWORD }
-        : {}),
+      password: DEV_PASSWORD,
     });
     if (error) throw new Error(`Failed to update official auth user: ${error.message}`);
   }
@@ -62,7 +60,6 @@ export async function ensureFarmerAuthUser(farmer: FarmerRecord): Promise<void> 
     role: 'FARMER',
     farmer_id: farmer.id,
   };
-  const isDev = process.env.NODE_ENV !== 'production' || process.env.AUTH_DEV_MODE === 'true';
   const devEmail = farmerDevEmail(farmer.aadhaarPhone);
 
   const { data: existing } = await admin.auth.admin.getUserById(farmer.id);
@@ -72,18 +69,21 @@ export async function ensureFarmerAuthUser(farmer: FarmerRecord): Promise<void> 
       id: farmer.id,
       phone,
       phone_confirm: true,
+      email: devEmail,
+      password: DEV_PASSWORD,
+      email_confirm: true,
       user_metadata: { name: farmer.name },
       app_metadata: appMetadata,
-      ...(isDev ? { email: devEmail, password: DEV_PASSWORD, email_confirm: true } : {}),
     });
     if (error) throw new Error(`Failed to create farmer auth user: ${error.message}`);
   } else {
     const { error } = await admin.auth.admin.updateUserById(farmer.id, {
       phone,
       phone_confirm: true,
+      email: devEmail,
+      password: DEV_PASSWORD,
       app_metadata: appMetadata,
       user_metadata: { name: farmer.name },
-      ...(isDev ? { email: devEmail, password: DEV_PASSWORD } : {}),
     });
     if (error) throw new Error(`Failed to update farmer auth user: ${error.message}`);
   }
