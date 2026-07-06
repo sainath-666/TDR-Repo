@@ -67,6 +67,15 @@ export async function createBond(params: FabricBondParams): Promise<string> {
   return submitTransaction('CreateBond', JSON.stringify(params));
 }
 
+/** Register bond on ledger if missing (e.g. DB synced before Fabric was live). */
+export async function ensureBondOnChain(params: FabricBondParams): Promise<void> {
+  if (isFabricMockMode()) return;
+  const existing = await getBond(params.tdrNumber);
+  if (existing) return;
+  logger.info('Backfilling bond on Fabric ledger', { tdrNumber: params.tdrNumber });
+  await createBond(params);
+}
+
 export async function recordApproval(params: FabricApprovalParams): Promise<string> {
   if (isFabricMockMode()) {
     logger.info('Mock Fabric: recordApproval', {

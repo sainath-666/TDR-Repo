@@ -7,6 +7,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "start": "fabric-chaincode-node start",
     "test": "node test/bond.test.js"
   },
   "dependencies": {

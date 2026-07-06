@@ -113,6 +113,22 @@ async function processIntakeReview({
   return { newStatus, cerbosCallId, fabricTxId, level: 0 };
 }
 
+function fabricBondParamsFromRecord(
+  bond: Awaited<ReturnType<typeof getBondWithRelations>>,
+): fabric.FabricBondParams {
+  if (!bond.landDetails || !bond.holder) {
+    throw new ValidationError('Land and holder details required for blockchain registration');
+  }
+  return {
+    tdrNumber: bond.tdrNumber,
+    surveyNumber: bond.landDetails.surveyNumber,
+    holderAadhaarHash: bond.holder.aadhaarHash,
+    extentSqYds: Number(bond.landDetails.tdrIssuedExtentSqYds),
+    ratio: bond.landDetails.issuedRatio,
+    ipfsDocCid: bond.documents[0]?.ipfsCid ?? '',
+  };
+}
+
 export async function processApproval({ bondId, decision, remarks, req }: ProcessApprovalParams) {
   const user = await getCurrentUser();
   if (!user || !isOfficialRole(user.role)) throw new AuthenticationError();
@@ -159,6 +175,8 @@ export async function processApproval({ bondId, decision, remarks, req }: Proces
   const signatureHash = user.employeeId
     ? generateApprovalSignature(user.employeeId, bondId, decision, timestamp)
     : undefined;
+
+  await fabric.ensureBondOnChain(fabricBondParamsFromRecord(bond));
 
   const fabricTxId = await fabric.recordApproval({
     tdrNumber: bond.tdrNumber,

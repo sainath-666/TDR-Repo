@@ -1,11 +1,13 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
+RUN apk add --no-cache openssl
 COPY package*.json ./
 COPY prisma ./prisma
 RUN npm ci
 
 FROM node:20-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache openssl
 
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -27,7 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs \
-  && apk add --no-cache curl
+  && apk add --no-cache curl openssl
 
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
