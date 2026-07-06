@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/lib/supabase/client';
 import { withCerbos } from '@/lib/cerbos/enforce';
 import { getBondWithRelations, getClientIp } from '@/lib/bond-helpers';
 import { writeAuditLog } from '@/lib/audit';
-import { readBondCertificatePdf } from '@/lib/certificate/mint';
+import { readBondCertificatePdf, generateBondCertificatePdfBuffer } from '@/lib/certificate/mint';
 
 export const GET = withErrorHandling(
   async (req: NextRequest, { params }: { params: { bondId: string } }) => {
@@ -24,11 +24,22 @@ export const GET = withErrorHandling(
       'download',
     );
 
-    if (bond.status !== BondStatus.ACTIVE || !bond.certificateStoragePath) {
+    if (bond.status !== BondStatus.ACTIVE) {
       throw new ValidationError('Certificate not available yet');
     }
 
-    const pdfBuffer = await readBondCertificatePdf(params.bondId, bond.certificateStoragePath);
+    const verifyOrigin = new URL(req.url).origin;
+    let pdfBuffer: Buffer;
+
+    try {
+      // Regenerate from current bond data so download matches the on-screen preview.
+      pdfBuffer = await generateBondCertificatePdfBuffer(bond, verifyOrigin);
+    } catch {
+      if (!bond.certificateStoragePath) {
+        throw new ValidationError('Certificate not available yet');
+      }
+      pdfBuffer = await readBondCertificatePdf(params.bondId, bond.certificateStoragePath);
+    }
 
     // AUDIT: Records farmer or official certificate PDF download
     await writeAuditLog({

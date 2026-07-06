@@ -1,12 +1,12 @@
 import { GRPC } from '@cerbos/grpc';
+import { parseCerbosPdpUrl } from './config';
 
 let cerbosClient: GRPC | null = null;
 
 export function getCerbosClient(): GRPC {
   if (!cerbosClient) {
-    const url = process.env.CERBOS_PDP_URL ?? 'localhost:3593';
-    const useTls = process.env.CERBOS_PDP_TLS === 'true';
-    cerbosClient = new GRPC(url, { tls: useTls });
+    const { grpcHost, tls } = parseCerbosPdpUrl();
+    cerbosClient = new GRPC(grpcHost, { tls });
   }
   return cerbosClient;
 }

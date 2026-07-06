@@ -1,11 +1,14 @@
 import { cache } from 'react';
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
+import type { User } from '@supabase/supabase-js';
 import type { CurrentUser, UserRole } from '@/types';
 import { isOfficialRole } from '@/types';
 import { prisma } from '@/lib/prisma';
+import { getCitizenSessionFromCookies } from '@/lib/citizen-session';
+
+export { createAdminClient } from './admin';
 
 function getSupabaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -36,138 +39,94 @@ export function createServerClient(cookieStore: ReadonlyRequestCookies) {
   });
 }
 
-export function createAdminClient() {
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
-  return createClient(getSupabaseUrl(), serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+function normalizeRole(role: string | undefined): UserRole | undefined {
+  if (!role) return undefined;
+  const upper = role.toUpperCase() as UserRole;
+  if (upper === 'FARMER' || isOfficialRole(upper)) return upper;
+  return undefined;
 }
 
-function parsePhoneFromAuthUser(phone: string | undefined): string | undefined {
-  if (!phone) return undefined;
-  return phone.replace(/^\+91/, '');
-}
-
-async function resolveUserFromPrisma(
-  userId: string,
-  phone: string | undefined,
-  displayName?: string,
-): Promise<CurrentUser | null> {
+async function resolveOfficialFromPrisma(userId: string): Promise<CurrentUser | null> {
   const official = await prisma.official.findUnique({ where: { id: userId } });
-  if (official?.isActive) {
-    return {
-      id: userId,
-      role: official.role as UserRole,
-      name: official.name,
-      districtCode: official.districtCode,
-      employeeId: official.employeeId,
-    };
-  }
+  if (!official?.isActive) return null;
 
-  const farmerById = await prisma.farmer.findUnique({ where: { id: userId } });
-  if (farmerById) {
-    return { id: userId, role: 'FARMER', name: farmerById.name, farmerId: farmerById.id };
-  }
+  return {
+    id: userId,
+    role: official.role as UserRole,
+    name: official.name,
+    districtCode: official.districtCode,
+    employeeId: official.employeeId,
+  };
+}
 
-  const normalizedPhone = parsePhoneFromAuthUser(phone);
-  if (normalizedPhone) {
-    const farmerByPhone = await prisma.farmer.findFirst({
-      where: { aadhaarPhone: normalizedPhone },
-    });
-    if (farmerByPhone) {
+async function resolveOfficialFromSupabaseUser(user: User): Promise<CurrentUser | null> {
+  const meta = user.app_metadata as Record<string, string | undefined>;
+  const userMeta = user.user_metadata as Record<string, string | undefined>;
+  const displayName = typeof userMeta.name === 'string' ? userMeta.name : undefined;
+  const role = normalizeRole(meta.role);
+
+  if (role === 'FARMER') return null;
+
+  if (role && isOfficialRole(role)) {
+    if (displayName && meta.district_code && meta.employee_id) {
       return {
-        id: userId,
-        role: 'FARMER',
-        name: farmerByPhone.name,
-        farmerId: farmerByPhone.id,
+        id: user.id,
+        role,
+        name: displayName,
+        districtCode: meta.district_code,
+        employeeId: meta.employee_id,
+        farmerId: meta.farmer_id,
+      };
+    }
+
+    const official = await prisma.official.findUnique({
+      where: { id: user.id },
+      select: { name: true, districtCode: true, employeeId: true, isActive: true, role: true },
+    });
+    if (official?.isActive) {
+      return {
+        id: user.id,
+        role: (official.role as UserRole) ?? role,
+        name: official.name ?? displayName,
+        districtCode: meta.district_code ?? official.districtCode,
+        employeeId: meta.employee_id ?? official.employeeId,
+        farmerId: meta.farmer_id,
       };
     }
   }
 
-  if (displayName) {
-    return { id: userId, role: 'FARMER', name: displayName };
-  }
-
-  return null;
+  return resolveOfficialFromPrisma(user.id);
 }
 
 /** Request-scoped: layout + page share one auth lookup. */
 export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const store = cookies();
+
   const supabase = createServerClient(store);
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser();
 
+  // Official session wins over a stale farmer cookie (e.g. after switching portals).
+  if (!error && user) {
+    const official = await resolveOfficialFromSupabaseUser(user);
+    if (official) return official;
+  }
+
+  const citizen = await getCitizenSessionFromCookies(store);
+  if (citizen) return citizen;
+
   if (error || !user) return null;
 
   const meta = user.app_metadata as Record<string, string | undefined>;
   const userMeta = user.user_metadata as Record<string, string | undefined>;
   const displayName = typeof userMeta.name === 'string' ? userMeta.name : undefined;
-  const role = meta.role as UserRole | undefined;
+  const role = normalizeRole(meta.role);
+
+  if (role === 'FARMER') return null;
 
   if (role) {
-    if (isOfficialRole(role)) {
-      // Prefer JWT claims (no DB) when complete — avoids a Prisma round-trip on every page
-      if (displayName && meta.district_code && meta.employee_id) {
-        return {
-          id: user.id,
-          role,
-          name: displayName,
-          districtCode: meta.district_code,
-          employeeId: meta.employee_id,
-          farmerId: meta.farmer_id,
-        };
-      }
-
-      const official = await prisma.official.findUnique({
-        where: { id: user.id },
-        select: { name: true, districtCode: true, employeeId: true, isActive: true },
-      });
-      if (official?.isActive) {
-        return {
-          id: user.id,
-          role,
-          name: official.name ?? displayName,
-          districtCode: meta.district_code ?? official.districtCode,
-          employeeId: meta.employee_id ?? official.employeeId,
-          farmerId: meta.farmer_id,
-        };
-      }
-    }
-
-    if (role === 'FARMER') {
-      // Name is in user_metadata from provision — skip farmer table lookup
-      if (displayName || meta.farmer_id) {
-        return {
-          id: user.id,
-          role,
-          name: displayName ?? 'Citizen',
-          districtCode: meta.district_code,
-          employeeId: meta.employee_id,
-          farmerId: meta.farmer_id,
-        };
-      }
-
-      const phone = parsePhoneFromAuthUser(user.phone);
-      const farmer = phone
-        ? await prisma.farmer.findFirst({
-            where: { aadhaarPhone: phone },
-            select: { id: true, name: true },
-          })
-        : null;
-      return {
-        id: user.id,
-        role,
-        name: farmer?.name ?? displayName,
-        districtCode: meta.district_code,
-        employeeId: meta.employee_id,
-        farmerId: farmer?.id ?? meta.farmer_id,
-      };
-    }
-
     return {
       id: user.id,
       role,
@@ -178,6 +137,5 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     };
   }
 
-  // Fallback: JWT may lack claims before auth hook / sync — resolve from Prisma
-  return resolveUserFromPrisma(user.id, user.phone, displayName);
+  return resolveOfficialFromPrisma(user.id);
 });

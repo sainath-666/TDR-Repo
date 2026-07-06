@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import type { CertificateTableRow } from '@/lib/certificate/content';
 
+export const CERT_FONT = 'Times-Roman';
+export const CERT_FONT_BOLD = 'Times-Bold';
 export const CERT_GREEN = '#1B5E20';
 export const CERT_GREEN_LIGHT = '#2E7D32';
 export const PAGE_MARGIN = 28;
@@ -59,7 +61,7 @@ export function drawWatermark(doc: PDFKit.PDFDocument): void {
 }
 
 export function drawPageNumber(doc: PDFKit.PDFDocument, page: number): void {
-  doc.font('Helvetica').fontSize(9).fillColor('#000000');
+  doc.font(CERT_FONT).fontSize(9).fillColor('#64748b');
   doc.text(String(page), 0, doc.page.height - PAGE_MARGIN + 6, {
     width: doc.page.width,
     align: 'center',
@@ -77,31 +79,43 @@ export function drawCertificateHeader(
   const width = contentWidth(doc);
   let y = PAGE_MARGIN + INNER_PAD + 4;
 
+  if (qrBuffer.length > 0) {
+    doc.image(qrBuffer, left + width - 52, y, { width: 48 });
+  }
+
   if (logoPath) {
     try {
-      doc.image(logoPath, left, y, { width: 42 });
+      const emblemSize = 44;
+      doc.image(logoPath, left + (width - emblemSize) / 2, y, { width: emblemSize });
     } catch {
-      // logo optional
+      // emblem optional
     }
   }
 
-  if (qrBuffer.length > 0) {
-    doc.image(qrBuffer, left + width - 62, y - 2, { width: 58 });
-  }
+  y += 50;
 
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#000000');
-  doc.text('ANDHRA PRADESH CAPITAL REGION', left, y + 2, { width: width - 70, align: 'center' });
+  doc.font(CERT_FONT_BOLD).fontSize(11).fillColor('#0f172a');
+  doc.text('Andhra Pradesh Capital Region', left, y, { width, align: 'center' });
   y = doc.y + 2;
-  doc.fontSize(12).text('DEVELOPMENT AUTHORITY', left, y, { width: width - 70, align: 'center' });
-  y = doc.y + 6;
-  doc.fontSize(11).text(title, left, y, { width: width - 70, align: 'center' });
+  doc.text('Development Authority', left, y, { width, align: 'center' });
+  y = doc.y + 8;
+  doc.fontSize(10).fillColor(CERT_GREEN).text(title, left, y, { width, align: 'center' });
   y = doc.y + 4;
   doc
-    .font('Helvetica')
+    .font(CERT_FONT)
     .fontSize(8)
-    .text(subtitle, left, y, { width: width - 70, align: 'center' });
+    .fillColor('#475569')
+    .text(subtitle, left, y, { width, align: 'center' });
+  y = doc.y + 10;
 
-  return doc.y + 10;
+  doc
+    .lineWidth(0.8)
+    .strokeColor('#1b5e2033')
+    .moveTo(left, y)
+    .lineTo(left + width, y)
+    .stroke();
+
+  return y + 12;
 }
 
 export function drawFileMetaRow(
@@ -113,12 +127,12 @@ export function drawFileMetaRow(
   const left = contentLeft();
   const width = contentWidth(doc);
 
-  doc.font('Helvetica').fontSize(9).fillColor('#000000');
+  doc.font(CERT_FONT).fontSize(9).fillColor('#000000');
   doc.text(`File No.: `, left, y, { continued: true });
-  doc.font('Helvetica-Bold').text(fileNo, { continued: false });
+  doc.font(CERT_FONT_BOLD).text(fileNo, { continued: false });
 
   const dateLabel = `File Date: ${fileDate}`;
-  doc.font('Helvetica').text(dateLabel, left, y, { width, align: 'right' });
+  doc.font(CERT_FONT).text(dateLabel, left, y, { width, align: 'right' });
 
   return y + 16;
 }
@@ -133,10 +147,10 @@ export function drawNarrativeParagraph(
 
   doc.x = left;
   doc.y = y;
-  doc.fontSize(9).fillColor('#000000');
+  doc.fontSize(9).fillColor('#0f172a');
 
   parts.forEach((part, index) => {
-    doc.font(part.bold ? 'Helvetica-Bold' : 'Helvetica');
+    doc.font(part.bold ? CERT_FONT_BOLD : CERT_FONT);
     doc.text(part.text, {
       width,
       continued: index < parts.length - 1,
@@ -167,13 +181,13 @@ export function drawDataTable(
     doc.rect(left + colSerial, ry, colLabel, rowHeight).stroke();
     doc.rect(left + colSerial + colLabel, ry, colValue, rowHeight).stroke();
 
-    doc.font('Helvetica').fontSize(8).fillColor('#000000');
+    doc.font(CERT_FONT).fontSize(8).fillColor('#000000');
     doc.text(String(row.serial), left + 2, ry + 7, {
       width: colSerial - 4,
       align: 'center',
     });
     doc.text(row.label, left + colSerial + 4, ry + 7, { width: colLabel - 8 });
-    doc.font('Helvetica-Bold').text(row.value, left + colSerial + colLabel + 4, ry + 7, {
+    doc.font(CERT_FONT_BOLD).text(row.value, left + colSerial + colLabel + 4, ry + 7, {
       width: colValue - 8,
     });
   });
@@ -187,41 +201,31 @@ export function drawSignatureBlocks(doc: PDFKit.PDFDocument, y: number): void {
   const blockW = (width - 24) / 2;
 
   const blocks = [
-    {
-      title: 'DIRECTOR (LANDS)',
-      org: 'APCRDA',
-      footer: 'Seal & Stamp',
-    },
-    {
-      title: 'COMMISSIONER',
-      org: 'APCRDA',
-      footer: 'Seal & Stamp',
-    },
+    { title: 'Director (Lands)', org: 'APCRDA' },
+    { title: 'Commissioner', org: 'APCRDA' },
   ];
 
   blocks.forEach((block, i) => {
-    const bx = left + i * (blockW + 24);
+    const blockLeft = left + i * (blockW + 24);
+    const centerX = blockLeft + blockW / 2;
+
     doc.save();
-    doc.lineWidth(0.5).strokeColor(CERT_GREEN).fillColor(CERT_GREEN);
-    doc
-      .moveTo(bx + 8, y + 18)
-      .lineTo(bx + 14, y + 26)
-      .lineTo(bx + 26, y + 10)
-      .stroke();
+    doc.lineWidth(1).strokeColor(CERT_GREEN).fillColor('#e8f5e9');
+    doc.circle(centerX, y + 14, 12).fillAndStroke();
+    doc.fillColor(CERT_GREEN).font(CERT_FONT_BOLD).fontSize(12);
+    doc.text('✓', centerX - 4, y + 8);
     doc.restore();
 
-    doc.font('Helvetica').fontSize(7).fillColor('#333333');
-    doc.text('Digitally signed by', bx, y);
-    doc.text(block.title, bx, y + 10);
-    doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, bx, y + 20);
-
-    doc.font('Helvetica-Bold').fontSize(9).fillColor('#000000');
-    doc.text(block.title, bx, y + 44, { width: blockW, align: 'center' });
+    doc.font(CERT_FONT).fontSize(7).fillColor('#64748b');
+    doc.text('Digitally signed by', blockLeft, y + 32, { width: blockW, align: 'center' });
+    doc.font(CERT_FONT_BOLD).fontSize(8).fillColor('#0f172a');
+    doc.text(block.title, blockLeft, y + 42, { width: blockW, align: 'center' });
+    doc.font(CERT_FONT).fontSize(8).fillColor('#1e293b');
+    doc.text(block.org, blockLeft, y + 54, { width: blockW, align: 'center' });
     doc
-      .font('Helvetica')
-      .fontSize(8)
-      .text(block.org, bx, y + 56, { width: blockW, align: 'center' });
-    doc.fontSize(7).text(block.footer, bx, y + 68, { width: blockW, align: 'center' });
+      .fontSize(7)
+      .fillColor('#64748b')
+      .text('Seal & Stamp', blockLeft, y + 66, { width: blockW, align: 'center' });
   });
 }
 
@@ -236,7 +240,7 @@ export function drawWrappedTerms(
   let cy = y;
 
   terms.forEach((term, index) => {
-    doc.font('Helvetica').fontSize(fontSize).fillColor('#000000');
+    doc.font(CERT_FONT).fontSize(fontSize).fillColor('#000000');
     const text = `${index + 1}. ${term}`;
     doc.text(text, left, cy, { width, align: 'justify', lineGap: 1 });
     cy = doc.y + 4;
@@ -258,14 +262,14 @@ export function drawLedgerSummary(
   for (let i = 0; i < fields.length; i += 2) {
     const leftField = fields[i];
     const rightField = fields[i + 1];
-    doc.font('Helvetica').fontSize(8).fillColor('#000000');
+    doc.font(CERT_FONT).fontSize(8).fillColor('#000000');
     if (leftField) {
       doc.text(`${leftField.label}: `, left, cy, { continued: true });
-      doc.font('Helvetica-Bold').text(leftField.value);
+      doc.font(CERT_FONT_BOLD).text(leftField.value);
     }
     if (rightField) {
-      doc.font('Helvetica').text(`${rightField.label}: `, left + colW, cy, { continued: true });
-      doc.font('Helvetica-Bold').text(rightField.value);
+      doc.font(CERT_FONT).text(`${rightField.label}: `, left + colW, cy, { continued: true });
+      doc.font(CERT_FONT_BOLD).text(rightField.value);
     }
     cy += 14;
   }
@@ -297,7 +301,7 @@ export function drawLedgerTable(
     const w = colWidths[i] ?? 50;
     doc.lineWidth(0.6).strokeColor('#000000');
     doc.rect(x, y, w, headerH).stroke();
-    doc.font('Helvetica-Bold').fontSize(5.5).fillColor('#000000');
+    doc.font(CERT_FONT_BOLD).fontSize(5.5).fillColor('#000000');
     doc.text(col, x + 1, y + 4, { width: w - 2, align: 'center' });
     x += w;
   });
@@ -318,7 +322,7 @@ export function drawLedgerTable(
     const w = colWidths[i] ?? 50;
     doc.rect(x, ry, w, rowH).stroke();
     doc
-      .font('Helvetica')
+      .font(CERT_FONT)
       .fontSize(6.5)
       .text(val, x + 2, ry + 7, { width: w - 4 });
     x += w;

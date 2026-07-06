@@ -8,6 +8,7 @@ import {
 } from '@prisma/client';
 import { createHash } from 'crypto';
 import { encryptAadhaar, hashAadhaar } from '@/lib/security/hmac';
+import { truncateAllTables } from '../scripts/truncate-all-tables';
 
 const prisma = new PrismaClient();
 const GENESIS_HASH = 'APCRDA-TDR-GENESIS-2026';
@@ -27,19 +28,7 @@ function chainHash(prev: string, payload: object): string {
 }
 
 async function clearAllData() {
-  await prisma.$transaction([
-    prisma.auditLog.deleteMany(),
-    prisma.approvalStep.deleteMany(),
-    prisma.bondDocument.deleteMany(),
-    prisma.bondHolder.deleteMany(),
-    prisma.bondLandDetail.deleteMany(),
-    prisma.tdrBond.deleteMany(),
-    prisma.otpRequest.deleteMany(),
-    prisma.idempotencyCache.deleteMany(),
-    prisma.farmer.deleteMany(),
-    prisma.official.deleteMany(),
-    prisma.village.deleteMany(),
-  ]);
+  await truncateAllTables(prisma);
 }
 
 interface DraftBondSeed {
@@ -191,6 +180,90 @@ const DRAFT_BONDS: DraftBondSeed[] = [
     issuedRatio: '1:1',
     tdrCertificateNumber: 'TDR-CERT-2025-006',
   },
+  {
+    tdrNumber: 'TDR-2025-007',
+    farmerId: '22222222-2222-2222-2222-222222222207',
+    farmerName: 'Smt. Nagamani',
+    aadhaar: '333333333333',
+    phone: '9333333333',
+    email: 'nagamani.p@example.com',
+    relationType: RelationType.W_O,
+    relationName: 'Prasad Rao',
+    doorNo: '2-18',
+    street: 'Collector Office Road',
+    village: 'Kanuru',
+    mandal: 'Penamaluru',
+    district: 'KRISHNA',
+    surveyNumber: '19/5A',
+    ownershipDeedNo: 'DEED-2024-9012',
+    surrenderedAreaSqYds: 740,
+    tdrIssuedExtentSqYds: 740,
+    issuedRatio: '1:1',
+    tdrCertificateNumber: 'TDR-CERT-2025-007',
+  },
+  {
+    tdrNumber: 'TDR-2025-008',
+    farmerId: '22222222-2222-2222-2222-222222222208',
+    farmerName: 'Sri Krishna Rao',
+    aadhaar: '222222222222',
+    phone: '9222222222',
+    email: 'krishna.rao@example.com',
+    relationType: RelationType.S_O,
+    relationName: 'Subba Rao',
+    doorNo: '11-7',
+    street: 'Poranki Main Road',
+    village: 'Poranki',
+    mandal: 'Penamaluru',
+    district: 'KRISHNA',
+    surveyNumber: '61/8B',
+    ownershipDeedNo: 'DEED-2024-9156',
+    surrenderedAreaSqYds: 980,
+    tdrIssuedExtentSqYds: 980,
+    issuedRatio: '1:1',
+    tdrCertificateNumber: 'TDR-CERT-2025-008',
+  },
+  {
+    tdrNumber: 'TDR-2025-009',
+    farmerId: '22222222-2222-2222-2222-222222222209',
+    farmerName: 'Smt. Sunitha Devi',
+    aadhaar: '111111111111',
+    phone: '9111111111',
+    email: 'sunitha.devi@example.com',
+    relationType: RelationType.D_O,
+    relationName: 'Venkataiah',
+    doorNo: '4-56',
+    street: 'Tadigadapa Cross Road',
+    village: 'Tadigadapa',
+    mandal: 'Penamaluru',
+    district: 'KRISHNA',
+    surveyNumber: '88/1',
+    ownershipDeedNo: 'DEED-2024-9288',
+    surrenderedAreaSqYds: 830,
+    tdrIssuedExtentSqYds: 830,
+    issuedRatio: '1:1',
+    tdrCertificateNumber: 'TDR-CERT-2025-009',
+  },
+  {
+    tdrNumber: 'TDR-2025-010',
+    farmerId: '22222222-2222-2222-2222-222222222210',
+    farmerName: 'Sri Mahesh Babu',
+    aadhaar: '101010101010',
+    phone: '9000000010',
+    email: 'mahesh.babu@example.com',
+    relationType: RelationType.S_O,
+    relationName: 'Hanumantha Rao',
+    doorNo: '9-31',
+    street: 'Gannavaram Bypass',
+    village: 'Gannavaram',
+    mandal: 'Gannavaram',
+    district: 'KRISHNA',
+    surveyNumber: '27/6C',
+    ownershipDeedNo: 'DEED-2024-9401',
+    surrenderedAreaSqYds: 1050,
+    tdrIssuedExtentSqYds: 1050,
+    issuedRatio: '1:1',
+    tdrCertificateNumber: 'TDR-CERT-2025-010',
+  },
 ];
 
 async function main() {
@@ -287,6 +360,8 @@ async function main() {
       ],
     });
 
+    let auditId = 0n;
+
     for (const seed of DRAFT_BONDS) {
       const aadhaarHash = hashAadhaar(seed.aadhaar);
 
@@ -361,8 +436,10 @@ async function main() {
         timestamp: new Date().toISOString(),
       };
 
+      auditId += 1n;
       await tx.auditLog.create({
         data: {
+          id: auditId,
           bondId: bond.id,
           action: 'BOND_SEED_DRAFT',
           chainHash: chainHash(GENESIS_HASH, payload),
@@ -373,7 +450,7 @@ async function main() {
 
     console.log(`Created ${DRAFT_BONDS.length} bonds awaiting DEO review:`);
     DRAFT_BONDS.forEach((b) => console.log(`  · ${b.tdrNumber} — ${b.farmerName}`));
-    console.log('Officials: 5 · Farmers: 6 · Villages: 6');
+    console.log('Officials: 5 · Farmers: 10 · Villages: 6');
   });
 
   console.log('Approval logins (5):');

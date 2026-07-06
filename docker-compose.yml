@@ -21,12 +21,11 @@ services:
     build: .
     ports:
       - '3000:3000'
-    env_file: .env.local
+    env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-apcrda_tdr}
       CERBOS_PDP_URL: cerbos:3593
       CERBOS_MOCK_MODE: 'false'
-      IPFS_API_URL: http://ipfs:5001
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,19 +52,9 @@ services:
     networks:
       - apcrda-internal
 
-  ipfs:
-    image: ipfs/kubo:v0.32.1
-    ports:
-      - '5001:5001'
-    volumes:
-      - ipfs_data:/data/ipfs
-    networks:
-      - apcrda-internal
-
 volumes:
   postgres_data:
   cerbos_logs:
-  ipfs_data:
 
 networks:
   apcrda-internal:

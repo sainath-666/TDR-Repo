@@ -107,7 +107,7 @@ Option B — WSL (Ubuntu):
   1. wsl --install   (if not already installed)
   2. npm run cerbos:start
 
-Then set in .env.local:
+Then set in .env:
   CERBOS_MOCK_MODE=false
   CERBOS_PDP_URL=localhost:3593
 

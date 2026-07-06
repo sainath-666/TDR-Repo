@@ -11,9 +11,13 @@ import { prisma } from '@/lib/prisma';
 import * as fabric from '@/lib/fabric/gateway';
 import { isFabricMockMode } from '@/lib/fabric/gateway';
 import { generateCertificatePdf } from '@/lib/pdf/certificate';
-import { decryptAadhaar, generateApprovalSignature } from '@/lib/security/hmac';
-
-const CERT_RELATIVE_DIR = path.join('storage', 'certificates');
+import { buildCertificateRenderData } from '@/lib/certificate/render-data';
+import { generateApprovalSignature } from '@/lib/security/hmac';
+import {
+  downloadCertificatePdf,
+  isLegacyLocalCertificatePath,
+  uploadCertificatePdf,
+} from '@/lib/supabase/storage';
 
 export interface MintedCertificate {
   certificateIpfsCid: string;
@@ -22,29 +26,8 @@ export interface MintedCertificate {
   pdfSize: number;
 }
 
-function certificateAbsolutePath(bondId: string): string {
-  return path.join(process.cwd(), CERT_RELATIVE_DIR, `${bondId}.pdf`);
-}
-
-function certificateRelativePath(bondId: string): string {
-  return path.join(CERT_RELATIVE_DIR, `${bondId}.pdf`).replace(/\\/g, '/');
-}
-
-function aadhaarLast4(encrypted: string): string {
-  try {
-    const digits = decryptAadhaar(encrypted).replace(/\D/g, '');
-    return digits.length >= 4 ? digits.slice(-4) : digits.padStart(4, '0');
-  } catch {
-    return 'XXXX';
-  }
-}
-
-function commissionerDisplayName(role: UserRole): string {
-  return role === 'COMMISSIONER' ? 'Commissioner APCRDA' : 'Additional Commissioner APCRDA';
-}
-
-async function ensureCertificateDir(): Promise<void> {
-  await fs.mkdir(path.join(process.cwd(), CERT_RELATIVE_DIR), { recursive: true });
+function legacyCertificateAbsolutePath(storagePath: string): string {
+  return path.join(process.cwd(), storagePath.replace(/^\//, ''));
 }
 
 function assertBondReadyForCertificate(bond: TdrBondWithRelations): void {
@@ -52,7 +35,24 @@ function assertBondReadyForCertificate(bond: TdrBondWithRelations): void {
   if (!bond.landDetails) throw new ValidationError('Land details required before certificate mint');
 }
 
-/** Generate PDF, persist locally, and return mint metadata (no DB write). */
+/** Build a fresh PDF from current bond data (same source as the on-screen preview). */
+export async function generateBondCertificatePdfBuffer(
+  bond: TdrBondWithRelations,
+  verifyOrigin: string,
+  actorRole: UserRole = 'COMMISSIONER',
+  approvalFabricTxId?: string | null,
+): Promise<Buffer> {
+  assertBondReadyForCertificate(bond);
+
+  const data = buildCertificateRenderData(bond, { actorRole, approvalFabricTxId });
+  if (!data) throw new ValidationError('Certificate data incomplete');
+
+  const verifyUrl = `${verifyOrigin}/verify/${bond.tdrNumber}`;
+  const qrBuffer = await QRCode.toBuffer(verifyUrl);
+  return generateCertificatePdf(data, qrBuffer);
+}
+
+/** Generate PDF, upload to Supabase Storage, and return mint metadata (no DB write). */
 export async function prepareBondCertificate(params: {
   bond: TdrBondWithRelations;
   actorRole: UserRole;
@@ -60,71 +60,52 @@ export async function prepareBondCertificate(params: {
   verifyOrigin: string;
   approvalFabricTxId?: string | null;
 }): Promise<MintedCertificate> {
-  assertBondReadyForCertificate(params.bond);
-
-  const verifyUrl = `${params.verifyOrigin}/verify/${params.bond.tdrNumber}`;
-  const qrBuffer = await QRCode.toBuffer(verifyUrl);
-
-  const pdfBuffer = await generateCertificatePdf(
-    {
-      tdrNumber: params.bond.tdrNumber,
-      tdrCertificateNumber:
-        params.bond.landDetails!.tdrCertificateNumber ??
-        `CERT-${params.bond.tdrNumber.replace(/[^0-9]/g, '')}`,
-      holderName: params.bond.holder!.name,
-      aadhaarLast4: aadhaarLast4(params.bond.holder!.aadhaarEncrypted),
-      relationType: params.bond.holder!.relationType.replace('_', '/'),
-      relationName: params.bond.holder!.relationName,
-      surveyNumber: params.bond.landDetails!.surveyNumber,
-      village: params.bond.landDetails!.surrenderedVillage,
-      mandal: params.bond.holder!.mandal,
-      district: params.bond.holder!.district,
-      ownershipDeedNo: params.bond.landDetails!.ownershipDeedNo,
-      surrenderedAreaSqYds: Number(params.bond.landDetails!.surrenderedAreaSqYds),
-      tdrExtentSqYds: Number(params.bond.landDetails!.tdrIssuedExtentSqYds),
-      issuedRatio: params.bond.landDetails!.issuedRatio,
-      issuedAt: (params.bond.mintedAt ?? params.bond.updatedAt).toISOString(),
-      commissionerName: commissionerDisplayName(params.actorRole),
-      fabricTxId: params.approvalFabricTxId ?? undefined,
-      blockchainPending: isFabricMockMode(),
-    },
-    qrBuffer,
+  const pdfBuffer = await generateBondCertificatePdfBuffer(
+    params.bond,
+    params.verifyOrigin,
+    params.actorRole,
+    params.approvalFabricTxId,
   );
 
-  await ensureCertificateDir();
-  const absolutePath = certificateAbsolutePath(params.bond.id);
-  await fs.writeFile(absolutePath, pdfBuffer);
+  const uploaded = await uploadCertificatePdf(params.bond.id, pdfBuffer);
 
-  const certificateIpfsCid = `bafy-cert-${params.bond.tdrNumber.replace(/[^a-z0-9]/gi, '').toLowerCase()}`;
   const commissionerHash = params.employeeId
     ? generateApprovalSignature(params.employeeId, params.bond.id, 'CERT', Date.now())
     : 'unsigned-dev';
 
   const fabricTxId = await fabric.mintCertificate(
     params.bond.tdrNumber,
-    certificateIpfsCid,
+    uploaded.contentHash,
     commissionerHash,
   );
 
   return {
-    certificateIpfsCid,
-    certificateStoragePath: certificateRelativePath(params.bond.id),
+    certificateIpfsCid: uploaded.contentHash,
+    certificateStoragePath: uploaded.storagePath,
     fabricTxId,
     pdfSize: pdfBuffer.length,
   };
 }
 
-/** Load certificate PDF bytes for download. */
+/** Load archived certificate PDF from storage (legacy / audit copy). */
 export async function readBondCertificatePdf(
   bondId: string,
   storagePath?: string | null,
 ): Promise<Buffer> {
-  const absolutePath = storagePath
-    ? path.join(process.cwd(), storagePath.replace(/^\//, ''))
-    : certificateAbsolutePath(bondId);
+  if (!storagePath) {
+    throw new ValidationError('Certificate file not found');
+  }
+
+  if (isLegacyLocalCertificatePath(storagePath)) {
+    try {
+      return await fs.readFile(legacyCertificateAbsolutePath(storagePath));
+    } catch {
+      throw new ValidationError('Certificate file not found');
+    }
+  }
 
   try {
-    return await fs.readFile(absolutePath);
+    return await downloadCertificatePdf(storagePath);
   } catch {
     throw new ValidationError('Certificate file not found');
   }
@@ -187,7 +168,6 @@ export async function mintBondCertificateAfterApproval(params: {
     approvalFabricTxId: params.approvalFabricTxId,
   });
 
-  // AUDIT: Records TDR certificate PDF generation after final commissioner approval
   await writeAuditLog({
     bondId: params.bondId,
     actorId: params.actorId,

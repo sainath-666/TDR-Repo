@@ -15,10 +15,6 @@ export function officialDevEmail(employeeId: string): string {
   return `${employeeId.toLowerCase()}@${DEV_EMAIL_DOMAIN}`;
 }
 
-export function farmerDevEmail(phone: string): string {
-  return `farmer-${phone}@${DEV_EMAIL_DOMAIN}`;
-}
-
 /** Demo citizen login is always visible (same as official approval logins). */
 export function isFarmerDemoLoginVisible(): boolean {
   return true;

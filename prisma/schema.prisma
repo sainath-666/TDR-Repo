@@ -189,7 +189,7 @@ model Farmer {
 }
 
 model AuditLog {
-  id           BigInt   @id @default(autoincrement())
+  id           BigInt   @id
   bondId       String?  @map("bond_id") @db.Uuid
   actorId      String?  @map("actor_id") @db.Uuid
   actorRole    String?  @map("actor_role")

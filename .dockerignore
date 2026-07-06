@@ -8,7 +8,6 @@ build
 coverage
 
 .env
-.env.local
 .env.production
 
 .git

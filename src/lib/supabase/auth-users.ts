@@ -1,5 +1,5 @@
-import { getDevPassword, officialDevEmail, farmerDevEmail } from '@/lib/dev-auth';
-import { createAdminClient } from './server';
+import { getDevPassword, officialDevEmail } from '@/lib/dev-auth';
+import { createAdminClient } from './admin';
 
 const DEV_PASSWORD = getDevPassword();
 
@@ -13,13 +13,7 @@ interface OfficialRecord {
   districtCode: string;
 }
 
-interface FarmerRecord {
-  id: string;
-  name: string;
-  aadhaarPhone: string;
-}
-
-export { officialDevEmail, farmerDevEmail } from '@/lib/dev-auth';
+export { officialDevEmail } from '@/lib/dev-auth';
 
 export async function ensureOfficialAuthUser(official: OfficialRecord): Promise<void> {
   const admin = createAdminClient();
@@ -59,58 +53,4 @@ export async function ensureOfficialAuthUser(official: OfficialRecord): Promise<
     password: DEV_PASSWORD,
   });
   if (error) throw new Error(`Failed to update official auth user: ${error.message}`);
-}
-
-export async function ensureFarmerAuthUser(farmer: FarmerRecord): Promise<void> {
-  const admin = createAdminClient();
-  const phone = `+91${farmer.aadhaarPhone}`;
-  const appMetadata = {
-    role: 'FARMER',
-    farmer_id: farmer.id,
-  };
-  const devEmail = farmerDevEmail(farmer.aadhaarPhone);
-
-  const { data: existing } = await admin.auth.admin.getUserById(farmer.id);
-
-  if (!existing.user) {
-    const { error } = await admin.auth.admin.createUser({
-      id: farmer.id,
-      phone,
-      phone_confirm: true,
-      email: devEmail,
-      password: DEV_PASSWORD,
-      email_confirm: true,
-      user_metadata: { name: farmer.name },
-      app_metadata: appMetadata,
-    });
-    if (error) throw new Error(`Failed to create farmer auth user: ${error.message}`);
-    return;
-  }
-
-  // Fast path: user already provisioned — skip slow updateUserById (was resetting password every login)
-  const meta = existing.user.app_metadata as Record<string, unknown>;
-  const alreadyReady =
-    meta.role === 'FARMER' && meta.farmer_id === farmer.id && Boolean(existing.user.email);
-  if (alreadyReady) return;
-
-  const { error } = await admin.auth.admin.updateUserById(farmer.id, {
-    phone,
-    phone_confirm: true,
-    email: devEmail,
-    password: DEV_PASSWORD,
-    app_metadata: appMetadata,
-    user_metadata: { name: farmer.name },
-  });
-  if (error) throw new Error(`Failed to update farmer auth user: ${error.message}`);
-}
-
-export async function syncFarmerAppMetadata(userId: string, farmerId: string): Promise<void> {
-  const admin = createAdminClient();
-  const { error } = await admin.auth.admin.updateUserById(userId, {
-    app_metadata: {
-      role: 'FARMER',
-      farmer_id: farmerId,
-    },
-  });
-  if (error) throw new Error(`Failed to sync farmer metadata: ${error.message}`);
 }

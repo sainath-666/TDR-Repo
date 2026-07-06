@@ -1,4 +1,5 @@
 import { createHash } from 'crypto';
+import type { Prisma } from '@prisma/client';
 import { prisma } from './prisma';
 import { redactSensitive, logger } from './logger';
 
@@ -20,11 +21,22 @@ function computeChainHash(previousHash: string, payload: Record<string, unknown>
   return createHash('sha256').update(data).digest('hex');
 }
 
+/** App-assigned ids — avoids DB sequence grants on restricted roles. */
+export async function nextAuditLogId(
+  tx: Prisma.TransactionClient | typeof prisma = prisma,
+): Promise<bigint> {
+  const last = await tx.auditLog.findFirst({
+    orderBy: { id: 'desc' },
+    select: { id: true },
+  });
+  return (last?.id ?? 0n) + 1n;
+}
+
 export async function writeAuditLog(entry: AuditEntry): Promise<void> {
   try {
     const lastEntry = await prisma.auditLog.findFirst({
       orderBy: { id: 'desc' },
-      select: { chainHash: true },
+      select: { chainHash: true, id: true },
     });
     const previousHash = lastEntry?.chainHash ?? GENESIS_HASH;
 
@@ -41,9 +53,11 @@ export async function writeAuditLog(entry: AuditEntry): Promise<void> {
     };
 
     const chainHash = computeChainHash(previousHash, payload);
+    const id = (lastEntry?.id ?? 0n) + 1n;
 
     await prisma.auditLog.create({
       data: {
+        id,
         bondId: entry.bondId,
         actorId: entry.actorId,
         actorRole: entry.actorRole,

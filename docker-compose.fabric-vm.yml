@@ -1,0 +1,19 @@
+# VM overlay — expose app on localhost:3000, connect to host Fabric peer
+services:
+  app:
+    ports:
+      - '127.0.0.1:3000:3000'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      FABRIC_PEER_ENDPOINT: host.docker.internal:7051
+      FABRIC_PEER_HEALTH_URL: http://host.docker.internal:9443/healthz
+      FABRIC_CERT_PATH: ./fabric/network/wallet/admin/cert.pem
+      FABRIC_KEY_PATH: ./fabric/network/wallet/admin/key.pem
+      FABRIC_TLS_CERT_PATH: ./fabric/network/crypto-config/peerOrganizations/apcrda/peers/peer0.apcrda/tls/ca.crt
+    volumes:
+      - ./fabric/network/wallet:/app/fabric/network/wallet:ro
+      - ./fabric/network/crypto-config/peerOrganizations/apcrda/peers/peer0.apcrda/tls:/app/fabric/network/crypto-config/peerOrganizations/apcrda/peers/peer0.apcrda/tls:ro
+
+  cerbos:
+    image: ghcr.io/cerbos/cerbos:0.53.0
