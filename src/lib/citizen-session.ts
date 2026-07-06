@@ -15,7 +15,19 @@ interface CitizenSessionPayload {
 }
 
 function getSessionSecret(): string {
-  return process.env.CITIZEN_SESSION_SECRET ?? getDevPassword();
+  return (
+    process.env.CITIZEN_SESSION_SECRET ??
+    process.env.HMAC_SECRET ??
+    getDevPassword()
+  );
+}
+
+/** Only mark session cookies Secure when the app is served over HTTPS. */
+function cookieSecureFlag(): boolean {
+  if (process.env.COOKIE_SECURE === 'true') return true;
+  if (process.env.COOKIE_SECURE === 'false') return false;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? '';
+  return appUrl.startsWith('https://');
 }
 
 function toBase64Url(bytes: Uint8Array): string {
@@ -123,7 +135,7 @@ export async function setCitizenSessionCookie(
     sameSite: 'lax',
     path: '/',
     maxAge: SESSION_MAX_AGE_SEC,
-    secure: process.env.NODE_ENV === 'production',
+    secure: cookieSecureFlag(),
   });
 }
 
