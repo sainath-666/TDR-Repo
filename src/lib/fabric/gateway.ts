@@ -47,6 +47,10 @@ function mockTxId(): string {
   return `mock-tx-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function decodeFabricPayload(result: Uint8Array): string {
+  return new TextDecoder().decode(result);
+}
+
 async function submitTransaction(fn: string, ...args: string[]): Promise<string> {
   try {
     const contract = await getContract();
@@ -122,7 +126,7 @@ export async function getBond(tdrNumber: string): Promise<FabricBondState | null
   try {
     const contract = await getContract();
     const result = await contract.evaluate('GetBond', { arguments: [tdrNumber] });
-    return JSON.parse(result.toString()) as FabricBondState;
+    return JSON.parse(decodeFabricPayload(result)) as FabricBondState;
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     if (message.includes('not found')) return null;
