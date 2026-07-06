@@ -27,17 +27,20 @@ if [ ! -f channel-artifacts/genesis.block ] || [ ! -f wallet/admin/cert.pem ]; t
   bash "$ROOT/fabric/scripts/generate-artifacts.sh"
 fi
 
+bash "$ROOT/fabric/scripts/install-peercfg.sh"
+
 echo "=== Starting Fabric orderer + peer + cli ==="
 docker compose up -d orderer.apcrda peer0.apcrda cli
 
 echo "=== Waiting for peer to start ==="
-for i in $(seq 1 30); do
+for i in $(seq 1 45); do
   if curl -sf http://localhost:9443/healthz >/dev/null 2>&1; then
     echo "✓ peer0.apcrda healthy"
     break
   fi
-  if [ "$i" -eq 30 ]; then
-    echo "WARN: peer health check timed out — continuing anyway"
+  if [ "$i" -eq 45 ]; then
+    echo "ERROR: peer health check timed out"
+    exit 1
   fi
   sleep 2
 done

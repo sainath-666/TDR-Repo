@@ -27,6 +27,7 @@
     "fabric:start": "docker compose -f fabric/network/docker-compose.yml up -d",
     "fabric:stop": "docker compose -f fabric/network/docker-compose.yml down",
     "fabric:deploy-cc": "bash fabric/scripts/deploy-chaincode.sh",
+    "fabric:reset": "bash fabric/scripts/reset-network.sh",
     "ppt:workflow": "node scripts/generate-workflow-ppt.mjs",
     "ppt:login": "node scripts/generate-login-workflow-ppt.mjs"
   },

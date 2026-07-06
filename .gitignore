@@ -15,8 +15,9 @@
 # .env
 # .env.production
 
-# misc
-.DS_Store
+# fabric generated peer config (see fabric/scripts/install-peercfg.sh)
+fabric/network/peercfg/core.yaml
+
 *.pem
 
 # debug
