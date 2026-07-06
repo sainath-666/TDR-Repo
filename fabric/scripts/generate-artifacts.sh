@@ -14,6 +14,12 @@ docker run --rm \
   hyperledger/fabric-tools:2.5 \
   cryptogen generate --config=./crypto-config.yaml --output="crypto-config"
 
+# cryptogen runs as root in the container — fix ownership so wallet copy and peer mounts work
+if command -v sudo >/dev/null 2>&1; then
+  sudo chown -R "$(id -u):$(id -g)" crypto-config channel-artifacts 2>/dev/null || true
+fi
+chmod -R u+rwX crypto-config 2>/dev/null || true
+
 echo "=== Generating genesis block + channel transaction ==="
 docker run --rm \
   -v "${NETWORK_DIR}:/data" \

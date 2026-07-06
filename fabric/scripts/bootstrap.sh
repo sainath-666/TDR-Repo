@@ -43,6 +43,7 @@ for i in $(seq 1 30); do
 done
 
 ORDERER_CA="/etc/hyperledger/fabric/crypto-config/ordererOrganizations/apcrda/orderers/orderer.apcrda/msp/tlscacerts/tlsca.apcrda-cert.pem"
+CHANNEL_DIR="/etc/hyperledger/fabric/channel-artifacts"
 
 peer_cmd() {
   docker compose exec -T cli peer "$@"
@@ -54,13 +55,13 @@ if ! peer_cmd channel list 2>/dev/null | grep -q "${CHANNEL_NAME}"; then
   peer_cmd channel create \
     -o orderer.apcrda:7050 \
     -c "${CHANNEL_NAME}" \
-    -f "./channel-artifacts/${CHANNEL_NAME}.tx" \
-    --outputBlock "./channel-artifacts/${CHANNEL_NAME}.block" \
+    -f "${CHANNEL_DIR}/${CHANNEL_NAME}.tx" \
+    --outputBlock "${CHANNEL_DIR}/${CHANNEL_NAME}.block" \
     --tls \
     --cafile "${ORDERER_CA}"
 
   echo "=== Joining peer to channel ==="
-  peer_cmd channel join -b "./channel-artifacts/${CHANNEL_NAME}.block"
+  peer_cmd channel join -b "${CHANNEL_DIR}/${CHANNEL_NAME}.block"
 else
   echo "✓ Channel ${CHANNEL_NAME} already exists"
 fi

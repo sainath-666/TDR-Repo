@@ -1,11 +1,18 @@
-# VM overlay — expose app on localhost:3000, connect to host Fabric peer
+# VM overlay — expose app on localhost:3000, connect to host Fabric peer + host Postgres
 services:
   app:
     ports:
       - '127.0.0.1:3000:3000'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
+    depends_on:
+      cerbos:
+        condition: service_started
     environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:5433/${POSTGRES_DB:-my_nextjs_db}
+      FABRIC_MOCK_MODE: 'false'
+      CERBOS_PDP_URL: cerbos:3593
+      CERBOS_PDP_TLS: 'false'
       FABRIC_PEER_ENDPOINT: host.docker.internal:7051
       FABRIC_PEER_HEALTH_URL: http://host.docker.internal:9443/healthz
       FABRIC_CERT_PATH: ./fabric/network/wallet/admin/cert.pem
@@ -17,3 +24,5 @@ services:
 
   cerbos:
     image: ghcr.io/cerbos/cerbos:0.53.0
+    healthcheck:
+      disable: true
