@@ -74,14 +74,7 @@ async function processIntakeReview({
     if (!bond.landDetails) throw new ValidationError('Land details required before approval');
     if (!bond.holder) throw new ValidationError('Holder details required before approval');
 
-    fabricTxId = await fabric.createBond({
-      tdrNumber: bond.tdrNumber,
-      surveyNumber: bond.landDetails.surveyNumber,
-      holderAadhaarHash: bond.holder.aadhaarHash,
-      extentSqYds: Number(bond.landDetails.tdrIssuedExtentSqYds),
-      ratio: bond.landDetails.issuedRatio,
-      ipfsDocCid: bond.documents[0]?.ipfsCid ?? '',
-    });
+    fabricTxId = await fabric.ensureBondOnChain(fabricBondParamsFromRecord(bond));
   }
 
   await prisma.tdrBond.update({

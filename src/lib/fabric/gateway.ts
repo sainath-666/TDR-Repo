@@ -71,13 +71,24 @@ export async function createBond(params: FabricBondParams): Promise<string> {
   return submitTransaction('CreateBond', JSON.stringify(params));
 }
 
-/** Register bond on ledger if missing (e.g. DB synced before Fabric was live). */
-export async function ensureBondOnChain(params: FabricBondParams): Promise<void> {
-  if (isFabricMockMode()) return;
+/** Register bond on ledger if missing (e.g. DB re-seeded while ledger retained). */
+export async function ensureBondOnChain(params: FabricBondParams): Promise<string | undefined> {
+  if (isFabricMockMode()) return mockTxId();
+
   const existing = await getBond(params.tdrNumber);
-  if (existing) return;
+  if (existing) return undefined;
+
   logger.info('Backfilling bond on Fabric ledger', { tdrNumber: params.tdrNumber });
-  await createBond(params);
+  try {
+    return await createBond(params);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('already exists')) {
+      logger.warn('Bond already on Fabric ledger', { tdrNumber: params.tdrNumber });
+      return undefined;
+    }
+    throw err;
+  }
 }
 
 export async function recordApproval(params: FabricApprovalParams): Promise<string> {
