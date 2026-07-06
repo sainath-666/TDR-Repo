@@ -171,15 +171,16 @@ export async function processApproval({ bondId, decision, remarks, req }: Proces
 
   await fabric.ensureBondOnChain(fabricBondParamsFromRecord(bond));
 
-  const fabricTxId = await fabric.recordApproval({
-    tdrNumber: bond.tdrNumber,
-    level,
-    decision,
-    employeeId: user.employeeId ?? user.id,
-    signatureHash: signatureHash ?? '',
-    cerbosCallId,
-    remarks: remarks ?? '',
-  });
+  const fabricTxId =
+    (await fabric.ensureRecordApproval({
+      tdrNumber: bond.tdrNumber,
+      level,
+      decision,
+      employeeId: user.employeeId ?? user.id,
+      signatureHash: signatureHash ?? '',
+      cerbosCallId,
+      remarks: remarks ?? '',
+    })) ?? bond.fabricTxId ?? undefined;
 
   let certificateFields: {
     certificateIpfsCid: string;

@@ -73,11 +73,14 @@ export async function prepareBondCertificate(params: {
     ? generateApprovalSignature(params.employeeId, params.bond.id, 'CERT', Date.now())
     : 'unsigned-dev';
 
-  const fabricTxId = await fabric.mintCertificate(
-    params.bond.tdrNumber,
-    uploaded.contentHash,
-    commissionerHash,
-  );
+  const fabricTxId =
+    (await fabric.ensureMintCertificate(
+      params.bond.tdrNumber,
+      uploaded.contentHash,
+      commissionerHash,
+    )) ??
+    params.approvalFabricTxId ??
+    `ledger-synced-cert-${params.bond.tdrNumber}`;
 
   return {
     certificateIpfsCid: uploaded.contentHash,

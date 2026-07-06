@@ -8,7 +8,7 @@ class TdrBondContract extends Contract {
     const key = `bond~${bond.tdrNumber}`;
     const existing = await ctx.stub.getState(key);
     if (existing && existing.length > 0) {
-      throw new Error(`Bond ${bond.tdrNumber} already exists`);
+      return existing.toString();
     }
 
     const record = {
@@ -42,6 +42,17 @@ class TdrBondContract extends Contract {
 
     if (levelNum < 1 || levelNum > 4) throw new Error('Invalid approval level');
 
+    bond.approvals = bond.approvals || [];
+    const prior = bond.approvals.find((a) => a.level === levelNum);
+    if (prior) {
+      if (prior.decision === decision) {
+        return JSON.stringify(bond);
+      }
+      throw new Error(
+        `Approval level ${levelNum} already recorded with decision ${prior.decision}`,
+      );
+    }
+
     const approval = {
       level: levelNum,
       decision,
@@ -52,7 +63,6 @@ class TdrBondContract extends Contract {
       timestamp: new Date().toISOString(),
     };
 
-    bond.approvals = bond.approvals || [];
     bond.approvals.push(approval);
 
     if (decision === 'APPROVED') {
@@ -77,6 +87,9 @@ class TdrBondContract extends Contract {
     if (!data || data.length === 0) throw new Error(`Bond ${tdrNumber} not found`);
 
     const bond = JSON.parse(data.toString());
+    if (bond.certificateIpfsCid) {
+      return JSON.stringify(bond);
+    }
     if (bond.status !== 'ACTIVE') throw new Error('Bond must be ACTIVE to mint certificate');
 
     bond.certificateIpfsCid = certificateIpfsCid;
