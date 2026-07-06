@@ -12,6 +12,7 @@ import { writeAuditLog } from '@/lib/audit';
 import { getClientIp } from '@/lib/bond-helpers';
 import { isOfficialRole, type UserRole } from '@/types';
 import { getOfficialDashboardPath } from '@/lib/approval-levels';
+import { clearCitizenSessionCookie } from '@/lib/citizen-session';
 
 function getRedirectForRole(role: UserRole): string {
   return getOfficialDashboardPath(role);
@@ -80,6 +81,8 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const redirectTo = getRedirectForRole(role);
 
+  clearCitizenSessionCookie(response);
+
   response.cookies.set('last_active', String(Date.now()), {
     httpOnly: true,
     sameSite: 'lax',
@@ -93,5 +96,6 @@ export const POST = withErrorHandling(async (req: NextRequest) => {
 
   const redirectResponse = NextResponse.redirect(new URL(redirectTo, req.url));
   copyAuthCookies(response, redirectResponse);
+  clearCitizenSessionCookie(redirectResponse);
   return redirectResponse;
 });

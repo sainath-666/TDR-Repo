@@ -21,8 +21,7 @@ TDR-Repo/
 ├── docker-compose.prod.yml  # Production hardening
 ├── docker-compose.vm.yml    # VM HTTP (port 80)
 ├── Dockerfile
-├── .env                   # Shared defaults
-├── .env.local             # Local development
+├── .env                   # Local development
 └── .env.production        # VM / production Docker
 ```
 
@@ -30,21 +29,17 @@ TDR-Repo/
 
 ## Environment files
 
-| File              | Used for                        |
-| ----------------- | ------------------------------- |
-| `.env`            | Shared base (loaded by Next.js) |
-| `.env.local`      | Local dev — `npm run dev`       |
-| `.env.production` | VM deploy — `npm run deploy`    |
+| File              | Used for                     |
+| ----------------- | ---------------------------- |
+| `.env`            | Local dev — `npm run dev`    |
+| `.env.production` | VM deploy — `npm run deploy` |
 
-**Keep all three files identical.** Same Supabase keys, secrets, and settings everywhere.
+Use **`.env`** for local work and **`.env.production`** on the VM. They are separate — local DB URLs, secrets, and hostnames stay in `.env`; production values stay in `.env.production`.
 
 On VM deploy, Docker Compose automatically overrides these for the container network:
 
 - `DATABASE_URL` → `postgresql://...@postgres:5432/...`
 - `CERBOS_PDP_URL` → `cerbos:3593`
-- `IPFS_API_URL` → `http://ipfs:5001`
-
-After changing any value, copy the same line to all three files.
 
 ---
 
@@ -71,7 +66,7 @@ Verify: http://localhost:3592/\_cerbos/health → should return OK
 npm run dev
 ```
 
-### `.env.local` (required)
+### `.env` (local)
 
 ```env
 CERBOS_MOCK_MODE=false

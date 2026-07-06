@@ -36,6 +36,8 @@ import {
   drawWatermark,
   INNER_PAD,
   PAGE_MARGIN,
+  CERT_FONT,
+  CERT_FONT_BOLD,
 } from '@/lib/pdf/certificate-layout';
 
 function logoPath(): string | null {
@@ -84,7 +86,7 @@ export async function generateCertificatePdf(
 
     let y = drawCertificateHeader(
       doc,
-      'DEVELOPMENT RIGHT CERTIFICATE',
+      'Development Right Certificate',
       'G.O.Ms.No. 207 MA&UD dt. 08.08.2016 · LPS Rule 5(4)(B)',
       qrBuffer,
       logo,
@@ -97,7 +99,7 @@ export async function generateCertificatePdf(
 
     if (data.blockchainPending) {
       doc
-        .font('Helvetica')
+        .font(CERT_FONT)
         .fontSize(7)
         .fillColor('#64748b')
         .text(
@@ -120,10 +122,10 @@ export async function generateCertificatePdf(
     const width = contentWidth(doc);
     y = PAGE_MARGIN + INNER_PAD + 20;
 
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#000000');
+    doc.font(CERT_FONT_BOLD).fontSize(11).fillColor('#000000');
     doc.text(ANNEXURE_I_TITLE, left, y, { width, align: 'center' });
     y = doc.y + 14;
-    doc.font('Helvetica').fontSize(9).text(ANNEXURE_I_FORMULA, left, y, { width, align: 'center' });
+    doc.font(CERT_FONT).fontSize(9).text(ANNEXURE_I_FORMULA, left, y, { width, align: 'center' });
     y = doc.y + 10;
     ANNEXURE_I_LEGEND.forEach((line) => {
       doc.fontSize(8).text(line, left, y, { width, align: 'center' });
@@ -132,7 +134,7 @@ export async function generateCertificatePdf(
 
     y += 24;
     doc
-      .font('Helvetica-Bold')
+      .font(CERT_FONT_BOLD)
       .fontSize(11)
       .text(ANNEXURE_II_TITLE, left, y, { width, align: 'center' });
     y = doc.y + 10;
@@ -146,7 +148,7 @@ export async function generateCertificatePdf(
     renderPageShell(doc);
 
     y = PAGE_MARGIN + INNER_PAD + 20;
-    doc.font('Helvetica-Bold').fontSize(11).fillColor('#000000');
+    doc.font(CERT_FONT_BOLD).fontSize(11).fillColor('#000000');
     doc.text(ANNEXURE_III_TITLE, left, y, { width, align: 'center' });
     y = doc.y + 6;
     doc.text(ANNEXURE_III_SUBTITLE, left, y, { width, align: 'center' });
@@ -165,9 +167,9 @@ export async function generateCertificatePdf(
     drawLedgerTable(doc, y, LEDGER_COLUMNS, ledger);
 
     doc
-      .font('Helvetica')
+      .font(CERT_FONT)
       .fontSize(7)
-      .fillColor('#333333')
+      .fillColor('#64748b')
       .text(data.tdrCertificateNumber, left, doc.page.height - PAGE_MARGIN - INNER_PAD - 30);
 
     drawPageNumber(doc, 3);

@@ -44,7 +44,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-apcrda_tdr}
       CERBOS_PDP_URL: cerbos:3593
       CERBOS_MOCK_MODE: 'false'
-      IPFS_API_URL: http://ipfs:5001
     ports: !reset []
     expose:
       - '3000'
@@ -53,8 +52,6 @@ services:
         condition: service_healthy
       cerbos:
         condition: service_healthy
-      ipfs:
-        condition: service_started
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/health']
       interval: 30s
@@ -94,30 +91,6 @@ services:
       resources:
         limits:
           memory: 512M
-
-  ipfs:
-    image: ipfs/kubo:v0.32.1
-    restart: unless-stopped
-    ports: !reset []
-    expose:
-      - '5001'
-    environment:
-      IPFS_PROFILE: server
-    healthcheck:
-      test: ['CMD', 'ipfs', 'id']
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    logging:
-      driver: json-file
-      options:
-        max-size: '10m'
-        max-file: '3'
-    deploy:
-      resources:
-        limits:
-          memory: 1G
 
   nginx:
     image: nginx:1.27-alpine

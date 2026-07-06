@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import type { UserRole } from '@/types';
 import { isOfficialRole } from '@/types';
+import {
+  getCitizenSessionFromRequest,
+  isCitizenOnlyRoute,
+  isSharedCitizenApiRoute,
+} from '@/lib/citizen-session';
 
 const PUBLIC_ROUTES = [
   '/',
@@ -34,7 +39,11 @@ function isPublicRoute(pathname: string): boolean {
 }
 
 function getLoginRedirect(pathname: string): string {
-  if (pathname.startsWith('/farmer') || pathname.startsWith('/api/bonds/farmer')) {
+  if (
+    pathname.startsWith('/farmer') ||
+    pathname.startsWith('/api/bonds/farmer') ||
+    pathname.startsWith('/api/dashboard/farmer')
+  ) {
     return '/farmer-login';
   }
   return '/official-login';
@@ -65,11 +74,63 @@ function checkRouteAccess(pathname: string, role: UserRole): boolean {
   return true;
 }
 
+function applyIdleTimeout(request: NextRequest, loginPath: string): NextResponse | null {
+  const lastActive = request.cookies.get('last_active')?.value;
+  if (!lastActive) return null;
+
+  const elapsed = Date.now() - parseInt(lastActive, 10);
+  if (elapsed <= IDLE_TIMEOUT_MS) return null;
+
+  const loginUrl = new URL(loginPath, request.url);
+  loginUrl.searchParams.set('reason', 'idle');
+  const idleResponse = NextResponse.redirect(loginUrl);
+  idleResponse.cookies.delete('last_active');
+  idleResponse.cookies.delete('citizen_session');
+  return idleResponse;
+}
+
+function touchLastActive(response: NextResponse): void {
+  response.cookies.set('last_active', String(Date.now()), {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 1800,
+  });
+}
+
+async function handleCitizenRoute(request: NextRequest): Promise<NextResponse> {
+  const idleRedirect = applyIdleTimeout(request, '/farmer-login');
+  if (idleRedirect) return idleRedirect;
+
+  const citizen = await getCitizenSessionFromRequest(request);
+  if (!citizen) {
+    return NextResponse.redirect(new URL('/farmer-login', request.url));
+  }
+
+  const response = NextResponse.next({ request });
+  touchLastActive(response);
+  return response;
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isPublicRoute(pathname)) {
     return NextResponse.next();
+  }
+
+  if (isCitizenOnlyRoute(pathname)) {
+    return await handleCitizenRoute(request);
+  }
+
+  const citizen = await getCitizenSessionFromRequest(request);
+  if (isSharedCitizenApiRoute(pathname) && citizen) {
+    const idleRedirect = applyIdleTimeout(request, '/farmer-login');
+    if (idleRedirect) return idleRedirect;
+
+    const response = NextResponse.next({ request });
+    touchLastActive(response);
+    return response;
   }
 
   let response = NextResponse.next({ request });
@@ -102,24 +163,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  const lastActive = request.cookies.get('last_active')?.value;
-  if (lastActive) {
-    const elapsed = Date.now() - parseInt(lastActive, 10);
-    if (elapsed > IDLE_TIMEOUT_MS) {
-      const loginUrl = new URL(getLoginRedirect(pathname), request.url);
-      loginUrl.searchParams.set('reason', 'idle');
-      const idleResponse = NextResponse.redirect(loginUrl);
-      idleResponse.cookies.delete('last_active');
-      return idleResponse;
-    }
-  }
+  const idleRedirect = applyIdleTimeout(request, getLoginRedirect(pathname));
+  if (idleRedirect) return idleRedirect;
 
-  response.cookies.set('last_active', String(Date.now()), {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 1800,
-  });
+  touchLastActive(response);
 
   const session = await supabase.auth.getSession();
   const jwtUser = session.data.session?.access_token

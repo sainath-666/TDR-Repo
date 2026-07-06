@@ -1,38 +1,29 @@
 /**
- * Syncs seeded officials and farmers from Prisma into Supabase Auth.
+ * Syncs seeded officials from Prisma into Supabase Auth.
+ * Citizens (farmers) use cookie sessions — they are not provisioned in Supabase.
  * Run after: npm run db:seed
  *
  * Usage: npm run auth:sync
  */
 import { PrismaClient } from '@prisma/client';
 import { getDevPassword, officialDevEmail } from '../src/lib/dev-auth';
-import { ensureOfficialAuthUser, ensureFarmerAuthUser } from '../src/lib/supabase/auth-users';
+import { ensureOfficialAuthUser } from '../src/lib/supabase/auth-users';
 
 const prisma = new PrismaClient();
 
 async function main() {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error(
-      'ERROR: Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local or .env',
-    );
+    console.error('ERROR: Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env');
     process.exit(1);
   }
 
   const officials = await prisma.official.findMany({ where: { isActive: true } });
-  const farmers = await prisma.farmer.findMany();
 
-  console.log(
-    `Syncing ${officials.length} officials and ${farmers.length} farmers to Supabase Auth...`,
-  );
+  console.log(`Syncing ${officials.length} officials to Supabase Auth...`);
 
   for (const official of officials) {
     await ensureOfficialAuthUser(official);
     console.log(`  ✓ Official ${official.employeeId} (${official.role})`);
-  }
-
-  for (const farmer of farmers) {
-    await ensureFarmerAuthUser(farmer);
-    console.log(`  ✓ Farmer ${farmer.name} (+91${farmer.aadhaarPhone})`);
   }
 
   console.log('\nOfficial login emails (after auth:sync):');
@@ -40,6 +31,7 @@ async function main() {
     console.log(`  ${o.employeeId} → ${officialDevEmail(o.employeeId)}`);
   }
   console.log(`  Password (dev): ${getDevPassword()}`);
+  console.log('\nCitizen login: phone + OTP at /farmer-login (no Supabase account).');
 }
 
 main()
