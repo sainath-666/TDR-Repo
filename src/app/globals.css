@@ -23,14 +23,14 @@
   --official-hero-mid: #581c87;
   --official-hero-to: #7c2d12;
 
-  /* Public APCRDA portal — rich purple & burgundy */
-  --portal-purple: #8b2e8b;
-  --portal-purple-dark: #5c1a6e;
-  --portal-purple-light: #ab47ab;
+  /* Public APCRDA portal — maroon red */
+  --portal-purple: #8b1e3f;
+  --portal-purple-dark: #5c1228;
+  --portal-purple-light: #a83252;
   --portal-maroon: #8b1e3f;
-  --portal-blue: #0284c7;
-  --portal-red: #dc2626;
-  --portal-surface: #f8f0fa;
+  --portal-blue: #8b1e3f;
+  --portal-red: #991b1b;
+  --portal-surface: #fdf2f4;
 }
 
 @layer base {
@@ -65,7 +65,7 @@
 @layer components {
   /* ── APCRDA TDR official portal chrome ── */
   .gov-header-brand {
-    @apply border-b border-purple-100/80 bg-gradient-to-r from-white via-white to-purple-50/40 py-4 shadow-sm sm:py-5;
+    @apply border-b border-rose-100/80 bg-gradient-to-r from-white via-white to-rose-50/40 py-4 shadow-sm sm:py-5;
   }
 
   .gov-header-title {
@@ -115,18 +115,23 @@
   }
 
   .gov-footer {
-    background: linear-gradient(160deg, var(--portal-purple-dark) 0%, #3d1250 55%, #2a0d38 100%);
+    background: linear-gradient(160deg, var(--portal-purple-dark) 0%, #4a0f1f 55%, #2d0912 100%);
     @apply text-white;
   }
 
   .portal-section-title {
-    color: var(--portal-blue);
+    color: var(--portal-maroon);
     @apply mb-2 text-center text-2xl font-bold tracking-tight sm:text-3xl;
   }
 
   .portal-section-accent {
     @apply mx-auto mb-8 h-1.5 w-20 rounded-full;
-    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold), var(--portal-blue));
+    background: linear-gradient(
+      90deg,
+      var(--portal-purple),
+      var(--brand-gold),
+      var(--portal-purple-light)
+    );
   }
 
   .portal-section {
@@ -135,7 +140,7 @@
 
   .portal-section-muted {
     background: linear-gradient(180deg, var(--portal-surface) 0%, #f1f5f9 100%);
-    @apply border-t border-purple-100/50;
+    @apply border-t border-rose-100/50;
   }
 
   .portal-content-block {
@@ -194,17 +199,26 @@
     @apply focus:border-apcrda-accent focus:ring-apcrda-accent/25;
   }
 
+  .input-field-portal {
+    @apply focus:border-apcrda-portal-maroon focus:ring-apcrda-portal-maroon/25;
+  }
+
   .input-field-with-icon {
     @apply pl-10;
   }
 
   .auth-card {
-    @apply overflow-hidden rounded-2xl border border-purple-100/60 bg-white shadow-card;
+    @apply overflow-hidden rounded-2xl border border-rose-100/60 bg-white shadow-card;
   }
 
   .auth-card-accent {
     @apply h-1.5 w-full;
-    background: linear-gradient(90deg, var(--portal-purple), var(--brand-gold), var(--portal-blue));
+    background: linear-gradient(
+      90deg,
+      var(--portal-purple),
+      var(--brand-gold),
+      var(--portal-purple-light)
+    );
   }
 
   .btn-submit {
@@ -214,13 +228,13 @@
   }
 
   .btn-submit-primary {
-    background: linear-gradient(135deg, var(--brand-navy) 0%, var(--brand-navy-light) 100%);
-    @apply hover:brightness-110 focus-visible:ring-apcrda-primary/35;
+    background: linear-gradient(135deg, var(--portal-purple-dark) 0%, var(--portal-purple) 100%);
+    @apply hover:brightness-110 focus-visible:ring-apcrda-portal-maroon/35;
   }
 
   .btn-submit-accent {
-    background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-light) 100%);
-    @apply hover:brightness-110 focus-visible:ring-apcrda-accent/35;
+    background: linear-gradient(135deg, var(--portal-purple) 0%, var(--portal-purple-light) 100%);
+    @apply hover:brightness-110 focus-visible:ring-apcrda-portal-maroon/35;
   }
 
   .alert-banner-warning {
@@ -237,12 +251,12 @@
   }
 
   .data-table thead {
-    background: linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%);
-    @apply border-b border-indigo-100;
+    background: linear-gradient(180deg, #fdf2f4 0%, #f8fafc 100%);
+    @apply border-b border-rose-100;
   }
 
   .data-table th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-indigo-900/70;
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-rose-900/70;
   }
 
   .data-table td {
@@ -250,7 +264,7 @@
   }
 
   .data-table tbody tr {
-    @apply border-b border-slate-100 transition-colors hover:bg-indigo-50/40;
+    @apply border-b border-slate-100 transition-colors hover:bg-rose-50/40;
   }
 
   .data-table tbody tr:last-child {

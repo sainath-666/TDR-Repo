@@ -67,10 +67,10 @@ export default function OfficialLoginClient() {
   return (
     <div className="w-full max-w-lg mx-auto animate-slide-up">
       <div className="text-center mb-6">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary text-white mb-4 shadow-lg shadow-indigo-900/25">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-portal text-white mb-4 shadow-lg shadow-rose-900/25">
           <Shield className="h-7 w-7 text-apcrda-secondary" />
         </div>
-        <h1 className="text-2xl font-bold text-apcrda-primary">Official Login</h1>
+        <h1 className="text-2xl font-bold text-apcrda-portal-maroon">Official Login</h1>
         <p className="text-sm text-slate-500 mt-1">
           Five approval roles · DEO through Commissioner
         </p>
@@ -111,7 +111,7 @@ export default function OfficialLoginClient() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="input-field input-field-with-icon"
+                  className="input-field input-field-portal input-field-with-icon"
                   placeholder="official@apcrda.ap.gov.in"
                 />
               </div>
@@ -132,7 +132,7 @@ export default function OfficialLoginClient() {
                   minLength={8}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-field input-field-with-icon pr-11"
+                  className="input-field input-field-portal input-field-with-icon pr-11"
                   placeholder="Enter your password"
                 />
                 <button
@@ -167,7 +167,7 @@ export default function OfficialLoginClient() {
               </div>
               <Link
                 href="/api/auth/official/sso"
-                className="flex items-center justify-center gap-2 w-full border-2 border-apcrda-primary text-apcrda-primary py-3 rounded-xl font-semibold hover:bg-apcrda-primary/5 transition-colors"
+                className="flex items-center justify-center gap-2 w-full border-2 border-apcrda-portal-maroon text-apcrda-portal-maroon py-3 rounded-xl font-semibold hover:bg-apcrda-portal-maroon/5 transition-colors"
               >
                 <Shield className="h-4 w-4" />
                 Login with NIC SSO
@@ -178,7 +178,7 @@ export default function OfficialLoginClient() {
       </div>
 
       {SHOW_DEV_LOGINS && (
-        <div className="mb-5 rounded-2xl border border-indigo-100 bg-white p-4 shadow-sm">
+        <div className="mb-5 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Approval logins (dev)
           </p>
@@ -192,9 +192,9 @@ export default function OfficialLoginClient() {
                     setPassword(DEV_LOGIN_PASSWORD_HINT);
                     setError('');
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-apcrda-primary/30 hover:bg-indigo-50/50"
+                  className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-apcrda-portal-maroon/30 hover:bg-rose-50/50"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-apcrda-primary text-[11px] font-bold text-white">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-apcrda-portal-maroon text-[11px] font-bold text-white">
                     {account.level}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -219,7 +219,10 @@ export default function OfficialLoginClient() {
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Farmer?{' '}
-        <Link href="/farmer-login" className="font-semibold text-apcrda-accent hover:underline">
+        <Link
+          href="/farmer-login"
+          className="font-semibold text-apcrda-portal-maroon hover:underline"
+        >
           Login here
         </Link>
       </p>

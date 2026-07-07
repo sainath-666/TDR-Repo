@@ -62,7 +62,7 @@ export function HeroCarousel() {
         </div>
       ))}
 
-      <div className="absolute inset-0 z-20 bg-gradient-to-r from-indigo-950/85 via-purple-900/60 to-sky-900/30" />
+      <div className="absolute inset-0 z-20 bg-gradient-to-r from-rose-950/85 via-red-950/65 to-rose-900/35" />
 
       <div className="absolute inset-0 z-30 flex items-center">
         <div className="max-w-[1140px] mx-auto w-full px-6 sm:px-8">
@@ -76,7 +76,7 @@ export function HeroCarousel() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/farmer-login"
-              className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 px-5 py-2.5 text-sm font-bold text-indigo-950 shadow-lg transition hover:brightness-110"
+              className="inline-flex items-center rounded-xl bg-gradient-to-r from-amber-400 to-amber-300 px-5 py-2.5 text-sm font-bold text-rose-950 shadow-lg transition hover:brightness-110"
             >
               {t.hero.applyForTdr}
             </Link>

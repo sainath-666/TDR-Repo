@@ -40,9 +40,9 @@ export function LandingQuickActions() {
   const { t } = useLocale();
 
   return (
-    <section className="border-b border-purple-100/60 bg-gradient-to-r from-white via-purple-50/30 to-sky-50/40 shadow-sm">
+    <section className="border-b border-rose-100/60 bg-gradient-to-r from-white via-rose-50/30 to-rose-50/40 shadow-sm">
       <div className="mx-auto max-w-[1140px] px-4 sm:px-6">
-        <div className="grid grid-cols-2 divide-x divide-purple-100/50 lg:grid-cols-4">
+        <div className="grid grid-cols-2 divide-x divide-rose-100/50 lg:grid-cols-4">
           {ACTIONS.map((action) => {
             const Icon = action.icon;
             return (

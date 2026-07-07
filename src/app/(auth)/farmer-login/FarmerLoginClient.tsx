@@ -79,10 +79,10 @@ export default function FarmerLoginClient() {
   return (
     <div className="w-full max-w-lg mx-auto animate-slide-up">
       <div className="text-center mb-6">
-        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-teal text-white mb-4 shadow-lg shadow-teal-900/25">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl gradient-portal text-white mb-4 shadow-lg shadow-rose-900/25">
           <Wheat className="h-7 w-7" />
         </div>
-        <h1 className="text-2xl font-bold text-apcrda-primary">Citizen Login</h1>
+        <h1 className="text-2xl font-bold text-apcrda-portal-maroon">Citizen Login</h1>
         <p className="text-sm text-slate-500 mt-1">Track TDR bonds &amp; download certificates</p>
       </div>
 
@@ -107,7 +107,7 @@ export default function FarmerLoginClient() {
                   maxLength={10}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                  className="input-field input-field-accent"
+                  className="input-field input-field-portal"
                   placeholder="10-digit mobile number"
                 />
               </div>
@@ -128,7 +128,7 @@ export default function FarmerLoginClient() {
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                  className="input-field input-field-accent text-center font-mono text-xl tracking-[0.3em]"
+                  className="input-field input-field-portal text-center font-mono text-xl tracking-[0.3em]"
                   placeholder="000000"
                 />
               </div>
@@ -141,7 +141,7 @@ export default function FarmerLoginClient() {
               </button>
               <button
                 onClick={() => setStep('phone')}
-                className="w-full text-sm text-slate-500 hover:text-apcrda-primary py-1"
+                className="w-full text-sm text-slate-500 hover:text-apcrda-portal-maroon py-1"
               >
                 ← Change phone number
               </button>
@@ -151,7 +151,7 @@ export default function FarmerLoginClient() {
       </div>
 
       {SHOW_DEMO_LOGIN && (
-        <div className="mt-5 mb-5 rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
+        <div className="mt-5 mb-5 rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
           <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
             Demo login
           </p>
@@ -161,9 +161,9 @@ export default function FarmerLoginClient() {
               applyDemoCredentials();
               setStep('phone');
             }}
-            className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-teal-500/30 hover:bg-teal-50/50"
+            className="flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2.5 text-left transition-colors hover:border-apcrda-portal-maroon/30 hover:bg-rose-50/50"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-teal-700 text-[11px] font-bold text-white">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-apcrda-portal-maroon text-[11px] font-bold text-white">
               C
             </span>
             <span className="min-w-0 flex-1">
@@ -185,7 +185,10 @@ export default function FarmerLoginClient() {
 
       <p className="mt-6 text-center text-sm text-slate-500">
         Official?{' '}
-        <Link href="/official-login" className="font-semibold text-apcrda-primary hover:underline">
+        <Link
+          href="/official-login"
+          className="font-semibold text-apcrda-portal-maroon hover:underline"
+        >
           Login here
         </Link>
       </p>

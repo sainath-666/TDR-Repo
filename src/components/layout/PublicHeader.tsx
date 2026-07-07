@@ -20,6 +20,8 @@ import {
 import { cn } from '@/lib/utils';
 import { ApStateEmblem, AmaravatiLogo } from '@/components/layout/GovLogos';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { en } from '@/lib/i18n/translations/en';
+import { te } from '@/lib/i18n/translations/te';
 import type { TranslationTree } from '@/lib/i18n/types';
 
 type NavKey = keyof TranslationTree['nav'];
@@ -175,7 +177,7 @@ function NavDropdown({
                 href={child.href}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-[#f5f0f8] hover:text-[#7d007d]"
+                className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-[#fdf2f4] hover:text-[#8b1e3f]"
               >
                 {child.label}
               </Link>
@@ -214,15 +216,18 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
             </div>
 
             <div className="text-center min-w-0 px-1 sm:px-2">
+              <p className="gov-header-title text-[0.65rem] leading-tight sm:text-sm md:text-lg lg:text-xl xl:text-[1.5rem]">
+                {en.header.orgTitle}
+              </p>
+              <p className="gov-header-title-te mt-0.5 text-[0.6rem] leading-tight sm:text-xs md:text-base lg:text-lg xl:text-[1.35rem]">
+                {te.header.orgTitle}
+              </p>
               <p
                 className={cn(
-                  locale === 'te' ? 'gov-header-title-te' : 'gov-header-title',
-                  'text-[0.7rem] leading-tight sm:text-base md:text-xl lg:text-[1.65rem] xl:text-[2rem]',
+                  'gov-header-tdr mt-1.5 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl',
+                  locale === 'te' && 'font-telugu',
                 )}
               >
-                {t.header.orgTitle}
-              </p>
-              <p className="gov-header-tdr mt-1.5 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl">
                 {t.header.tdrTitle}
               </p>
             </div>

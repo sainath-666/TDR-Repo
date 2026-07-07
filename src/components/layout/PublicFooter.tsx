@@ -12,12 +12,14 @@ export function PublicFooter() {
       <div className="max-w-[1140px] mx-auto px-6 py-10">
         <div className="grid gap-8 text-sm sm:grid-cols-3">
           <div>
-            <h3 className="mb-3 text-base font-bold tracking-tight">{t.footer.getInTouch}</h3>
+            <h3 className="mb-3 text-base font-bold tracking-tight text-white">
+              {t.footer.getInTouch}
+            </h3>
             <p className="text-white/90 leading-relaxed">{t.footer.callAvailability}</p>
           </div>
 
           <div>
-            <h3 className="font-bold text-base mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-base mb-3 flex items-center gap-2 text-white">
               <Clock className="h-4 w-4" />
               {t.footer.workingHours}
             </h3>
@@ -33,8 +35,8 @@ export function PublicFooter() {
           </div>
 
           <div>
-            <h3 className="font-bold text-base mb-3">{t.footer.contactUs}</h3>
-            <p className="font-semibold mb-2">{t.footer.orgName}</p>
+            <h3 className="font-bold text-base mb-3 text-white">{t.footer.contactUs}</h3>
+            <p className="font-semibold mb-2 text-white">{t.footer.orgName}</p>
             <p className="flex items-start gap-2 text-white/90 mb-2 leading-relaxed">
               <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
               {t.footer.address}
