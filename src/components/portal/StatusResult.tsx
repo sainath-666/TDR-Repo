@@ -1,15 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft, CheckCircle2, MapPin, Ruler } from 'lucide-react';
-import { BondStatus } from '@prisma/client';
+import { AlertCircle, ArrowLeft, CheckCircle2, ClipboardList, MapPin, Ruler } from 'lucide-react';
+import { BondStatus, TdrStatusCheckRequestStatus } from '@prisma/client';
 import { PortalPageShell } from '@/components/layout/PortalPageShell';
 import { BondStatusTracker } from '@/components/farmer/BondStatusTracker';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { resolveBondStatus } from '@/lib/bond-status';
+import { STATUS_CHECK_BADGE_CLASSES } from '@/lib/status-check-status';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { BondStatusLookupResult } from '@/lib/portal-status';
+import { cn } from '@/lib/utils';
 
 interface StatusResultProps {
   result: BondStatusLookupResult;
@@ -21,6 +24,10 @@ export function StatusResult({ result }: StatusResultProps) {
   const statusLabel = (status?: string) => {
     const resolved = resolveBondStatus(status);
     return resolved ? t.bondStatus[resolved] : undefined;
+  };
+
+  const requestStatusLabel = (status: TdrStatusCheckRequestStatus) => {
+    return t.statusPage.requestStatus[status];
   };
 
   return (
@@ -35,17 +42,73 @@ export function StatusResult({ result }: StatusResultProps) {
         </Link>
 
         {!result.found ? (
-          <Card>
-            <div className="flex flex-col items-center py-6 text-center">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-                <AlertCircle className="h-7 w-7 text-red-500" />
+          result.existingRequest ? (
+            <Card>
+              <div className="space-y-5">
+                <div className="flex flex-col items-center py-2 text-center">
+                  <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
+                    <ClipboardList className="h-7 w-7 text-blue-600" />
+                  </div>
+                  <h2 className="text-lg font-bold text-slate-800">
+                    {t.statusPage.existingRequestTitle}
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {t.statusPage.existingRequestMessage.replace('{tdrNumber}', result.tdrNumber)}
+                  </p>
+                </div>
+
+                <dl className="space-y-3 border-t border-slate-100 pt-4 text-sm">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-slate-500">{t.statusPage.referenceId}</dt>
+                    <dd className="font-mono font-semibold text-[var(--portal-blue)]">
+                      {result.existingRequest.referenceId}
+                    </dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-4">
+                    <dt className="text-slate-500">{t.common.status}</dt>
+                    <dd>
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset',
+                          STATUS_CHECK_BADGE_CLASSES[result.existingRequest.status],
+                        )}
+                      >
+                        {requestStatusLabel(result.existingRequest.status)}
+                      </span>
+                    </dd>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-slate-500">{t.statusPage.submittedOn}</dt>
+                    <dd className="font-medium text-slate-800">
+                      {new Date(result.existingRequest.submittedAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </dd>
+                  </div>
+                </dl>
               </div>
-              <h2 className="text-lg font-bold text-slate-800">{t.statusPage.notFoundTitle}</h2>
-              <p className="mt-2 text-sm text-slate-600">
-                {t.statusPage.notFoundMessage.replace('{tdrNumber}', result.tdrNumber)}
-              </p>
-            </div>
-          </Card>
+            </Card>
+          ) : (
+            <Card>
+              <div className="flex flex-col items-center py-6 text-center">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+                  <AlertCircle className="h-7 w-7 text-red-500" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-800">{t.statusPage.notFoundTitle}</h2>
+                <p className="mt-2 text-sm text-slate-600">
+                  {t.statusPage.notFoundMessage.replace('{tdrNumber}', result.tdrNumber)}
+                </p>
+                <Button
+                  href={`/status/request?tdrNumber=${encodeURIComponent(result.tdrNumber)}`}
+                  className="mt-6 bg-teal-600 hover:bg-teal-700"
+                >
+                  {t.statusPage.raiseRequest}
+                </Button>
+              </div>
+            </Card>
+          )
         ) : (
           <Card>
             <div className="space-y-5">

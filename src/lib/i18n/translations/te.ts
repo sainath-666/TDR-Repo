@@ -150,6 +150,37 @@ export const te: TranslationTree = {
     holderName: 'హోల్డర్ పేరు',
     lastUpdated: 'చివరిగా నవీకరించబడింది',
     issuedDate: 'సర్టిఫికేట్ జారీ తేదీ',
+    raiseRequest: 'TDR తనిఖీ కోసం అభ్యర్థన నమోదు చేయండి',
+    requestTitle: 'TDR స్థితి తనిఖీ అభ్యర్థన',
+    requestSubtitle:
+      'ధృవీకరణ కోసం TDR సర్టిఫికేట్ నంబర్, సంబంధిత పత్రాలు మరియు వ్యాఖ్యలను సమర్పించండి.',
+    documents: 'పత్రాలు',
+    documentsHint:
+      'PDF, JPG లేదా PNG ఫైల్‌లను అప్‌లోడ్ చేయండి (ఒక్కొక్కటి గరిష్టంగా 5 MB, 10 ఫైల్‌ల వరకు).',
+    uploadDocuments: 'అప్‌లోడ్ చేయడానికి పత్రాలను ఎంచుకోండి',
+    removeDocument: 'పత్రాన్ని తీసివేయండి',
+    errorNoDocuments: 'దయచేసి కనీసం ఒక పత్రాన్ని అప్‌లోడ్ చేయండి.',
+    errorInvalidDocument: '{fileName} మద్దతు లేని ఫైల్ రకం. PDF, JPG లేదా PNG ఉపయోగించండి.',
+    errorDocumentTooLarge: '{fileName} చాలా పెద్దది. ప్రతి ఫైల్ 5 MB లేదా అంతకంటే తక్కువగా ఉండాలి.',
+    remarks: 'వ్యాఖ్యలు',
+    remarksPlaceholder: 'మీ TDR సర్టిఫికేట్ గురించి అదనపు వివరాలు',
+    submitRequest: 'అభ్యర్థన సమర్పించండి',
+    submittingRequest: 'సమర్పిస్తోంది...',
+    requestError: 'మీ అభ్యర్థనను సమర్పించలేకపోయాం. దయచేసి మళ్లీ ప్రయత్నించండి.',
+    requestSuccessTitle: 'అభ్యర్థన సమర్పించబడింది',
+    requestSuccessMessage:
+      'మీ అభ్యర్థన స్వీకరించబడింది. తదుపరి అనుసరణ కోసం క్రింది సూచన సంఖ్యను సేవ్ చేసుకోండి.',
+    existingRequestTitle: 'స్థితి తనిఖీ అభ్యర్థన ఇప్పటికే సమర్పించబడింది',
+    existingRequestMessage:
+      'TDR నంబర్ "{tdrNumber}" కోసం స్థితి తనిఖీ అభ్యర్థన ఇప్పటికే సమీక్షలో ఉంది.',
+    referenceId: 'సూచన ID',
+    submittedOn: 'సమర్పించిన తేదీ',
+    requestStatus: {
+      PENDING: 'పెండింగ్',
+      IN_REVIEW: 'సమీక్షలో',
+      RESOLVED: 'పరిష్కరించబడింది',
+      CLOSED: 'మూసివేయబడింది',
+    },
   },
   instructions: {
     title: 'సూచనలు',

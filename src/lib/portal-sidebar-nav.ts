@@ -1,4 +1,4 @@
-import { LayoutDashboard, type LucideIcon } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, type LucideIcon } from 'lucide-react';
 import type { UserRole } from '@/types';
 
 export type PortalType = 'deo' | 'official' | 'farmer';
@@ -20,7 +20,14 @@ export function getSidebarNav(portal: PortalType, role: UserRole): SidebarNavSec
     return [
       {
         title: 'Menu',
-        items: [{ href: '/deo/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
+        items: [
+          { href: '/deo/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          {
+            href: '/deo/status-requests',
+            label: 'Status check requests',
+            icon: ClipboardList,
+          },
+        ],
       },
     ];
   }

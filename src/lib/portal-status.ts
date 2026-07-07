@@ -1,4 +1,4 @@
-import { BondStatus } from '@prisma/client';
+import { BondStatus, TdrStatusCheckRequestStatus } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export interface PublicBondStatus {
@@ -15,7 +15,15 @@ export interface PublicBondStatus {
   holderName: string | null;
 }
 
-export type BondStatusLookupResult = { found: false; tdrNumber: string } | PublicBondStatus;
+export interface ExistingStatusCheckRequest {
+  referenceId: string;
+  status: TdrStatusCheckRequestStatus;
+  submittedAt: string;
+}
+
+export type BondStatusLookupResult =
+  | PublicBondStatus
+  | { found: false; tdrNumber: string; existingRequest: ExistingStatusCheckRequest | null };
 
 export async function getBondStatusByTdrNumber(tdrNumber: string): Promise<BondStatusLookupResult> {
   const bond = await prisma.tdrBond.findUnique({
@@ -24,7 +32,29 @@ export async function getBondStatusByTdrNumber(tdrNumber: string): Promise<BondS
   });
 
   if (!bond) {
-    return { found: false, tdrNumber };
+    const existingRequest = await prisma.tdrStatusCheckRequest.findFirst({
+      where: {
+        tdrNumber: { equals: tdrNumber, mode: 'insensitive' },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        referenceId: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      found: false,
+      tdrNumber,
+      existingRequest: existingRequest
+        ? {
+            referenceId: existingRequest.referenceId,
+            status: existingRequest.status,
+            submittedAt: existingRequest.createdAt.toISOString(),
+          }
+        : null,
+    };
   }
 
   return {

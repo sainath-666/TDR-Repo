@@ -239,3 +239,41 @@ model IdempotencyCache {
 
   @@map("idempotency_cache")
 }
+
+enum TdrStatusCheckRequestStatus {
+  PENDING
+  IN_REVIEW
+  RESOLVED
+  CLOSED
+}
+
+model TdrStatusCheckRequest {
+  id          String                      @id @default(uuid()) @db.Uuid
+  referenceId String                      @unique @map("reference_id")
+  tdrNumber   String                      @map("tdr_number")
+  remarks     String?
+  status      TdrStatusCheckRequestStatus @default(PENDING)
+  createdAt   DateTime                    @default(now()) @map("created_at")
+  updatedAt   DateTime                    @updatedAt @map("updated_at")
+
+  documents TdrStatusCheckDocument[]
+
+  @@index([tdrNumber])
+  @@index([createdAt])
+  @@map("tdr_status_check_requests")
+}
+
+model TdrStatusCheckDocument {
+  id          String   @id @default(uuid()) @db.Uuid
+  requestId   String   @map("request_id") @db.Uuid
+  fileName    String   @map("file_name")
+  storagePath String   @map("storage_path")
+  contentType String   @map("content_type")
+  sizeKb      Int      @map("size_kb")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  request TdrStatusCheckRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("tdr_status_check_documents")
+}

@@ -4,9 +4,20 @@ import { ValidationError } from '@/lib/errors';
 
 const DEFAULT_CERTIFICATES_BUCKET = 'tdr-certificates';
 const LEGACY_LOCAL_PREFIX = 'storage/certificates/';
+export const TDR_STATUS_CHECK_STORAGE_FOLDER = 'tdr-status-check';
 
 export function getCertificatesBucket(): string {
   return process.env.SUPABASE_CERTIFICATES_BUCKET ?? DEFAULT_CERTIFICATES_BUCKET;
+}
+
+/** Folder prefix inside the certificates bucket for public status-check uploads. */
+export function tdrStatusCheckStoragePrefix(requestId: string): string {
+  return `${TDR_STATUS_CHECK_STORAGE_FOLDER}/${requestId}`;
+}
+
+/** Object path inside the Supabase Storage bucket for a status-check document. */
+export function tdrStatusCheckDocumentPath(requestId: string, fileName: string): string {
+  return `${tdrStatusCheckStoragePrefix(requestId)}/${fileName}`;
 }
 
 /** Object path inside the Supabase Storage bucket. */

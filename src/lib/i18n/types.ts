@@ -140,6 +140,33 @@ export type TranslationTree = {
     holderName: string;
     lastUpdated: string;
     issuedDate: string;
+    raiseRequest: string;
+    requestTitle: string;
+    requestSubtitle: string;
+    documents: string;
+    documentsHint: string;
+    uploadDocuments: string;
+    removeDocument: string;
+    errorNoDocuments: string;
+    errorInvalidDocument: string;
+    errorDocumentTooLarge: string;
+    remarks: string;
+    remarksPlaceholder: string;
+    submitRequest: string;
+    submittingRequest: string;
+    requestError: string;
+    requestSuccessTitle: string;
+    requestSuccessMessage: string;
+    existingRequestTitle: string;
+    existingRequestMessage: string;
+    referenceId: string;
+    submittedOn: string;
+    requestStatus: {
+      PENDING: string;
+      IN_REVIEW: string;
+      RESOLVED: string;
+      CLOSED: string;
+    };
   };
   instructions: {
     title: string;
