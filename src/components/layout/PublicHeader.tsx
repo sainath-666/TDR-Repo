@@ -19,30 +19,34 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ApStateEmblem, AmaravatiLogo } from '@/components/layout/GovLogos';
+import { useLocale } from '@/lib/i18n/locale-context';
+import type { TranslationTree } from '@/lib/i18n/types';
+
+type NavKey = keyof TranslationTree['nav'];
 
 const NAV_ITEMS = [
-  { href: '/', label: 'HOME', icon: Home },
+  { href: '/', navKey: 'home' as const, icon: Home },
   {
-    label: 'APPLICATION',
+    navKey: 'application' as const,
     icon: FileText,
     matchPrefixes: ['/farmer-login', '/application'],
     children: [
-      { href: '/farmer-login', label: 'Apply Now' },
-      { href: '/application/how-to-apply', label: 'How To Apply' },
+      { href: '/farmer-login', navKey: 'applyNow' as const },
+      { href: '/application/how-to-apply', navKey: 'howToApply' as const },
     ],
   },
-  { href: '/tdr-bank', label: 'TDR BANK', icon: Landmark },
-  { href: '/verify', label: 'TDR VERIFICATION', icon: Bell },
-  { href: '/instructions', label: 'INSTRUCTIONS', icon: HelpCircle },
-  { href: '/calculator', label: 'CALCULATOR', icon: Calculator },
-  { href: '/status', label: 'STATUS', icon: BarChart3, badge: 'NEW' as const },
+  { href: '/tdr-bank', navKey: 'tdrBank' as const, icon: Landmark },
+  { href: '/verify', navKey: 'tdrVerification' as const, icon: Bell },
+  { href: '/instructions', navKey: 'instructions' as const, icon: HelpCircle },
+  { href: '/calculator', navKey: 'calculator' as const, icon: Calculator },
+  { href: '/status', navKey: 'status' as const, icon: BarChart3, badge: true },
   {
-    label: 'SIGN IN',
+    navKey: 'signIn' as const,
     icon: LogIn,
     matchPrefixes: ['/official-login', '/farmer-login'],
     children: [
-      { href: '/official-login', label: 'Officer Login' },
-      { href: '/farmer-login', label: 'Citizen Login' },
+      { href: '/official-login', navKey: 'officerLogin' as const },
+      { href: '/farmer-login', navKey: 'citizenLogin' as const },
     ],
   },
 ] as const;
@@ -186,20 +190,23 @@ function NavDropdown({
 export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const navItems = showLogins ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.label !== 'SIGN IN');
+  const { locale, setLocale, t } = useLocale();
+  const navItems = showLogins ? NAV_ITEMS : NAV_ITEMS.filter((item) => item.navKey !== 'signIn');
+
+  const labelFor = (navKey: NavKey) => t.nav[navKey];
 
   return (
     <header className="relative z-50 shadow-md">
-      {/* Official white brand band */}
       <div className="gov-header-brand">
         <div className="max-w-[1280px] mx-auto px-3 sm:px-6">
           <div className="grid grid-cols-[auto_1fr_auto] gap-3 sm:gap-8 items-center">
             <div className="flex flex-col items-center gap-1.5">
               <ApStateEmblem className="h-16 w-16 sm:h-20 sm:w-20 md:h-24 md:w-24" />
               <select
-                defaultValue="en"
+                value={locale}
+                onChange={(e) => setLocale(e.target.value as 'en' | 'te')}
                 className="text-[11px] border border-slate-400 rounded-sm px-1.5 py-0.5 text-slate-700 bg-white min-w-[72px]"
-                aria-label="Language"
+                aria-label={t.header.language}
               >
                 <option value="en">English</option>
                 <option value="te">తెలుగు</option>
@@ -207,14 +214,16 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
             </div>
 
             <div className="text-center min-w-0 px-1 sm:px-2">
-              <p className="gov-header-title text-[0.7rem] leading-tight sm:text-base md:text-xl lg:text-[1.65rem] xl:text-[2rem]">
-                Andhra Pradesh Capital Region Development Authority
-              </p>
-              <p className="gov-header-title-te mt-1 text-[0.65rem] sm:text-sm md:text-lg lg:text-[1.4rem] xl:text-[1.65rem]">
-                ఆంధ్ర ప్రదేశ్ రాజధాని ప్రాంత అభివృద్ధి ప్రాధికార సంస్థ
+              <p
+                className={cn(
+                  locale === 'te' ? 'gov-header-title-te' : 'gov-header-title',
+                  'text-[0.7rem] leading-tight sm:text-base md:text-xl lg:text-[1.65rem] xl:text-[2rem]',
+                )}
+              >
+                {t.header.orgTitle}
               </p>
               <p className="gov-header-tdr mt-1.5 text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl">
-                Transferable Development Rights-TDR
+                {t.header.tdrTitle}
               </p>
             </div>
 
@@ -225,7 +234,6 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
         </div>
       </div>
 
-      {/* Purple navigation — full width, official style */}
       <div className="gov-nav-bar overflow-visible">
         <div className="max-w-[1140px] mx-auto flex h-12 items-center overflow-visible px-2">
           <nav className="hidden md:flex flex-1 flex-wrap items-center justify-center overflow-visible">
@@ -238,10 +246,13 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
                 );
                 return (
                   <NavDropdown
-                    key={item.label}
-                    label={item.label}
+                    key={item.navKey}
+                    label={labelFor(item.navKey)}
                     icon={item.icon}
-                    items={item.children}
+                    items={item.children.map((child) => ({
+                      href: child.href,
+                      label: labelFor(child.navKey),
+                    }))}
                     active={dropdownActive}
                   />
                 );
@@ -252,15 +263,15 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
               const badge = 'badge' in item ? item.badge : undefined;
               return (
                 <Link
-                  key={item.label}
+                  key={item.navKey}
                   href={href}
                   className={cn('gov-nav-link relative shrink-0', active && 'gov-nav-link-active')}
                 >
                   <Icon className="h-4 w-4 shrink-0 opacity-90" />
-                  {item.label}
+                  {labelFor(item.navKey)}
                   {badge && (
                     <span className="absolute -top-1 right-1 bg-[#2563eb] text-white text-[8px] font-bold px-1 py-px rounded-sm leading-none">
-                      {badge}
+                      {t.nav.new}
                     </span>
                   )}
                 </Link>
@@ -272,7 +283,7 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
             type="button"
             className="md:hidden ml-auto p-2 text-white"
             onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
+            aria-label={t.nav.toggleMenu}
           >
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -284,10 +295,13 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
               if ('children' in item && item.children) {
                 return (
                   <NavDropdown
-                    key={item.label}
-                    label={item.label}
+                    key={item.navKey}
+                    label={labelFor(item.navKey)}
                     icon={item.icon}
-                    items={item.children}
+                    items={item.children.map((child) => ({
+                      href: child.href,
+                      label: labelFor(child.navKey),
+                    }))}
                     mobile
                     onNavigate={() => setMobileOpen(false)}
                   />
@@ -297,13 +311,13 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
               const Icon = item.icon;
               return (
                 <Link
-                  key={item.label}
+                  key={item.navKey}
                   href={href}
                   onClick={() => setMobileOpen(false)}
                   className="flex items-center gap-2 px-4 py-3 text-sm font-bold text-white hover:bg-white/10 uppercase border-b border-white/10"
                 >
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  {labelFor(item.navKey)}
                 </Link>
               );
             })}
@@ -315,17 +329,19 @@ export function PublicHeader({ showLogins = true }: { showLogins?: boolean }) {
 }
 
 export function PortalLoginStrip() {
+  const { t } = useLocale();
+
   return (
     <div className="gov-nav-bar text-xs">
       <div className="max-w-[1140px] mx-auto px-4 flex h-7 items-center justify-end gap-4 text-white/90">
         <Link href="/" className="hover:text-white">
-          Home
+          {t.nav.home}
         </Link>
         <Link href="/official-login" className="hover:text-white">
-          Officer
+          {t.nav.officerLogin}
         </Link>
         <Link href="/farmer-login" className="hover:text-white">
-          Citizen
+          {t.nav.citizenLogin}
         </Link>
       </div>
     </div>
