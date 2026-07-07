@@ -37,7 +37,7 @@ export function StatusLookup() {
       return;
     }
     setError('');
-    router.push(`/verify/${encodeURIComponent(certificateNo.trim())}`);
+    router.push(`/status/${encodeURIComponent(certificateNo.trim())}`);
   }
 
   return (
@@ -109,9 +109,7 @@ export function StatusLookup() {
         </div>
       </Card>
 
-      <div className="mt-6 min-h-[80px] rounded-lg border border-pink-200 bg-pink-50/30 p-4 text-center text-sm text-slate-500">
-        {t.statusPage.resultsHint}
-      </div>
+      <p className="mt-4 text-center text-sm text-slate-500">{t.statusPage.resultsHint}</p>
     </div>
   );
 }

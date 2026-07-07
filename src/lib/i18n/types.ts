@@ -127,6 +127,19 @@ export type TranslationTree = {
     errorNoCert: string;
     errorCaptcha: string;
     resultsHint: string;
+    backToSearch: string;
+    notFoundTitle: string;
+    notFoundMessage: string;
+    tdrNumber: string;
+    workflowStage: string;
+    certificateActive: string;
+    rejectionReason: string;
+    village: string;
+    surveyNumber: string;
+    tdrExtent: string;
+    holderName: string;
+    lastUpdated: string;
+    issuedDate: string;
   };
   instructions: {
     title: string;

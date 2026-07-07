@@ -135,7 +135,21 @@ export const en: TranslationTree = {
     errorNoCert: 'Please enter TDR Certificate Number.',
     errorCaptcha: 'Captcha does not match. Please try again.',
     resultsHint:
-      'Status results will appear on the verification page after you submit a valid certificate number.',
+      'Enter your TDR certificate number and captcha to check where your application is in the approval workflow.',
+    backToSearch: 'Back to status search',
+    notFoundTitle: 'No TDR Found',
+    notFoundMessage:
+      'No TDR application was found for certificate number "{tdrNumber}". Please check the number and try again.',
+    tdrNumber: 'TDR Certificate No.',
+    workflowStage: 'Current Stage in Workflow',
+    certificateActive: 'TDR certificate has been issued and is active.',
+    rejectionReason: 'Rejection reason',
+    village: 'Village',
+    surveyNumber: 'Survey Number',
+    tdrExtent: 'TDR Extent',
+    holderName: 'Holder Name',
+    lastUpdated: 'Last Updated',
+    issuedDate: 'Certificate Issued',
   },
   instructions: {
     title: 'Instructions',
