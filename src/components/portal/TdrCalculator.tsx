@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 export function TdrCalculator() {
+  const { t } = useLocale();
   const [unit, setUnit] = useState<'sqyd' | 'sqft'>('sqyd');
   const [builtupArea, setBuiltupArea] = useState('0');
   const [tdrMarketValue, setTdrMarketValue] = useState('0');
@@ -42,7 +44,7 @@ export function TdrCalculator() {
   }
 
   const totalArea = rows.reduce((sum, row) => sum + row.tdrArea, 0);
-  const unitLabel = unit === 'sqyd' ? 'Sq.Yds' : 'Sq.ft';
+  const inUnitLabel = unit === 'sqyd' ? t.calculator.inSqYds : t.calculator.inSqft;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -56,7 +58,7 @@ export function TdrCalculator() {
               onChange={() => setUnit('sqyd')}
               className="accent-[var(--portal-purple)]"
             />
-            (In Sq.Yds)
+            ({t.calculator.inSqYds})
           </label>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
             <input
@@ -66,7 +68,7 @@ export function TdrCalculator() {
               onChange={() => setUnit('sqft')}
               className="accent-[var(--portal-purple)]"
             />
-            (In Sq.ft)
+            ({t.calculator.inSqft})
           </label>
         </div>
 
@@ -74,19 +76,19 @@ export function TdrCalculator() {
           {[
             {
               id: 'builtup',
-              label: `Required Builtup Area (In ${unitLabel})`,
+              label: `${t.calculator.builtupLabel} (${inUnitLabel})`,
               value: builtupArea,
               set: setBuiltupArea,
             },
             {
               id: 'tdr-mv',
-              label: `Market Value of TDR Certificate (In ${unitLabel})`,
+              label: `${t.calculator.tdrMvLabel} (${inUnitLabel})`,
               value: tdrMarketValue,
               set: setTdrMarketValue,
             },
             {
               id: 'site-mv',
-              label: `Market Value of Receiving Site (In ${unitLabel})`,
+              label: `${t.calculator.siteMvLabel} (${inUnitLabel})`,
               value: siteMarketValue,
               set: setSiteMarketValue,
             },
@@ -110,7 +112,7 @@ export function TdrCalculator() {
         </div>
 
         <p className="mt-6 text-sm font-semibold text-red-600">
-          TDR Area to be Purchased (in {unit === 'sqyd' ? 'Sq.yds' : 'Sq.ft'}) :{' '}
+          {t.calculator.areaToPurchase} ({unit === 'sqyd' ? 'Sq.yds' : 'Sq.ft'}) :{' '}
           {displayTdrArea.toFixed(2)}
         </p>
 
@@ -120,7 +122,7 @@ export function TdrCalculator() {
             onClick={handleCalculate}
             className="bg-[var(--portal-blue)] hover:opacity-90"
           >
-            Calculate
+            {t.calculator.calculate}
           </Button>
         </div>
       </Card>
@@ -130,12 +132,12 @@ export function TdrCalculator() {
           <table className="data-table min-w-[640px]">
             <thead>
               <tr>
-                <th>SNo</th>
-                <th>Required Builtup Area (in Sq.Yds)</th>
-                <th>Market Value of TDR Certificate (per Sq.Yd)</th>
-                <th>Market Value of Receiving Site (per Sq.Yd)</th>
-                <th>TDR Area to be Purchased (in Sq.yds)</th>
-                <th>Action</th>
+                <th>{t.common.sNo}</th>
+                <th>{t.calculator.colBuiltup}</th>
+                <th>{t.calculator.colTdrMv}</th>
+                <th>{t.calculator.colSiteMv}</th>
+                <th>{t.calculator.colTdrArea}</th>
+                <th>{t.common.action}</th>
               </tr>
             </thead>
             <tbody>
@@ -152,14 +154,14 @@ export function TdrCalculator() {
                       onClick={() => setRows((prev) => prev.filter((_, idx) => idx !== i))}
                       className="text-xs font-semibold text-red-600 hover:underline"
                     >
-                      Remove
+                      {t.calculator.remove}
                     </button>
                   </td>
                 </tr>
               ))}
               <tr className="bg-slate-50 font-semibold">
                 <td colSpan={4} className="text-right">
-                  Total Purchase Area
+                  {t.calculator.totalPurchaseArea}
                 </td>
                 <td colSpan={2}>{totalArea.toFixed(2)} Sq.Yds</td>
               </tr>
