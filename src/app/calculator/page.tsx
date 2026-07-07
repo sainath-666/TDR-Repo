@@ -1,13 +1,10 @@
 import { PublicPageLayout } from '@/components/layout/PublicPageLayout';
-import { PortalPageShell } from '@/components/layout/PortalPageShell';
-import { TdrCalculator } from '@/components/portal/TdrCalculator';
+import { CalculatorContent } from '@/components/portal/CalculatorContent';
 
 export default function CalculatorPage() {
   return (
     <PublicPageLayout>
-      <PortalPageShell title="TDR Area Calculator">
-        <TdrCalculator />
-      </PortalPageShell>
+      <CalculatorContent />
     </PublicPageLayout>
   );
 }

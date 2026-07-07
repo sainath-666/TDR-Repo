@@ -1,47 +1,47 @@
+'use client';
+
 import Link from 'next/link';
 import { MapPin, Phone, Clock } from 'lucide-react';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 export function PublicFooter() {
+  const { t } = useLocale();
+
   return (
     <footer id="contact" className="gov-footer mt-auto">
       <div className="max-w-[1140px] mx-auto px-6 py-10">
         <div className="grid gap-8 text-sm sm:grid-cols-3">
           <div>
-            <h3 className="mb-3 text-base font-bold tracking-tight">Get In Touch</h3>
-            <p className="text-white/90 leading-relaxed">
-              Your call will be answered 24 hours a day, 7 days a week.
-            </p>
+            <h3 className="mb-3 text-base font-bold tracking-tight">{t.footer.getInTouch}</h3>
+            <p className="text-white/90 leading-relaxed">{t.footer.callAvailability}</p>
           </div>
 
           <div>
             <h3 className="font-bold text-base mb-3 flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Working Hours
+              {t.footer.workingHours}
             </h3>
             <ul className="text-white/90 space-y-1">
-              <li>Mon-Friday: 10:30 am to 5:00 pm</li>
+              <li>{t.footer.monFri}</li>
               <li>
-                Second-Saturday: <strong>Closed</strong>
+                {t.footer.secondSaturday} <strong>{t.footer.closed}</strong>
               </li>
               <li>
-                Sunday: <strong>Closed</strong>
+                {t.footer.sunday} <strong>{t.footer.closed}</strong>
               </li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-bold text-base mb-3">Contact Us</h3>
-            <p className="font-semibold mb-2">
-              Andhra Pradesh Capital Region Development Authority
-            </p>
+            <h3 className="font-bold text-base mb-3">{t.footer.contactUs}</h3>
+            <p className="font-semibold mb-2">{t.footer.orgName}</p>
             <p className="flex items-start gap-2 text-white/90 mb-2 leading-relaxed">
               <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-              2nd, 3rd, and 5th Floors, APCRDA Project Office, Rayapudi Post, Tulluru Mandal,
-              Amravati, Guntur District, Andhra Pradesh - 522237.
+              {t.footer.address}
             </p>
             <p className="flex items-center gap-2 text-white/90">
               <Phone className="h-4 w-4 shrink-0" />
-              Phone :{' '}
+              {t.footer.phone}{' '}
               <a href="tel:08662527110" className="hover:underline">
                 0866 – 2527110
               </a>
@@ -50,14 +50,16 @@ export function PublicFooter() {
         </div>
 
         <div className="mt-8 pt-5 border-t border-white/20 flex flex-col sm:flex-row justify-between gap-2 text-xs text-white/60">
-          <p>© {new Date().getFullYear()} APCRDA. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {t.footer.copyright}
+          </p>
           <p>
             <Link href="/official-login" className="hover:text-white">
-              Officer Login
+              {t.footer.officerLogin}
             </Link>
             {' · '}
             <Link href="/farmer-login" className="hover:text-white">
-              Citizen Login
+              {t.footer.citizenLogin}
             </Link>
           </p>
         </div>

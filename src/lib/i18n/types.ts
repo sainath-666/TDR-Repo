@@ -1,0 +1,163 @@
+export type Locale = 'en' | 'te';
+
+export type TranslationTree = {
+  header: {
+    orgTitle: string;
+    tdrTitle: string;
+    language: string;
+  };
+  nav: {
+    home: string;
+    application: string;
+    applyNow: string;
+    howToApply: string;
+    tdrBank: string;
+    tdrVerification: string;
+    instructions: string;
+    calculator: string;
+    status: string;
+    new: string;
+    signIn: string;
+    officerLogin: string;
+    citizenLogin: string;
+    toggleMenu: string;
+  };
+  hero: {
+    slideAlt1: string;
+    slideAlt2: string;
+    orgName: string;
+    title: string;
+    subtitle: string;
+    applyForTdr: string;
+    verifyCertificate: string;
+    previousSlide: string;
+    nextSlide: string;
+    goToSlide: string;
+  };
+  quickActions: {
+    applyNow: string;
+    applyNowDesc: string;
+    verifyTdr: string;
+    verifyTdrDesc: string;
+    trackStatus: string;
+    trackStatusDesc: string;
+    tdrBank: string;
+    tdrBankDesc: string;
+  };
+  about: {
+    apcrdaTitle: string;
+    apcrdaP1: string;
+    apcrdaP2: string;
+    apcrdaP3: string;
+    tdrTitle: string;
+    tdrBody: string;
+  };
+  footer: {
+    getInTouch: string;
+    callAvailability: string;
+    workingHours: string;
+    monFri: string;
+    secondSaturday: string;
+    sunday: string;
+    closed: string;
+    contactUs: string;
+    orgName: string;
+    address: string;
+    phone: string;
+    copyright: string;
+    officerLogin: string;
+    citizenLogin: string;
+  };
+  scrollToTop: string;
+  common: {
+    sNo: string;
+    status: string;
+    noData: string;
+    view: string;
+    submit: string;
+    action: string;
+    verify: string;
+  };
+  bondStatus: {
+    DRAFT: string;
+    PENDING_L1: string;
+    PENDING_L2: string;
+    PENDING_L3: string;
+    PENDING_L4: string;
+    ACTIVE: string;
+    REJECTED: string;
+    REVOKED: string;
+  };
+  verify: {
+    title: string;
+    subtitle: string;
+    searchPlaceholder: string;
+    colRef: string;
+    colIssuedDate: string;
+    colExtent: string;
+    colHolders: string;
+    colLandDetails: string;
+    colLpsUnit: string;
+    colObjection: string;
+    objection: string;
+    disclaimer: string;
+    survey: string;
+  };
+  tdrBank: {
+    title: string;
+    total: string;
+    note: string;
+    colHolder: string;
+    colSiteAddress: string;
+    colExtentIssued: string;
+    colBalance: string;
+    colMarketValue: string;
+    colHolders: string;
+    colSubmit: string;
+  };
+  statusPage: {
+    title: string;
+    enterCertNo: string;
+    certPlaceholder: string;
+    verify: string;
+    enterCaptcha: string;
+    captchaPlaceholder: string;
+    checkStatus: string;
+    refreshCaptcha: string;
+    errorNoCert: string;
+    errorCaptcha: string;
+    resultsHint: string;
+  };
+  instructions: {
+    title: string;
+    heading: string;
+    intro: string;
+    bullets: string[];
+    faqTitle: string;
+    faq: { question: string; answer: string }[];
+  };
+  calculator: {
+    title: string;
+    inSqYds: string;
+    inSqft: string;
+    builtupLabel: string;
+    tdrMvLabel: string;
+    siteMvLabel: string;
+    areaToPurchase: string;
+    calculate: string;
+    remove: string;
+    totalPurchaseArea: string;
+    colBuiltup: string;
+    colTdrMv: string;
+    colSiteMv: string;
+    colTdrArea: string;
+  };
+  howToApply: {
+    title: string;
+    subtitle: string;
+    intro: string;
+    steps: string[];
+    applyNow: string;
+    officerLogin: string;
+  };
+};
